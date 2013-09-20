@@ -28,13 +28,18 @@ def dump_type(type):
     result += " volatile" if type.is_volatile_qualified() else ""
     return result
 
-def dump_func(node):
+def make_func_desc(node):
     """
     """
-    print '%s at %s' % (node.spelling, node.location.file)
-    print dump_type(node.type.get_result())
     plist = zip([dump_type(at) for at in node.type.argument_types()], [p.spelling for p in node.get_children() if p.kind.name == 'PARM_DECL'])
-    print ', '.join([t + ' ' + n for t, n in plist])
+    return (node.spelling, node.location.file, dump_type(node.type.get_result()), plist)
+
+def dump_func(desc):
+    """
+    """
+    print '%s at %s' % (desc[0], desc[1])
+    print 'Result: ' + desc[2]
+    print 'Params: ' + ', '.join([t + ' ' + n for t, n in desc[3]])
 
 index = clang.cindex.Index.create()
 tu = index.parse(sys.argv[1])
@@ -42,4 +47,5 @@ print 'Translation unit:', tu.spelling
 #dump(0, tu.cursor)
 for c in tu.cursor.get_children():
     if(c.type.kind.name == "FUNCTIONPROTO" and re.search('[AW]$', c.spelling)):
-        dump_func(c)
+        desc = make_func_desc(c)
+        dump_func(desc)
