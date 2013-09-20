@@ -3,6 +3,7 @@
 """
 
 import sys
+import re
 import clang.cindex
 
 def dump(level, node):
@@ -13,7 +14,15 @@ def dump(level, node):
     for c in node.get_children():
         dump(level + 1, c)
 
+def dump_func(node):
+    """
+    """
+    print '%s at %s' % (node.spelling, node.location.file)
+
 index = clang.cindex.Index.create()
 tu = index.parse(sys.argv[1])
 print 'Translation unit:', tu.spelling
-dump(0, tu.cursor)
+#dump(0, tu.cursor)
+for c in tu.cursor.get_children():
+    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('[AW]$', c.spelling)):
+        dump_func(c)
