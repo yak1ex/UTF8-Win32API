@@ -17,13 +17,15 @@ def dump(level, node):
 def dump_type(type):
     """
     """
-    result = "const " if type.is_const_qualified() else ""
     if type.kind.name == "TYPEDEF":
-        result += type.get_declaration().spelling + '=(' + dump_type(type.get_declaration().underlying_typedef_type) + ')'
+        result = type.get_declaration().spelling + '=(' + dump_type(type.get_declaration().underlying_typedef_type) + ')'
     else:
-        result += type.kind.name
         if type.kind.name == "POINTER":
-            result += " -> " + dump_type(type.get_pointee())
+            result = dump_type(type.get_pointee()) + " *"
+        else:
+            result = type.kind.name
+    result += " const" if type.is_const_qualified() else ""
+    result += " volatile" if type.is_volatile_qualified() else ""
     return result
 
 def dump_func(node):
