@@ -31,11 +31,8 @@ def dump_func(node):
     """
     print '%s at %s' % (node.spelling, node.location.file)
     print dump_type(node.type.get_result())
-    for at in node.type.argument_types():
-        print dump_type(at)
-    for p in node.get_children():
-        if p.kind.name == 'PARM_DECL':
-            print p.spelling
+    print ', '.join([dump_type(at) for at in node.type.argument_types()])
+    print ', '.join([p.spelling for p in node.get_children() if p.kind.name == 'PARM_DECL'])
 
 index = clang.cindex.Index.create()
 tu = index.parse(sys.argv[1])
