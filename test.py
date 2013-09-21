@@ -47,6 +47,6 @@ tu = index.parse(sys.argv[1])
 print 'Translation unit:', tu.spelling
 #dump(0, tu.cursor)
 for c in tu.cursor.get_children():
-    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('[AW]$', c.spelling)):
+    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('W$', c.spelling)):
         desc = make_func_desc(c)
         dump_func(desc)
