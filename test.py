@@ -18,7 +18,8 @@ def dump_type(type):
     """
     """
     if type.kind.name == "TYPEDEF":
-        result = type.get_declaration().spelling + '=(' + dump_type(type.get_declaration().underlying_typedef_type) + ')'
+#       result = type.get_declaration().spelling + '=(' + dump_type(type.get_declaration().underlying_typedef_type) + ')'
+        result = type.get_declaration().spelling
     else:
         if type.kind.name == "POINTER":
             result = dump_type(type.get_pointee()) + " *"
