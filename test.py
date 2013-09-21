@@ -38,9 +38,7 @@ def make_func_desc(node):
 def dump_func(desc):
     """
     """
-    print '%s at %s' % (desc[0], desc[1])
-    print 'Result: ' + desc[2]
-    print 'Params: ' + ', '.join([t + ' ' + n for t, n in desc[3]])
+    print '%s %s(%s) at %s' % (desc[2], desc[0], ', '.join([t + ' ' + n for t, n in desc[3]]), desc[1])
 
 index = clang.cindex.Index.create()
 tu = index.parse(sys.argv[1])
