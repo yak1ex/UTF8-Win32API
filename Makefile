@@ -11,7 +11,7 @@ testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.
 	$(CXX) -o $@ $^
 
 clean:
-	-rm -rf *.o *.a *.exe winbaseu.h winuseru.h shellapiu.h
+	-rm -rf *.o *.a *.exe *.h.txt *.h.cpp
 
 libwin32u.a: win32u.o # winbaseu.o winuseru.o shellapiu.o psapiu.o winnlsu.o
 	$(AR) ru $@ $?
