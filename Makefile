@@ -10,6 +10,9 @@ testrun: testrunner
 testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.cpp,test%.o,$(wildcard test*.cpp)) libwin32u.a
 	$(CXX) -o $@ $^
 
+generate:
+	-python test.py /usr/include/w32api/windows.h
+
 clean:
 	-rm -rf *.o *.a *.exe *.h.txt *.h.cpp
 
