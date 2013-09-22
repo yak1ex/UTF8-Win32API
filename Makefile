@@ -1,6 +1,8 @@
 CFLAGS=-Wall -pedantic -DWINVER=0x0500
 CXXFLAGS=-Wall -pedantic -I/usr/include/boost -DWINVER=0x0500
 
+OBJS=$(patsubst %.h.cpp,%.h.o,$(wildcard *.h.cpp))
+
 test: libwin32u.a test.o
 	$(CXX) -o $@ $^ -L. -lwin32u
 
@@ -11,13 +13,14 @@ testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.
 	$(CXX) -o $@ $^
 
 generate:
+	-rm -f *.h.txt *.h.cpp
 	-python test.py /usr/include/w32api/windows.h
 
 clean:
 	-rm -rf *.o *.a *.exe *.h.txt *.h.cpp
 
-libwin32u.a: win32u.o # winbaseu.o winuseru.o shellapiu.o psapiu.o winnlsu.o
-	$(AR) ru $@ $?
+libwin32u.a: generate win32u.o $(OBJS)
+	$(AR) ru $@ win32u.o $(OBJS)
 
 %.h: %.txt
 	perl header.pl $< $@
