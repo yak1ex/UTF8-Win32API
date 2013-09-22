@@ -70,14 +70,30 @@ def read_only_wo_len(desc, spec):
     """
     target_index = index_arg(desc, spec[0])
     orig = desc[3][target_index][1]
-    desc[3][target_index] = (desc[3][target_index][0], orig + '_')
-    return "WSTR %s(%s);\n" % (desc[3][target_index][1], orig)
+    desc_self = (desc[0], desc[1], desc[2], desc[3][:])
+    desc_self[3][target_index] = ('LPCSTR', orig)
+    desc_call = (desc[0], desc[1], desc[2], desc[3][:])
+    desc_call[3][target_index] = (desc[3][target_index][0], orig + '_')
+    code = "WSTR %s(%s);\n" % (orig + '_', orig)
+    return (desc_self, desc_call, code)
 
 spec = [
            [[('LPCWSTR', 'lpApplicationName')], read_only_wo_len]
        ]
 
 # TODO: Need to complete parameter names
+
+status = {}
+
+def header(outname):
+    actualname = outname + '.cpp'
+    if actualname in status:
+        return
+    status[actualname] = 1
+    with open(actualname, 'a') as f:
+        f.write("#include <windows.h>\n")
+        f.write("#include \"win32u.hpp\"\n")
+
 
 index = clang.cindex.Index.create()
 tu = index.parse(sys.argv[1])
@@ -96,11 +112,13 @@ for c in tu.cursor.get_children():
             if(flag):
                 processed = True
                 outname = os.path.basename("%s" % desc[1])
+                header(outname)
                 with open(outname + '.cpp', 'a') as f:
-                    f.write(make_func_decl(desc) + "\n{\n")
-                    result = onespec[1](desc, onespec[0])
-                    f.write("\t" + result)
-                    f.write("\treturn " + make_func_call(desc) + ";\n}\n")
+                    (desc_self, desc_call, code) = onespec[1](desc, onespec[0])
+                    desc_self = (desc_self[0][:-1] + 'U', desc_self[1], desc_self[2], desc_self[3])
+                    f.write(make_func_decl(desc_self) + "\n{\n")
+                    f.write("\t" + code)
+                    f.write("\treturn " + make_func_call(desc_call) + ";\n}\n")
                 break
         if not processed:
             outname = os.path.basename("%s" % desc[1])
