@@ -85,7 +85,7 @@ spec = [
 
 status = {}
 
-def header(outname):
+def cpp_header(outname):
     actualname = outname + '.cpp'
     if actualname in status:
         return
@@ -112,7 +112,7 @@ for c in tu.cursor.get_children():
             if(flag):
                 processed = True
                 outname = os.path.basename("%s" % desc[1])
-                header(outname)
+                cpp_header(outname)
                 with open(outname + '.cpp', 'a') as f:
                     (desc_self, desc_call, code) = onespec[1](desc, onespec[0])
                     desc_self = (desc_self[0][:-1] + 'U', desc_self[1], desc_self[2], desc_self[3])
