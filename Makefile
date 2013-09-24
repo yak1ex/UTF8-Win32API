@@ -17,7 +17,7 @@ generate:
 	-python test.py /usr/include/w32api/windows.h
 
 clean:
-	-rm -rf *.o *.a *.exe *.h.txt *.h.cpp
+	-rm -rf *.o *.a *.exe *.h.txt *.h.cpp *.h.h
 
 libwin32u.a: generate win32u.o $(OBJS)
 	$(AR) ru $@ win32u.o $(OBJS)
