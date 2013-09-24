@@ -83,17 +83,29 @@ spec = [
 
 # TODO: Need to complete parameter names
 
-status = {}
+cpp_status = {}
+h_status = {}
 
 def cpp_header(outname):
     actualname = outname + '.cpp'
-    if actualname in status:
+    if actualname in cpp_status:
         return
-    status[actualname] = 1
+    cpp_status[actualname] = 1
     with open(actualname, 'a') as f:
-        f.write("#include <windows.h>\n")
+        f.write("#include \"" + outname + ".h\"\n")
         f.write("#include \"win32u.hpp\"\n")
 
+def h_header(outname):
+    actualname = outname + '.h'
+    if actualname in h_status:
+        return
+    h_status[actualname] = 1
+    guard_name = actualname.upper().replace('.', '_')
+    with open(actualname, 'a') as f:
+        f.write("#ifndef " + guard_name + "\n")
+        f.write("#define " + guard_name + "\n\n")
+        f.write("#include <windows.h>\n\n")
+        f.write("#ifndef __cplusplus\nexnter \"C\" {\n#endif\n\n")
 
 index = clang.cindex.Index.create()
 tu = index.parse(sys.argv[1])
@@ -112,15 +124,22 @@ for c in tu.cursor.get_children():
             if(flag):
                 processed = True
                 outname = os.path.basename("%s" % desc[1])
+                (desc_self, desc_call, code) = onespec[1](desc, onespec[0])
+                desc_self = (desc_self[0][:-1] + 'U', desc_self[1], desc_self[2], desc_self[3])
                 cpp_header(outname)
                 with open(outname + '.cpp', 'a') as f:
-                    (desc_self, desc_call, code) = onespec[1](desc, onespec[0])
-                    desc_self = (desc_self[0][:-1] + 'U', desc_self[1], desc_self[2], desc_self[3])
                     f.write(make_func_decl(desc_self) + "\n{\n")
                     f.write("\t" + code)
                     f.write("\treturn " + make_func_call(desc_call) + ";\n}\n")
+                h_header(outname)
+                with open(outname + '.h', 'a') as f:
+                    f.write("extern " + make_func_decl(desc_self) + ";\n")
                 break
         if not processed:
             outname = os.path.basename("%s" % desc[1])
             with open(outname + '.txt', 'a') as f:
                 f.write(make_func_decl(desc) + "\n")
+
+for actualname in h_status:
+    with open(actualname, 'a') as f:
+        f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")

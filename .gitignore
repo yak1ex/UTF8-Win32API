@@ -3,4 +3,5 @@
 *.o
 *.a
 *.h.cpp
+*.h.h
 *.h.txt

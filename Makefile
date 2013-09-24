@@ -13,7 +13,7 @@ testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.
 	$(CXX) -o $@ $^
 
 generate:
-	-rm -f *.h.txt *.h.cpp
+	-rm -f *.h.txt *.h.cpp *.h.h
 	-python test.py /usr/include/w32api/windows.h
 
 clean:
