@@ -1,6 +1,6 @@
 #include <boost/test/auto_unit_test.hpp>
 
-#include "win32u.hpp"
+#include "win32u_helper.hpp"
 #include <iostream>
 
 //const char pszDevJ[] = "\xe9\x96\x8b\xe7\x99\xba";

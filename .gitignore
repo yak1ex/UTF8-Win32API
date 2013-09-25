@@ -2,6 +2,6 @@
 *.exe
 *.o
 *.a
-*.h.cpp
-*.h.h
-*.h.txt
+*u.cpp
+*u.h
+*u.txt

@@ -83,20 +83,29 @@ spec = [
 
 # TODO: Need to complete parameter names
 
+def cpp_name(outname):
+    return outname.replace('.h', 'u.cpp')
+
+def h_name(outname):
+    return outname.replace('.h', 'u.h')
+
+def txt_name(outname):
+    return outname.replace('.h', 'u.txt')
+
 cpp_status = {}
 h_status = {}
 
 def cpp_header(outname):
-    actualname = outname + '.cpp'
+    actualname = cpp_name(outname)
     if actualname in cpp_status:
         return
     cpp_status[actualname] = 1
     with open(actualname, 'a') as f:
-        f.write("#include \"" + outname + ".h\"\n")
-        f.write("#include \"win32u.hpp\"\n")
+        f.write("#include \"" + h_name(outname) + "\"\n")
+        f.write("#include \"win32u_helper.hpp\"\n")
 
 def h_header(outname):
-    actualname = outname + '.h'
+    actualname = h_name(outname)
     if actualname in h_status:
         return
     h_status[actualname] = 1
@@ -127,17 +136,17 @@ for c in tu.cursor.get_children():
                 (desc_self, desc_call, code) = onespec[1](desc, onespec[0])
                 desc_self = (desc_self[0][:-1] + 'U', desc_self[1], desc_self[2], desc_self[3])
                 cpp_header(outname)
-                with open(outname + '.cpp', 'a') as f:
+                with open(cpp_name(outname), 'a') as f:
                     f.write(make_func_decl(desc_self) + "\n{\n")
                     f.write("\t" + code)
                     f.write("\treturn " + make_func_call(desc_call) + ";\n}\n")
                 h_header(outname)
-                with open(outname + '.h', 'a') as f:
+                with open(h_name(outname), 'a') as f:
                     f.write("extern " + make_func_decl(desc_self) + ";\n")
                 break
         if not processed:
             outname = os.path.basename("%s" % desc[1])
-            with open(outname + '.txt', 'a') as f:
+            with open(txt_name(outname), 'a') as f:
                 f.write(make_func_decl(desc) + "\n")
 
 for actualname in h_status:
