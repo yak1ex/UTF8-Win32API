@@ -114,9 +114,10 @@ def read_only_wo_len(desc, spec):
     code = "WSTR %s(%s);\n" % (orig_name + '_', orig_name)
     return (desc_self, desc_call, code)
 
-spec = [
-           [[('LPCWSTR', 'lpApplicationName')], read_only_wo_len]
-       ]
+spec = \
+[
+   [[('LPCWSTR', 'lpApplicationName')], read_only_wo_len]
+]
 
 # TODO: Need to complete parameter names
 
