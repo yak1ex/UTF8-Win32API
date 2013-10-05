@@ -120,38 +120,58 @@ spec = [
 
 # TODO: Need to complete parameter names
 
-def cpp_name(outname):
-    return outname.replace('.h', 'u.cpp')
+class Output(object):
+    _cpp = {}
+    _h = {}
 
-def h_name(outname):
-    return outname.replace('.h', 'u.h')
+    def _cpp_name(self, outname):
+        return outname.replace('.h', 'u.cpp')
 
-def txt_name(outname):
-    return outname.replace('.h', 'u.txt')
+    def _h_name(self, outname):
+        return outname.replace('.h', 'u.h')
 
-cpp_status = {}
-h_status = {}
+    def _txt_name(self, outname):
+        return outname.replace('.h', 'u.txt')
 
-def cpp_header(outname):
-    actualname = cpp_name(outname)
-    if actualname in cpp_status:
-        return
-    cpp_status[actualname] = 1
-    with open(actualname, 'a') as f:
-        f.write("#include \"" + h_name(outname) + "\"\n")
-        f.write("#include \"win32u_helper.hpp\"\n")
+    def _cpp_header(self, outname):
+        actualname = self._cpp_name(outname)
+        if actualname in self._cpp:
+            return
+        self._cpp[actualname] = 1
+        with open(actualname, 'a') as f:
+            f.write("#include \"" + self._h_name(outname) + "\"\n")
+            f.write("#include \"win32u_helper.hpp\"\n")
 
-def h_header(outname):
-    actualname = h_name(outname)
-    if actualname in h_status:
-        return
-    h_status[actualname] = 1
-    guard_name = actualname.upper().replace('.', '_')
-    with open(actualname, 'a') as f:
-        f.write("#ifndef " + guard_name + "\n")
-        f.write("#define " + guard_name + "\n\n")
-        f.write("#include <windows.h>\n\n")
-        f.write("#ifndef __cplusplus\nexnter \"C\" {\n#endif\n\n")
+    def _h_header(self, outname):
+        actualname = self._h_name(outname)
+        if actualname in self._h:
+            return
+        self._h[actualname] = 1
+        guard_name = actualname.upper().replace('.', '_')
+        with open(actualname, 'a') as f:
+            f.write("#ifndef " + guard_name + "\n")
+            f.write("#define " + guard_name + "\n\n")
+            f.write("#include <windows.h>\n\n")
+            f.write("#ifndef __cplusplus\nexnter \"C\" {\n#endif\n\n")
+
+    def cpp(self, outname, str):
+        with open(self._cpp_name(outname), 'a') as f:
+            f.write(str)
+
+    def h(self, outname, str):
+        with open(self._h_name(outname), 'a') as f:
+            f.write(str)
+
+    def txt(self, outname, str):
+        with open(self._txt_name(outname), 'a') as f:
+            f.write(str)
+
+    def cleanup(self):
+        for actualname in h_status:
+            with open(actualname, 'a') as f:
+                f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")
+
+output = Output()
 
 index = clang.cindex.Index.create()
 tu = index.parse(sys.argv[1])
@@ -161,6 +181,7 @@ for c in tu.cursor.get_children():
     if(c.type.kind.name == "FUNCTIONPROTO" and re.search('W$', c.spelling)):
         desc = FunctionDescriptor(c)
         processed = False
+        outname = os.path.basename("%s" % desc.file)
         for onespec in spec:
             flag = True
             for argspec in onespec[0]:
@@ -169,23 +190,20 @@ for c in tu.cursor.get_children():
                     break
             if(flag):
                 processed = True
-                outname = os.path.basename("%s" % desc.file)
                 (desc_self, desc_call, code) = onespec[1](desc, onespec[0])
                 desc_self.name = desc_self.name[:-1] + 'U'
-                cpp_header(outname)
-                with open(cpp_name(outname), 'a') as f:
-                    f.write(desc_self.make_func_decl() + "\n{\n")
-                    f.write("\t" + code)
-                    f.write("\treturn " + desc_call.make_func_call() + ";\n}\n")
-                h_header(outname)
-                with open(h_name(outname), 'a') as f:
-                    f.write("extern " + desc_self.make_func_decl() + ";\n")
+                output.cpp(outname, \
+                    desc_self.make_func_decl() + "\n{\n" + \
+                    "\t" + code + \
+                    "\treturn " + desc_call.make_func_call() + ";\n}\n" \
+                )
+                output.h(outname, \
+                    "extern " + desc_self.make_func_decl() + ";\n" \
+                )
                 break
         if not processed:
-            outname = os.path.basename("%s" % desc.file)
-            with open(txt_name(outname), 'a') as f:
-                f.write(desc.make_func_decl() + "\n")
+            output.txt(outname, \
+                desc.make_func_decl() + "\n" \
+            )
 
-for actualname in h_status:
-    with open(actualname, 'a') as f:
-        f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")
+output.cleanup()
