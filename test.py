@@ -114,11 +114,6 @@ def read_only_wo_len(desc, spec):
     code = "WSTR %s(%s);\n" % (orig_name + '_', orig_name)
     return (desc_self, desc_call, code)
 
-spec = \
-[
-   [[('LPCWSTR', 'lpApplicationName')], read_only_wo_len]
-]
-
 # TODO: Need to complete parameter names
 
 class Output(object):
@@ -156,10 +151,12 @@ class Output(object):
             f.write("#ifndef __cplusplus\nexnter \"C\" {\n#endif\n\n")
 
     def cpp(self, outname, str):
+        self._cpp_header(outname)
         with open(self._cpp_name(outname), 'a') as f:
             f.write(str)
 
     def h(self, outname, str):
+        self._h_header(outname)
         with open(self._h_name(outname), 'a') as f:
             f.write(str)
 
@@ -172,18 +169,17 @@ class Output(object):
             with open(actualname, 'a') as f:
                 f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")
 
-output = Output()
+class Dispatcher(object):
+    _output = Output()
+    _table = []
 
-index = clang.cindex.Index.create()
-tu = index.parse(sys.argv[1])
-print 'Translation unit:', tu.spelling
-#dump(0, tu.cursor)
-for c in tu.cursor.get_children():
-    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('W$', c.spelling)):
-        desc = FunctionDescriptor(c)
+    def register(self, spec):
+        self._table.extend(spec)
+
+    def dispatch(self, desc):
         processed = False
         outname = os.path.basename("%s" % desc.file)
-        for onespec in spec:
+        for onespec in self._table:
             flag = True
             for argspec in onespec[0]:
                 if desc.index_arg(argspec) == -1:
@@ -193,18 +189,36 @@ for c in tu.cursor.get_children():
                 processed = True
                 (desc_self, desc_call, code) = onespec[1](desc, onespec[0])
                 desc_self.name = desc_self.name[:-1] + 'U'
-                output.cpp(outname, \
+                self._output.cpp(outname, \
                     desc_self.make_func_decl() + "\n{\n" + \
                     "\t" + code + \
                     "\treturn " + desc_call.make_func_call() + ";\n}\n" \
                 )
-                output.h(outname, \
+                self._output.h(outname, \
                     "extern " + desc_self.make_func_decl() + ";\n" \
                 )
                 break
         if not processed:
-            output.txt(outname, \
+            self._output.txt(outname, \
                 desc.make_func_decl() + "\n" \
             )
 
-output.cleanup()
+    def cleanup(self):
+        self._output.cleanup()
+
+dispatcher = Dispatcher()
+
+dispatcher.register([\
+   [[('LPCWSTR', 'lpApplicationName')], read_only_wo_len]
+])
+
+index = clang.cindex.Index.create()
+tu = index.parse(sys.argv[1])
+print 'Translation unit:', tu.spelling
+#dump(0, tu.cursor)
+for c in tu.cursor.get_children():
+    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('W$', c.spelling)):
+        desc = FunctionDescriptor(c)
+        dispatcher.dispatch(desc)
+
+dispatcher.cleanup()
