@@ -168,7 +168,7 @@ class Output(object):
             f.write(str)
 
     def cleanup(self):
-        for actualname in h_status:
+        for actualname in self._h:
             with open(actualname, 'a') as f:
                 f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")
 
