@@ -40,7 +40,9 @@ def read_only_wo_len(desc, typespecs):
 dispatcher = Dispatcher()
 
 dispatcher.register([\
-   ['BinaryType', [('LPCWSTR', 'lpApplicationName')], read_only_wo_len]
+   ['BinaryType', [('LPCWSTR', 'lpApplicationName')], read_only_wo_len],
+
+   ['', [('LPCWSTR', 'lpString1'), ('LPCWSTR', 'lpString2')], read_only_wo_len_all],
 ])
 
 index = clang.cindex.Index.create()
