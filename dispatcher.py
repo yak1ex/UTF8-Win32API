@@ -80,8 +80,9 @@ class Dispatcher(object):
                     break
             if(flag):
                 processed = True
-                (desc_self, desc_call, code) = onespec[SPEC_FUNC](desc, onespec[SPEC_TYPES])
+                (suffix, desc_self, desc_call, code) = onespec[SPEC_FUNC](desc, onespec[SPEC_TYPES])
                 desc_self.name = desc_self.name[:-1] + 'U'
+                desc_call.name = desc_self.name[:-1] + suffix
                 self._output.cpp(outname, \
                     desc_self.make_func_decl() + "\n{\n" + \
                     code + \
