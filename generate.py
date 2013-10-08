@@ -8,17 +8,18 @@ import clang.cindex
 from descriptor import FunctionDescriptor
 from dispatcher import Dispatcher
 
-def read_only_wo_len(desc, spec):
+def read_only_wo_len_imp(desc_self, desc_call, code, spec):
     """
     """
     target_index = desc.index_arg(spec[0]) # The first entry
     orig_type, orig_name = desc.parameter_types[target_index]
-    desc_self = desc.clone()
     desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
-    desc_call = desc.clone()
     desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    code = "WSTR %s(%s);\n" % (orig_name + '_', orig_name)
+    code += "WSTR %s(%s);\n" % (orig_name + '_', orig_name)
     return (desc_self, desc_call, code)
+
+def read_only_wo_len(desc, spec):
+    return read_only_wo_len_imp(desc.clone(), desc.clone(), '', spec)
 
 # TODO: Need to complete parameter names
 
