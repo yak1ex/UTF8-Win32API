@@ -14,10 +14,10 @@ testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.
 
 generate:
 	-rm -f *u.txt *u.cpp *u.h
-	-python test.py /usr/include/w32api/windows.h
+	-python generate.py /usr/include/w32api/windows.h
 
 clean:
-	-rm -rf *.o *.a *.exe *u.txt *u.cpp *u.h
+	-rm -rf *.o *.a *.exe *u.txt *u.cpp *u.h *.pyc
 
 libwin32u.a: generate win32u_helper.o $(OBJS)
 	$(AR) ru $@ win32u_helper.o $(OBJS)
