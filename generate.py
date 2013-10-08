@@ -8,12 +8,10 @@ import clang.cindex
 from descriptor import FunctionDescriptor
 from dispatcher import Dispatcher
 
-# TODO: Avoid magic values
-
 def read_only_wo_len(desc, spec):
     """
     """
-    target_index = desc.index_arg(spec[0])
+    target_index = desc.index_arg(spec[0]) # The first entry
     orig_type, orig_name = desc.parameter_types[target_index]
     desc_self = desc.clone()
     desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)

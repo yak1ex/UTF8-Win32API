@@ -54,6 +54,9 @@ class _Output(object):
             with open(actualname, 'a') as f:
                 f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")
 
+SPEC_TYPES = 0
+SPEC_FUNC = 1
+
 class Dispatcher(object):
     _output = _Output()
     _table = []
@@ -66,13 +69,13 @@ class Dispatcher(object):
         outname = os.path.basename("%s" % desc.file)
         for onespec in self._table:
             flag = True
-            for argspec in onespec[0]:
+            for argspec in onespec[SPEC_TYPES]:
                 if desc.index_arg(argspec) == -1:
                     flag = False
                     break
             if(flag):
                 processed = True
-                (desc_self, desc_call, code) = onespec[1](desc, onespec[0])
+                (desc_self, desc_call, code) = onespec[SPEC_FUNC](desc, onespec[SPEC_TYPES])
                 desc_self.name = desc_self.name[:-1] + 'U'
                 self._output.cpp(outname, \
                     desc_self.make_func_decl() + "\n{\n" + \
