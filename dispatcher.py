@@ -80,13 +80,20 @@ class Dispatcher(object):
                     break
             if(flag):
                 processed = True
-                (suffix, desc_self, desc_call, code) = onespec[SPEC_FUNC](desc, onespec[SPEC_TYPES])
+                funcs = onespec[SPEC_FUNC] if isinstance(onespec[SPEC_FUNC], list) else [onespec[SPEC_FUNC]]
+                (suffix, desc_self, desc_call, code_before, code_after) = \
+                    reduce(lambda acc, func: func(acc, onespec[SPEC_TYPES]), funcs, ('W', desc.clone(), desc.clone(), '', ''))
                 desc_self.name = desc_self.name[:-1] + 'U'
                 desc_call.name = desc_self.name[:-1] + suffix
+                if desc_self.result_type == 'void' or desc_self.result_type == 'VOID':
+                    call = desc_call.make_func_call() + ";\n"
+                    ret = "return;\n"
+                else:
+                    call = desc_call.result_type + ' ret = ' + desc_call.make_func_call() + ";\n"
+                    ret = "return ret;\n"
                 self._output.cpp(outname, \
                     desc_self.make_func_decl() + "\n{\n" + \
-                    code + \
-                    "\treturn " + desc_call.make_func_call() + ";\n}\n" \
+                    code_before + "\t" + call + code_after + "\t" + ret + "}\n" \
                 )
                 self._output.h(outname, \
                     "extern " + desc_self.make_func_decl() + ";\n" \
