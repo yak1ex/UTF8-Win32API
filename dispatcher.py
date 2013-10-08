@@ -84,7 +84,7 @@ class Dispatcher(object):
                 desc_self.name = desc_self.name[:-1] + 'U'
                 self._output.cpp(outname, \
                     desc_self.make_func_decl() + "\n{\n" + \
-                    "\t" + code + \
+                    code + \
                     "\treturn " + desc_call.make_func_call() + ";\n}\n" \
                 )
                 self._output.h(outname, \
