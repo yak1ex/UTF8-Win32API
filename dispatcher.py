@@ -1,5 +1,7 @@
 """Dispatcher to actual conversion routines"""
+
 import os.path
+import re
 
 class _Output(object):
     _cpp = {}
@@ -54,8 +56,9 @@ class _Output(object):
             with open(actualname, 'a') as f:
                 f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")
 
-SPEC_TYPES = 0
-SPEC_FUNC = 1
+SPEC_REGEXP = 0
+SPEC_TYPES = 1
+SPEC_FUNC = 2
 
 class Dispatcher(object):
     _output = _Output()
@@ -68,6 +71,8 @@ class Dispatcher(object):
         processed = False
         outname = os.path.basename("%s" % desc.file)
         for onespec in self._table:
+            if(not re.search(onespec[SPEC_REGEXP], desc.name)):
+                continue
             flag = True
             for argspec in onespec[SPEC_TYPES]:
                 if desc.index_arg(argspec) == -1:
