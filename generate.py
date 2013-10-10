@@ -21,6 +21,7 @@ dispatcher.register([\
 
     ['', [('LPCWSTR', 'lpPathName')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpLibFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpExistingFileName'), ('LPCWSTR', 'lpNewFileName')], read_only_wo_len_all],
 ])
 
 index = clang.cindex.Index.create()
