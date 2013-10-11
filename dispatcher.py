@@ -96,7 +96,11 @@ class Dispatcher(object):
                     code_before + "\t" + call + code_after + "\t" + ret + "}\n" \
                 )
                 self._output.h(outname, \
-                    "extern " + desc_self.make_func_decl() + ";\n" \
+                    "#ifdef " + desc_self.name[:-1] + "\n" + \
+                    "#undef " + desc_self.name[:-1] + "\n" + \
+                    "#endif\n" + \
+                    "#define " + desc_self.name[:-1] + ' ' + desc_self.name + "\n" + \
+                    "extern " + desc_self.make_func_decl() + ";\n\n" \
                 )
                 break
         if not processed:
