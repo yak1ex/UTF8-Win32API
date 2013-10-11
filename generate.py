@@ -37,6 +37,9 @@ dispatcher.register([\
     ['', [('LPCWSTR', 'lpUNCServerName'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpFileName'), ('LPCWSTR', 'lpExistingFileName')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpText'), ('LPCWSTR', 'lpCaption')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpOutputString')], read_only_wo_len_all],
 ])
 
 index = clang.cindex.Index.create()
