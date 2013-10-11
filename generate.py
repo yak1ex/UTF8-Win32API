@@ -19,9 +19,24 @@ dispatcher.register([\
     ['GetLogicalDriveStrings', [('DWORD', 'nBufferLength'), ('LPWSTR', 'lpBuffer')], forwardA_all],
     ['', [('LPCWSTR', 'lpPathName'), ('LPCWSTR', 'lpPrefixString'), ('LPWSTR', 'lpTempFileName')], [read_only_wo_len_idx([0,1]), write_only_wo_len_idx(2)]],
 
+# Incorrect conversion:
+#
+# DWORD GetPrivateProfileStringU(LPCSTR lpAppName, LPCSTR lpKeyName, LPCWSTR lpDefault, LPWSTR lpReturnedString, DWORD nSize, LPCSTR lpFileName)
+# DWORD GetPrivateProfileSectionU(LPCWSTR lpAppName, LPWSTR lpReturnedString, DWORD nSize, LPCSTR lpFileName)
+# DWORD SearchPathU(LPCWSTR lpPath, LPCSTR lpFileName, LPCWSTR lpExtension, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
+# DWORD GetPrivateProfileSectionNamesU(LPWSTR lpszReturnBuffer, DWORD nSize, LPCSTR lpFileName)
+# DWORD GetFullPathNameU(LPCSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
+# DWORD SearchPathU(LPCWSTR lpPath, LPCSTR lpFileName, LPCWSTR lpExtension, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
+
     ['', [('LPCWSTR', 'lpPathName')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpLibFileName')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpExistingFileName'), ('LPCWSTR', 'lpNewFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpKeyName'), ('LPCWSTR', 'lpString'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpKeyName'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpString'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpUNCServerName'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpFileName'), ('LPCWSTR', 'lpExistingFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
 ])
 
 index = clang.cindex.Index.create()
