@@ -80,6 +80,8 @@ class Dispatcher(object):
                     flag = False
                     break
             if(flag):
+                if onespec[SPEC_FUNC] is None:
+                    break
                 processed = True
                 funcs = onespec[SPEC_FUNC] if isinstance(onespec[SPEC_FUNC], list) else [onespec[SPEC_FUNC]]
                 (suffix, desc_self, desc_call, code_before, code_after) = \
