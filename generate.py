@@ -40,6 +40,7 @@ dispatcher.register([\
     ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpText'), ('LPCWSTR', 'lpCaption')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpOutputString')], read_only_wo_len_all],
+    ['', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'nSize')], write_only_io_len_ret_bool(0,1)],
 ])
 
 index = clang.cindex.Index.create()

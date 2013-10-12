@@ -22,6 +22,7 @@ class _Output(object):
             return
         self._cpp[actualname] = 1
         with open(actualname, 'a') as f:
+            f.write("#include <boost/type_traits/remove_pointer.hpp>\n")
             f.write("#include \"" + self._h_name(outname) + "\"\n")
             f.write("#include \"win32u_helper.hpp\"\n")
 
