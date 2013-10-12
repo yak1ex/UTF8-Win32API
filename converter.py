@@ -86,6 +86,35 @@ def write_only_io_len_ret_bool_imp(str_idx, len_idx, args, typespecs):
 def write_only_io_len_ret_bool(str_idx, len_idx):
     return lambda args, typespecs: write_only_io_len_ret_bool_imp(str_idx, len_idx, args, typespecs)
 
+def write_only_i_len_ret_len_imp(str_idx, len_idx, args, typespecs):
+    """
+    """
+    suffix, desc_self, desc_call, code_before, code_after = args
+    str_index = desc_self.index_arg(typespecs[str_idx])
+    len_index = desc_self.index_arg(typespecs[len_idx])
+    orig_str_type, orig_str_name = desc_self.parameter_types[str_index]
+    orig_len_type, orig_len_name = desc_self.parameter_types[len_index]
+    desc_self.parameter_types[str_index] = ('LPSTR', orig_str_name)
+    desc_call.parameter_types[str_index] = (orig_str_type, orig_str_name + '_')
+    desc_call.parameter_types[len_index] = (orig_len_type, orig_len_name + '_')
+    code_before += """\
+	WSTR %s(%s * 3 + 1);
+	%s %s = %s * 3 + 1;
+""" % (orig_str_name + '_', orig_len_name, orig_len_type, orig_len_name + '_', orig_len_name)
+    code_after += """\
+	if(ret) {
+		if(%s.get_utf8_length() <= %s) {
+			ret = %s.get(%s, %s) - 1;
+		} else {
+			ret = %s.get_utf8_length();
+		}
+	}
+""" % (orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name, orig_str_name + '_')
+    return (suffix, desc_self, desc_call, code_before, code_after)
+
+def write_only_i_len_ret_len(str_idx, len_idx):
+    return lambda args, typespecs: write_only_i_len_ret_len_imp(str_idx, len_idx, args, typespecs)
+
 def forwardA_all(args, typespecs):
     desc_self = args[1]
     desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, desc_self.parameter_types)

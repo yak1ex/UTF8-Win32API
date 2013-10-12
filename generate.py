@@ -41,6 +41,8 @@ dispatcher.register([\
     ['', [('LPCWSTR', 'lpText'), ('LPCWSTR', 'lpCaption')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpOutputString')], read_only_wo_len_all],
     ['', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'nSize')], write_only_io_len_ret_bool(0,1)],
+    ['', [('LPWSTR', 'lpBuffer'), ('DWORD', 'nBufferLength')], write_only_i_len_ret_len(0,1)],
+    ['', [('LPWSTR', 'lpBuffer'), ('UINT', 'uSize')], write_only_i_len_ret_len(0,1)],
 ])
 
 index = clang.cindex.Index.create()
