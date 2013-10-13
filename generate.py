@@ -56,6 +56,14 @@ dispatcher.register([\
 
     ['', [('LPCWSTR', 'lpRootPathName'), ('LPCWSTR', 'lpVolumeName')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpRootPathName')], read_only_wo_len_all],
+
+    ['', [('LPCWSTR', 'lpDirectoryName')], read_only_wo_len_all],
+
+# Conversion not yet implemented:
+# HANDLE FindFirstVolumeMountPointW(LPCWSTR lpszRootPathName, LPWSTR lpszVolumeMountPoint, DWORD cchBufferLength)
+#    ['', [('LPCWSTR', 'pszRootPath'), ('LPWSTR', 'lpszVolumeMountPoint')], [read_only_wo_len_idx(0), ]],
+    ['', [('LPCWSTR', 'pszRootPath'), ('LPWSTR', 'lpszVolumeMountPoint')], None],
+    ['', [('LPCWSTR', 'pszRootPath')], read_only_wo_len_all],
 ])
 
 index = clang.cindex.Index.create()
