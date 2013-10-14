@@ -69,10 +69,10 @@ def _write_only_len_helper(str_idx, len_idx, args, typespecs, coder):
     before, after = coder(orig_str_type, orig_str_name, orig_len_type, orig_len_name)
     return (suffix, desc_self, desc_call, code_before + before, code_after + after)
 
-def write_only_io_len_ret_bool_imp(str_idx, len_idx, args, typespecs):
+def write_only_io_len_ret_bool(str_idx, len_idx):
     """
     """
-    return _write_only_len_helper(str_idx, len_idx, args, typespecs, \
+    return lambda args, typespecs: _write_only_len_helper(str_idx, len_idx, args, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
 	WSTR %s(*%s * 3 + 1);
 	boost::remove_pointer<%s>::type %s = *%s * 3 + 1;
@@ -86,13 +86,10 @@ def write_only_io_len_ret_bool_imp(str_idx, len_idx, args, typespecs):
 	}
 """ % (orig_str_name + '_', orig_len_name, orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name)))
 
-def write_only_io_len_ret_bool(str_idx, len_idx):
-    return lambda args, typespecs: write_only_io_len_ret_bool_imp(str_idx, len_idx, args, typespecs)
-
-def write_only_i_len_ret_len_imp(str_idx, len_idx, args, typespecs):
+def write_only_i_len_ret_len(str_idx, len_idx):
     """
     """
-    return _write_only_len_helper(str_idx, len_idx, args, typespecs, \
+    return lambda args, typespecs: _write_only_len_helper(str_idx, len_idx, args, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
 	WSTR %s(%s * 3 + 1);
 	%s %s = %s * 3 + 1;
@@ -105,9 +102,6 @@ def write_only_i_len_ret_len_imp(str_idx, len_idx, args, typespecs):
 		}
 	}
 """ % (orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name, orig_str_name + '_')))
-
-def write_only_i_len_ret_len(str_idx, len_idx):
-    return lambda args, typespecs: write_only_i_len_ret_len_imp(str_idx, len_idx, args, typespecs)
 
 def forwardA_all(args, typespecs):
     desc_self = args[1]
