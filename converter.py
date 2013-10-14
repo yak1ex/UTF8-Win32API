@@ -103,6 +103,24 @@ def write_only_i_len_ret_len(str_idx, len_idx):
 	}
 """ % (orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name, orig_str_name + '_')))
 
+def write_only_i_len_ret_zero(str_idx, len_idx):
+    """
+    """
+    return lambda args, typespecs: _write_only_len_helper(str_idx, len_idx, args, typespecs, \
+        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
+	WSTR %s(%s * 3 + 1);
+	%s %s = %s * 3 + 1;
+""" % (orig_str_name + '_', orig_len_name, orig_len_type, orig_len_name + '_', orig_len_name), """\
+	if(ret) {
+		if(%s.get_utf8_length() <= %s) {
+			%s.get(%s, %s);
+		} else {
+			SetLastError(ERROR_BUFFER_OVERFLOW);
+			ret = 0;
+		}
+	}
+""" % (orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name)))
+
 def forwardA_all(args, typespecs):
     desc_self = args[1]
     desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, desc_self.parameter_types)

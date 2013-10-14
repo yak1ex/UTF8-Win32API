@@ -58,11 +58,12 @@ dispatcher.register([\
     ['', [('LPCWSTR', 'lpRootPathName')], read_only_wo_len_all],
 
     ['', [('LPCWSTR', 'lpDirectoryName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPCWSTR', 'lpszVolueName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpszRootPathName'), ('LPWSTR', 'lpszVolumeMountPoint'), ('DWORD', 'cchBufferLength')], [read_only_wo_len_idx(0), write_only_i_len_ret_zero(1,2)]],
+    ['', [('LPWSTR', 'lpszVolumeMountPoint'), ('DWORD', 'cchBufferLength')], write_only_i_len_ret_zero(0,1)],
+    ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPWSTR', 'lpszVolumeName'), ('DWORD', 'cchBufferLength')], [read_only_wo_len_idx(0), write_only_i_len_ret_zero(1,2)]],
+    ['', [('LPCWSTR', 'lpszVolumeMountPoint')], read_only_wo_len_all],
 
-# Conversion not yet implemented:
-# HANDLE FindFirstVolumeMountPointW(LPCWSTR lpszRootPathName, LPWSTR lpszVolumeMountPoint, DWORD cchBufferLength)
-#    ['', [('LPCWSTR', 'pszRootPath'), ('LPWSTR', 'lpszVolumeMountPoint')], [read_only_wo_len_idx(0), ]],
-    ['', [('LPCWSTR', 'pszRootPath'), ('LPWSTR', 'lpszVolumeMountPoint')], None],
     ['', [('LPCWSTR', 'pszRootPath')], read_only_wo_len_all],
 ])
 
