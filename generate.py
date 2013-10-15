@@ -68,6 +68,38 @@ dispatcher.register([\
     ['', [('LPWCH', 'lpFilename'), ('DWORD', 'nSize')], write_only_i_len_ret_len(0,1)],
 
     ['', [('LPCWSTR', 'lpModuleName')], read_only_wo_len_all],
+
+# Conversion not yet implemented:
+# LONG RegEnumKeyW(HKEY hKey, DWORD dwIndex, LPWSTR lpName, DWORD cchName)
+# LONG RegEnumKeyExW(HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD lpcchName, LPDWORD lpReserved, LPWSTR lpClass, LPDWORD lpcchClass, PFILETIME lpftLastWriteTime)
+# maybe, write_only_io_len_ret_error
+    ['', [('LPWSTR', 'lpName'), ('LPDWORD', 'lpcchName'), ('LPWSTR', 'lpClass')], None],
+# LONG RegQueryValueW(HKEY hKey, LPCWSTR lpSubKey, LPWSTR lpData, PLONG lpcbData)
+# maybe, write_only_io_len_ret_error
+    ['', [('LPCWSTR', 'lpSubKey'), ('LPWSTR', 'lpData'), ('PLONG', 'lpcbData')], None],
+# LONG RegSetValueW(HKEY hKey, LPCWSTR lpSubKey, DWORD dwType, LPCWSTR lpData, DWORD cbData)
+# LONG RegSetValueExW(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE const * lpData, DWORD cbData)
+# dwType dependent
+    ['', [('LPCWSTR', 'lpSubKey'), ('DWORD', 'dwType'), ('LPCWSTR', 'lpData'), ('DWORD', 'cbData')], None],
+# LONG RegQueryValueW(HKEY hKey, LPCWSTR lpSubKey, LPWSTR lpData, PLONG lpcbData)
+# LONG RegQueryMultipleValuesW(HKEY hKey, PVALENTW val_list, DWORD num_vals, LPWSTR lpValueBuf, LPDWORD ldwTotsize)
+# LONG RegQueryValueExW(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+# LONG RegEnumValueW(HKEY hKey, DWORD dwIndex, LPWSTR lpValueName, LPDWORD lpcchValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+# lpType dependent
+# LONG RegGetValueW(HKEY hkey, LPCWSTR lpSubKey, LPCWSTR lpValue, DWORD dwFlags, LPDWORD pdwType, PVOID pvData, LPDWORD pcbData)
+# pdwType dependent
+    ['', [('LPCWSTR', 'lpSubKey'), ('LPCWSTR', 'lpValue'), ('LPDWORD', 'pdwType'), ('PVOID', 'pvData'), ('LPDWORD', 'pcbData')], None],
+
+    ['', [('LPCWSTR', 'lpSubKey'), ('LPWSTR', 'lpClass')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpSubKey'), ('LPCWSTR', 'lpFile')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpSubKey'), ('LPCWSTR', 'lpNewFile'), ('LPCWSTR', 'lpOldFile')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpSubKey')], read_only_wo_len_all],
+    ['', [('LPWSTR', 'lpClass')], read_only_wo_len_all],
+    ['Reg', [('LPCWSTR', 'lpFile')], read_only_wo_len_all],
+    ['Reg', [('LPCWSTR', 'lpMachineName')], read_only_wo_len_all],
+    ['RegDelete', [('LPCWSTR', 'lpValueName')], read_only_wo_len_all],
+
+    ['', [('LPCWSTR', 'lpszFormat')], read_only_wo_len_all],
 ])
 
 index = clang.cindex.Index.create()
