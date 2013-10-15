@@ -50,8 +50,7 @@ dispatcher.register([\
     ['', [('LPWSTR', 'lpBuffer'), ('DWORD', 'nBufferLength')], write_only_i_len_ret_len(0,1)],
     ['', [('LPWSTR', 'lpBuffer'), ('UINT', 'uSize')], write_only_i_len_ret_len(0,1)],
 
-# Conversion not yet implemented:
-# WINBOOL GetVolumeInformationW(LPCWSTR lpRootPathName, LPWSTR lpVolumeNameBuffer, DWORD nVolumeNameSize, LPDWORD lpVolumeSerialNumber, LPDWORD lpMaximumComponentLength, LPDWORD lpFileSystemFlags, LPWSTR lpFileSystemNameBuffer, DWORD nFileSystemNameSize)
+    ['', [('LPCWSTR', 'lpRootPathName'), ('LPWSTR', 'lpVolumeNameBuffer'), ('DWORD', 'nVolumeNameSize'), ('LPWSTR', 'lpFileSystemNameBuffer'), ('DWORD', 'nFileSystemNameSize')], [read_only_wo_len_idx(0), write_only_i_len_ret_zero(1,2), write_only_i_len_ret_zero(3,4)]],
     ['', [('LPCWSTR', 'lpRootPathName'), ('LPWSTR', 'lpVolumeNameBuffer'), ('DWORD', 'nVolumeNameSize'), ('LPWSTR', 'lpFileSystemNameBuffer'), ('DWORD', 'nFileSystemNameSize')], None],
 
     ['', [('LPCWSTR', 'lpRootPathName'), ('LPCWSTR', 'lpVolumeName')], read_only_wo_len_all],
@@ -65,6 +64,10 @@ dispatcher.register([\
     ['', [('LPCWSTR', 'lpszVolumeMountPoint')], read_only_wo_len_all],
 
     ['', [('LPCWSTR', 'pszRootPath')], read_only_wo_len_all],
+
+    ['', [('LPWCH', 'lpFilename'), ('DWORD', 'nSize')], write_only_i_len_ret_len(0,1)],
+
+    ['', [('LPCWSTR', 'lpModuleName')], read_only_wo_len_all],
 ])
 
 index = clang.cindex.Index.create()
