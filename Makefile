@@ -1,5 +1,7 @@
+CC=i686-w64-mingw32-gcc
+CXX=i686-w64-mingw32-g++
 CFLAGS=-Wall -pedantic -DWINVER=0x0500
-CXXFLAGS=-Wall -pedantic -I/usr/include/boost -DWINVER=0x0500
+CXXFLAGS=-Wall -pedantic -Ic:/cygwin/usr/local/include -DWINVER=0x0500
 
 OBJS=$(patsubst %u.cpp,%u.o,$(wildcard *u.cpp))
 
