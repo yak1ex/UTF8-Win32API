@@ -9,8 +9,6 @@ from descriptor import FunctionDescriptor
 from dispatcher import Dispatcher
 from converter import *
 
-# TODO: Need to complete parameter names
-
 dispatcher = Dispatcher()
 
 dispatcher.register([\

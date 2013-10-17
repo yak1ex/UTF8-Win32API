@@ -28,7 +28,10 @@ class FunctionDescriptor(object):
         """Create function descriptor from libclang node"""
         if node is None:
             return
-        plist = zip([dump_type(at) for at in node.type.argument_types()], [p.spelling for p in node.get_children() if p.kind.name == 'PARM_DECL'])
+        plist = zip( \
+            [dump_type(at) for at in node.type.argument_types()], \
+            [val if val != '' else 'arg' + str(idx + 1) for idx, val in enumerate([p.spelling for p in node.get_children() if p.kind.name == 'PARM_DECL'])] \
+        )
         self._name = node.spelling
         self._file = node.location.file
         self._result_type = dump_type(node.type.get_result())
