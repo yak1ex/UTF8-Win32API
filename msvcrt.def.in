@@ -341,13 +341,9 @@ wctomb
 
 ; need to conversion
 _access
-asctime
 _chdir
 _chmod
 _creat
-ctime
-_ctime32
-_ctime64
 _execl
 _execle
 _execlp
