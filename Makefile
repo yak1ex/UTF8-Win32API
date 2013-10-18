@@ -16,7 +16,7 @@ testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.
 
 generate:
 	-rm -f *u.txt [^m]*u.cpp m[^s]*u.cpp [^m]*u.h m[^s]*u.h
-	-python generate.py /usr/include/w32api/windows.h
+	-python apigenerate.py /usr/include/w32api/windows.h
 
 clean:
 	-rm -rf *.o *.a *.exe *u.txt [^m]*u.cpp m[^s]*u.cpp [^m]*u.h m[^s]*u.h *.pyc

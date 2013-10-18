@@ -61,7 +61,7 @@ SPEC_REGEXP = 0
 SPEC_TYPES = 1
 SPEC_FUNC = 2
 
-class Dispatcher(object):
+class APIDispatcher(object):
     _output = _Output()
     _table = []
 

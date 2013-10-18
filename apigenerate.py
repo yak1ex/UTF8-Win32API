@@ -6,10 +6,10 @@ import sys
 import re
 import clang.cindex
 from descriptor import FunctionDescriptor
-from dispatcher import Dispatcher
+from dispatcher import APIDispatcher
 from converter import *
 
-dispatcher = Dispatcher()
+dispatcher = APIDispatcher()
 
 dispatcher.register([\
     ['BinaryType', [('LPCWSTR', 'lpApplicationName')], read_only_wo_len],
