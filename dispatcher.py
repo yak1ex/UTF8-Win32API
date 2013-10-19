@@ -61,7 +61,7 @@ SPEC_REGEXP = 0
 SPEC_TYPES = 1
 SPEC_FUNC = 2
 
-class APIDispatcher(object):
+class Dispatcher(object):
     _output = _Output()
     _table = []
 
@@ -70,10 +70,11 @@ class APIDispatcher(object):
 
     def dispatch(self, desc):
         processed = False
-        outname = os.path.basename("%s" % desc.file)
+        outname = self._outname(desc)
         for onespec in self._table:
-            if(not re.search(onespec[SPEC_REGEXP], desc.name)):
+            if(not self._match(onespec, desc)):
                 continue
+
             flag = True
             for argspec in onespec[SPEC_TYPES]:
                 if desc.index_arg(argspec) == -1:
@@ -82,27 +83,33 @@ class APIDispatcher(object):
             if(flag):
                 if onespec[SPEC_FUNC] is None:
                     break
+
                 processed = True
+
                 funcs = onespec[SPEC_FUNC] if isinstance(onespec[SPEC_FUNC], list) else [onespec[SPEC_FUNC]]
                 (suffix, desc_self, desc_call, code_before, code_after) = \
                     reduce(lambda acc, func: func(acc, onespec[SPEC_TYPES]), funcs, ('W', desc.clone(), desc.clone(), '', ''))
-                desc_self.name = desc_self.name[:-1] + 'U'
-                desc_call.name = desc_self.name[:-1] + suffix
+
+                self._adjust(desc_self, desc_call, suffix, onespec)
+                macro = self._macro(desc_self, onespec)
+
                 if desc_self.result_type == 'void' or desc_self.result_type == 'VOID':
                     call = desc_call.make_func_call() + ";\n"
                     ret = "return;\n"
                 else:
                     call = desc_call.result_type + ' ret = ' + desc_call.make_func_call() + ";\n"
                     ret = "return ret;\n"
+
                 self._output.cpp(outname, \
                     desc_self.make_func_decl() + "\n{\n" + \
                     code_before + "\t" + call + code_after + "\t" + ret + "}\n" \
                 )
                 self._output.h(outname, \
-                    "#ifdef " + desc_self.name[:-1] + "\n" + \
-                    "#undef " + desc_self.name[:-1] + "\n" + \
-                    "#endif\n" + \
-                    "#define " + desc_self.name[:-1] + ' ' + desc_self.name + "\n" + \
+                    "\n".join(map( \
+                        lambda x: "#ifdef " + x + "\n" + \
+                            "#undef " + x + "\n" + \
+                            "#endif\n" + \
+                            "#define " + x + ' ' + desc_self.name + "\n", macro)) + \
                     "extern " + desc_self.make_func_decl() + ";\n\n" \
                 )
                 break
@@ -114,3 +121,16 @@ class APIDispatcher(object):
     def __del__(self):
         self._output.cleanup()
 
+class APIDispatcher(Dispatcher):
+    def _match(self, onespec, desc):
+        return re.search(onespec[SPEC_REGEXP], desc.name)
+
+    def _outname(self, desc):
+        return os.path.basename("%s" % desc.file)
+
+    def _adjust(self, desc_self, desc_call, suffix, onespec):
+        desc_self.name = desc_self.name[:-1] + 'U'
+        desc_call.name = desc_self.name[:-1] + suffix
+
+    def _macro(self, desc_self, onespec):
+        return [desc_self.name[:-1]]
