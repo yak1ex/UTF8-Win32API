@@ -364,7 +364,6 @@ _findnext32i64
 _findnext64
 _findnext64i32
 _findnexti64
-_fdopen
 fopen
 freopen
 _fsopen
