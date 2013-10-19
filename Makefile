@@ -17,7 +17,7 @@ testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.
 generate:
 	-rm -f *u.txt *u.cpp *u.h
 	-python apigenerate.py /usr/include/w32api/windows.h
-	-python crtgenerate.py /usr/i686-w64-mingw32/sys-root/mingw/include
+	-python crtgenerate.py /usr/i686-w64-mingw32/sys-root/mingw/include msvcrt.h
 
 clean:
 	-rm -rf *.o *.a *.exe *u.txt *u.cpp *u.h *.pyc
