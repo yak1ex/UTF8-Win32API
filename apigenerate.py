@@ -40,7 +40,8 @@ dispatcher.register([\
     ['', [('LPWSTR *', 'lpFilePart')], None],
 
     ['', [('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], read_only_wo_len_all],
+# ShellMessageBoxW in shlwapi
+#   ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpText'), ('LPCWSTR', 'lpCaption')], read_only_wo_len_all],
     ['', [('LPCWSTR', 'lpOutputString')], read_only_wo_len_all],
     ['', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'nSize')], write_only_io_len_ret_bool(0,1)],
