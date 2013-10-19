@@ -86,11 +86,12 @@ class Dispatcher(object):
 
                 processed = True
 
+                desc_self,desc_call = desc.clone(), desc.clone()
+                self._adjust(desc_self, desc_call, onespec)
                 funcs = onespec[SPEC_FUNC] if isinstance(onespec[SPEC_FUNC], list) else [onespec[SPEC_FUNC]]
-                (suffix, desc_self, desc_call, code_before, code_after) = \
-                    reduce(lambda acc, func: func(acc, onespec[SPEC_TYPES]), funcs, ('W', desc.clone(), desc.clone(), '', ''))
+                (desc_self, desc_call, code_before, code_after) = \
+                    reduce(lambda acc, func: func(acc, onespec[SPEC_TYPES]), funcs, (desc_self, desc_call, '', ''))
 
-                self._adjust(desc_self, desc_call, suffix, onespec)
                 macro = self._macro(desc_self, onespec)
 
                 if desc_self.result_type == 'void' or desc_self.result_type == 'VOID':
@@ -128,9 +129,8 @@ class APIDispatcher(Dispatcher):
     def _outname(self, desc):
         return os.path.basename("%s" % desc.file)
 
-    def _adjust(self, desc_self, desc_call, suffix, onespec):
+    def _adjust(self, desc_self, desc_call, onespec):
         desc_self.name = desc_self.name[:-1] + 'U'
-        desc_call.name = desc_self.name[:-1] + suffix
 
     def _macro(self, desc_self, onespec):
         return [desc_self.name[:-1]]
