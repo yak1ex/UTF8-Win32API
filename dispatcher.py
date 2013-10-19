@@ -42,7 +42,7 @@ class _Output(object):
             # FIXME: Inappropriate tight coupling
             if outname == 'msvcrt.h':
                 f.write("#include <wchar.h>\n\n")
-            f.write("#ifndef __cplusplus\nexnter \"C\" {\n#endif\n\n")
+            f.write("#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n")
 
     def cpp(self, outname, str):
         self._cpp_header(outname)
@@ -61,7 +61,7 @@ class _Output(object):
     def cleanup(self):
         for actualname in self._h:
             with open(actualname, 'a') as f:
-                f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")
+                f.write("\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n")
 
 from collections import namedtuple
 
