@@ -1,12 +1,12 @@
 CC=i686-w64-mingw32-gcc
 CXX=i686-w64-mingw32-g++
-CFLAGS=-Wall -pedantic -DWINVER=0x0500
+CFLAGS=-Wall -pedantic -DWINVER=0x0500 -I.
 CXXFLAGS=-Wall -pedantic -Ic:/cygwin/usr/local/include -DWINVER=0x0500
 
 OBJS=$(patsubst %u.cpp,%u.o,$(wildcard *u.cpp))
 
 test: libwin32u.a test.o
-	$(CXX) -o $@ $^ -L. -lwin32u
+	$(CXX) -static -o $@ $^ -L. -lwin32u
 
 testrun: testrunner
 	./testrunner --log-level=warning
