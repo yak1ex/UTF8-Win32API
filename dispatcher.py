@@ -22,6 +22,9 @@ class _Output(object):
             return
         self._cpp[actualname] = 1
         with open(actualname, 'a') as f:
+            # FIXME: Inappropriate tight coupling
+            if outname == 'msvcrt.h':
+                f.write("#define UTF8_WIN32_DONT_REPLACE_MSVCRT\n")
             f.write("#include <boost/type_traits/remove_pointer.hpp>\n")
             f.write("#include \"" + self._h_name(outname) + "\"\n")
             f.write("#include \"win32u_helper.hpp\"\n")
@@ -36,6 +39,9 @@ class _Output(object):
             f.write("#ifndef " + guard_name + "\n")
             f.write("#define " + guard_name + "\n\n")
             f.write("#include <windows.h>\n\n")
+            # FIXME: Inappropriate tight coupling
+            if outname == 'msvcrt.h':
+                f.write("#include <io.h>\n\n")
             f.write("#ifndef __cplusplus\nexnter \"C\" {\n#endif\n\n")
 
     def cpp(self, outname, str):
@@ -110,10 +116,12 @@ class Dispatcher(object):
                 )
                 self._output.h(outname, \
                     "\n".join(map( \
-                        lambda x: "#ifdef " + x + "\n" + \
-                            "#undef " + x + "\n" + \
+                        lambda x: ("#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT\n" if not x[0] else "") + \
+                            "#ifdef " + x[1] + "\n" + \
+                            "#undef " + x[1] + "\n" + \
                             "#endif\n" + \
-                            "#define " + x + ' ' + ctx.desc_self.name + "\n", macro)) + \
+                            "#define " + x[1] + ' ' + ctx.desc_self.name + "\n" + \
+                            ("#endif\n" if not x[0] else ""), macro)) + \
                     "extern " + ctx.desc_self.make_func_decl() + ";\n\n" \
                 )
                 break
@@ -137,4 +145,24 @@ class APIDispatcher(Dispatcher):
         return ctx
 
     def _macro(self, ctx, onespec):
-        return [ctx.desc_self.name[:-1]]
+        return [(True, ctx.desc_self.name[:-1])]
+
+class _Spec:
+    SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
+
+class CRTDispatcher(Dispatcher):
+    def _match(self, onespec, desc):
+        return desc.name == onespec[SPEC_REGEXP][_Spec.CALL]
+
+    def _outname(self, desc):
+        return 'msvcrt.h'
+
+    def _adjust(self, ctx, onespec):
+        ctx.desc_self.name = onespec[SPEC_REGEXP][_Spec.SELF]
+        ctx.desc_call.name = onespec[SPEC_REGEXP][_Spec.CALL]
+        return ctx
+
+    def _macro(self, ctx, onespec):
+        macro = map(lambda x: (False, x), onespec[SPEC_REGEXP][_Spec.ALIAS_OPT])
+        macro.extend(map(lambda x: (True, x), onespec[SPEC_REGEXP][_Spec.ALIAS_ALL]))
+        return macro

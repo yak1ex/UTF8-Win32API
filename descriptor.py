@@ -18,7 +18,7 @@ def dump_type(type):
         if type.kind.name == "POINTER":
             result = dump_type(type.get_pointee()) + " *"
         else:
-            result = type.kind.name
+            result = type.kind.name.lower()
     result += " const" if type.is_const_qualified() else ""
     result += " volatile" if type.is_volatile_qualified() else ""
     return result

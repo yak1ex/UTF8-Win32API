@@ -15,11 +15,12 @@ testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.
 	$(CXX) -o $@ $^
 
 generate:
-	-rm -f *u.txt [^m]*u.cpp m[^s]*u.cpp [^m]*u.h m[^s]*u.h
+	-rm -f *u.txt *u.cpp *u.h
 	-python apigenerate.py /usr/include/w32api/windows.h
+	-python crtgenerate.py /usr/i686-w64-mingw32/sys-root/mingw/include
 
 clean:
-	-rm -rf *.o *.a *.exe *u.txt [^m]*u.cpp m[^s]*u.cpp [^m]*u.h m[^s]*u.h *.pyc
+	-rm -rf *.o *.a *.exe *u.txt *u.cpp *u.h *.pyc
 
 libwin32u.a: generate win32u_helper.o $(OBJS)
 	$(AR) ru $@ win32u_helper.o $(OBJS)
