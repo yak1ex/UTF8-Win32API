@@ -57,6 +57,10 @@ class _Output(object):
             with open(actualname, 'a') as f:
                 f.write("\n#ifndef __cplusplus\n};\n#endif\n\n#endif\n")
 
+from collections import namedtuple
+
+convctx = namedtuple('ConvCtx', 'desc_self desc_call code_before code_after')
+
 SPEC_REGEXP = 0
 SPEC_TYPES = 1
 SPEC_FUNC = 2
@@ -86,32 +90,31 @@ class Dispatcher(object):
 
                 processed = True
 
-                desc_self,desc_call = desc.clone(), desc.clone()
-                self._adjust(desc_self, desc_call, onespec)
+                ctx = convctx(desc.clone(), desc.clone(), '', '')
+                ctx = self._adjust(ctx, onespec)
                 funcs = onespec[SPEC_FUNC] if isinstance(onespec[SPEC_FUNC], list) else [onespec[SPEC_FUNC]]
-                (desc_self, desc_call, code_before, code_after) = \
-                    reduce(lambda acc, func: func(acc, onespec[SPEC_TYPES]), funcs, (desc_self, desc_call, '', ''))
+                ctx = reduce(lambda acc, func: func(acc, onespec[SPEC_TYPES]), funcs, ctx)
 
-                macro = self._macro(desc_self, onespec)
+                macro = self._macro(ctx, onespec)
 
-                if desc_self.result_type == 'void' or desc_self.result_type == 'VOID':
-                    call = desc_call.make_func_call() + ";\n"
+                if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
+                    call = ctx.desc_call.make_func_call() + ";\n"
                     ret = "return;\n"
                 else:
-                    call = desc_call.result_type + ' ret = ' + desc_call.make_func_call() + ";\n"
+                    call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";\n"
                     ret = "return ret;\n"
 
                 self._output.cpp(outname, \
-                    desc_self.make_func_decl() + "\n{\n" + \
-                    code_before + "\t" + call + code_after + "\t" + ret + "}\n" \
+                    ctx.desc_self.make_func_decl() + "\n{\n" + \
+                    ctx.code_before + "\t" + call + ctx.code_after + "\t" + ret + "}\n" \
                 )
                 self._output.h(outname, \
                     "\n".join(map( \
                         lambda x: "#ifdef " + x + "\n" + \
                             "#undef " + x + "\n" + \
                             "#endif\n" + \
-                            "#define " + x + ' ' + desc_self.name + "\n", macro)) + \
-                    "extern " + desc_self.make_func_decl() + ";\n\n" \
+                            "#define " + x + ' ' + ctx.desc_self.name + "\n", macro)) + \
+                    "extern " + ctx.desc_self.make_func_decl() + ";\n\n" \
                 )
                 break
         if not processed:
@@ -129,8 +132,9 @@ class APIDispatcher(Dispatcher):
     def _outname(self, desc):
         return os.path.basename("%s" % desc.file)
 
-    def _adjust(self, desc_self, desc_call, onespec):
-        desc_self.name = desc_self.name[:-1] + 'U'
+    def _adjust(self, ctx, onespec):
+        ctx.desc_self.name = ctx.desc_self.name[:-1] + 'U'
+        return ctx
 
-    def _macro(self, desc_self, onespec):
-        return [desc_self.name[:-1]]
+    def _macro(self, ctx, onespec):
+        return [ctx.desc_self.name[:-1]]

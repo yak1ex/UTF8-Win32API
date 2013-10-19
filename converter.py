@@ -1,78 +1,75 @@
 """Converter functions"""
 
-def read_only_wo_len_imp(args, typespec):
+def read_only_wo_len_imp(ctx, typespec):
     """
     """
-    desc_self, desc_call, code_before, code_after = args
-    target_index = desc_self.index_arg(typespec)
-    orig_type, orig_name = desc_self.parameter_types[target_index]
-    desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
-    desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    code_before += "\tWSTR %s(%s);\n" % (orig_name + '_', orig_name)
-    return (desc_self, desc_call, code_before, code_after)
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    code_before_ = ctx.code_before + "\tWSTR %s(%s);\n" % (orig_name + '_', orig_name)
+    return ctx._replace(code_before = code_before_)
 
 def read_only_wo_len_idx(idx):
-    return lambda args, typespecs: reduce( \
+    return lambda ctx, typespecs: reduce( \
         lambda acc, x: read_only_wo_len_imp(acc, x), \
         map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
-        args \
+        ctx \
     )
 
-def read_only_wo_len_all(args, typespecs):
+def read_only_wo_len_all(ctx, typespecs):
     return reduce( \
         lambda acc, x: read_only_wo_len_imp(acc, x), \
         typespecs, \
-        args \
+        ctx \
     )
 
-def read_only_wo_len(args, typespecs):
-    return read_only_wo_len_imp(args, typespecs[0]) # for the first type spec
+def read_only_wo_len(ctx, typespecs):
+    return read_only_wo_len_imp(ctx, typespecs[0]) # for the first type spec
 
-def write_only_wo_len_imp(args, typespec):
+def write_only_wo_len_imp(ctx, typespec):
     """
     """
-    desc_self, desc_call, code_before, code_after = args
-    target_index = desc_self.index_arg(typespec)
-    orig_type, orig_name = desc_self.parameter_types[target_index]
-    desc_self.parameter_types[target_index] = ('LPSTR', orig_name)
-    desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    code_before += "\tWSTR %s(MAX_PATH);\n" % (orig_name + '_')
-    code_after += "\t%s.get(%s, MAX_PATH);\n" % (orig_name + '_', orig_name)
-    return (desc_self, desc_call, code_before, code_after)
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = ('LPSTR', orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    before = "\tWSTR %s(MAX_PATH);\n" % (orig_name + '_')
+    after = "\t%s.get(%s, MAX_PATH);\n" % (orig_name + '_', orig_name)
+    return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
 
 def write_only_wo_len_idx(idx):
-    return lambda args, typespecs: reduce( \
+    return lambda ctx, typespecs: reduce( \
         lambda acc, x: write_only_wo_len_imp(acc, x), \
         map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
-        args \
+        ctx \
     )
 
-def write_only_wo_len_all(args, typespecs):
+def write_only_wo_len_all(ctx, typespecs):
     return reduce( \
         lambda acc, x: write_only_wo_len_imp(acc, x), \
         typespecs, \
-        args \
+        ctx \
     )
 
-def write_only_wo_len(args, typespecs):
-    return write_only_wo_len_imp(args, typespecs[0]) # for the first type spec
+def write_only_wo_len(ctx, typespecs):
+    return write_only_wo_len_imp(ctx, typespecs[0]) # for the first type spec
 
-def _write_only_len_helper(str_idx, len_idx, args, typespecs, coder):
-    desc_self, desc_call, code_before, code_after = args
-    str_index = desc_self.index_arg(typespecs[str_idx])
-    len_index = desc_self.index_arg(typespecs[len_idx])
-    orig_str_type, orig_str_name = desc_self.parameter_types[str_index]
-    orig_len_type, orig_len_name = desc_self.parameter_types[len_index]
-    desc_self.parameter_types[str_index] = ('LPSTR', orig_str_name)
-    desc_call.parameter_types[str_index] = (orig_str_type, orig_str_name + '_')
-    desc_call.parameter_types[len_index] = (orig_len_type, orig_len_name + '_')
+def _write_only_len_helper(str_idx, len_idx, ctx, typespecs, coder):
+    str_index = ctx.desc_self.index_arg(typespecs[str_idx])
+    len_index = ctx.desc_self.index_arg(typespecs[len_idx])
+    orig_str_type, orig_str_name = ctx.desc_self.parameter_types[str_index]
+    orig_len_type, orig_len_name = ctx.desc_self.parameter_types[len_index]
+    ctx.desc_self.parameter_types[str_index] = ('LPSTR', orig_str_name)
+    ctx.desc_call.parameter_types[str_index] = (orig_str_type, orig_str_name + '_')
+    ctx.desc_call.parameter_types[len_index] = (orig_len_type, orig_len_name + '_')
     before, after = coder(orig_str_type, orig_str_name, orig_len_type, orig_len_name)
-    return (desc_self, desc_call, code_before + before, code_after + after)
+    return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
 
 def write_only_io_len_ret_bool(str_idx, len_idx):
     """
     """
-    return lambda args, typespecs: _write_only_len_helper(str_idx, len_idx, args, typespecs, \
+    return lambda ctx, typespecs: _write_only_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
 	WSTR %s(*%s * 3 + 1);
 	boost::remove_pointer<%s>::type %s = *%s * 3 + 1;
@@ -89,7 +86,7 @@ def write_only_io_len_ret_bool(str_idx, len_idx):
 def write_only_i_len_ret_len(str_idx, len_idx):
     """
     """
-    return lambda args, typespecs: _write_only_len_helper(str_idx, len_idx, args, typespecs, \
+    return lambda ctx, typespecs: _write_only_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
 	WSTR %s(%s * 3 + 1);
 	%s %s = %s * 3 + 1;
@@ -106,7 +103,7 @@ def write_only_i_len_ret_len(str_idx, len_idx):
 def write_only_i_len_ret_zero(str_idx, len_idx):
     """
     """
-    return lambda args, typespecs: _write_only_len_helper(str_idx, len_idx, args, typespecs, \
+    return lambda ctx, typespecs: _write_only_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
 	WSTR %s(%s * 3 + 1);
 	%s %s = %s * 3 + 1;
@@ -121,8 +118,7 @@ def write_only_i_len_ret_zero(str_idx, len_idx):
 	}
 """ % (orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name)))
 
-def forwardA_all(args, typespecs):
-    desc_self,desc_call = args[0:2]
-    desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, desc_self.parameter_types)
-    desc_call.name = desc_call.name[:-1] + 'A'
-    return (desc_self, desc_call, '', '')
+def forwardA_all(ctx, typespecs):
+    ctx.desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, ctx.desc_self.parameter_types)
+    ctx.desc_call.name = ctx.desc_call.name[:-1] + 'A'
+    return ctx
