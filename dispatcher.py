@@ -147,6 +147,14 @@ class APIDispatcher(Dispatcher):
     def _macro(self, ctx, onespec):
         return [(True, ctx.desc_self.name[:-1])]
 
+    def __del__(self):
+        with open('windowsu.h', 'a') as f:
+            f.write("#ifndef WINDOWSU_H\n#define WINDOWS_H\n\n")
+            for actualname in self._output._h:
+                f.write("#include <" + actualname + ">\n")
+            f.write("\n#endif\n")
+        Dispatcher.__del__(self)
+
 class _Spec:
     SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
 
