@@ -106,9 +106,12 @@ class Dispatcher(object):
                 if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
                     call = ctx.desc_call.make_func_call() + ";\n"
                     ret = "return;\n"
-                else:
+                elif ctx.desc_self.result_type == ctx.desc_call.result_type:
                     call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";\n"
                     ret = "return ret;\n"
+                else:
+                    call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";\n"
+                    ret = "return ret_;\n" # ret_ MUST be defined in conversion
 
                 self._output.cpp(outname, \
                     ctx.desc_self.make_func_decl() + "\n{\n" + \

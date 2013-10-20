@@ -55,6 +55,7 @@ def write_only_wo_len_all(ctx, typespecs):
 def write_only_wo_len(ctx, typespecs):
     return write_only_wo_len_imp(ctx, typespecs[0]) # for the first type spec
 
+
 def _write_only_len_helper(str_idx, len_idx, ctx, typespecs, coder):
     str_index = ctx.desc_self.index_arg(typespecs[str_idx])
     len_index = ctx.desc_self.index_arg(typespecs[len_idx])
@@ -117,6 +118,98 @@ def write_only_i_len_ret_zero(str_idx, len_idx):
 		}
 	}
 """ % (orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name)))
+
+def write_only_i_len_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
+    ctx.desc_self.result_type = 'LPSTR';
+    return _write_only_len_helper(str_idx, len_idx, ctx, typespecs, \
+        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
+	WSTR %s(%s * 3 + 1);
+	%s %s = %s * 3 + 1;
+""" % (orig_str_name + '_', orig_len_name, orig_len_type, orig_len_name + '_', orig_len_name), """\
+	LPSTR ret_ = 0;
+	if(ret) {
+		if(%s) {
+			ret_ = %s;
+		} else {
+			ret_ = (LPSTR)malloc(%s.get_utf8_length() < %s ? %s : %s.get_utf8_length());
+			if(ret_) {
+				%s = %s.get_utf8_length();
+			} else {
+				errno = ENOMEM;
+				ret_ = 0;
+			}
+		}
+		if(%s.get_utf8_length() <= %s) {
+			%s.get(ret_, %s);
+		} else {
+			errno = ERANGE;
+			ret_ = 0;
+		}
+	}
+""" % (orig_str_name, orig_str_name, orig_str_name + '_', orig_len_name, orig_len_name, orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_len_name)))
+
+def write_only_i_len_ret_buffer_alloc(str_idx, len_idx):
+    return lambda ctx, typespecs: write_only_i_len_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs)
+
+def write_only_wo_len_ret_null_static_imp(size, ctx, typespec):
+    ctx.desc_self.result_type = 'LPSTR';
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = ('LPSTR', orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    before = """\
+	static char static_buf[%s * 3 + 1];
+	WSTR %s(%s);
+""" % (size, orig_name + '_', size)
+    after = """\
+	LPSTR ret_ = 0;
+	if(ret) {
+		ret_ = %s ? %s : static_buf;
+		%s.get(ret_, %s.get_utf8_length()); // Assuming sufficient buffer
+	}
+""" % (orig_name, orig_name, orig_name + '_', orig_name + '_')
+    return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
+
+def write_only_wo_len_ret_null_static(size, idx):
+    """
+    """
+    return lambda ctx, typespecs: write_only_wo_len_ret_null_static_imp(size if isinstance(size, str) else str(size), ctx, typespecs[idx])
+
+def write_only_i_len_ret_buffer_alloc(str_idx, len_idx):
+    return lambda ctx, typespecs: write_only_i_len_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs)
+
+def write_only_wo_len_ret_imp(size, ctx, typespec):
+    ctx.desc_self.result_type = 'LPSTR';
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = ('LPSTR', orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    before = """\
+	WSTR %s(%s);
+""" % (orig_name + '_', size)
+    after = """\
+	LPSTR ret_ = 0;
+	if(ret) {
+		ret_ = %s;
+		%s.get(ret_, %s.get_utf8_length()); // Assuming sufficient buffer
+	}
+""" % (orig_name, orig_name + '_', orig_name + '_')
+    return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
+
+def write_only_wo_len_ret(size, idx):
+    """
+    """
+    return lambda ctx, typespecs: write_only_wo_len_ret_imp(size if isinstance(size, str) else str(size), ctx, typespecs[idx])
+
+def ret_alloc(ctx, typespecs):
+    """
+    """
+    ctx.desc_self.result_type = 'LPSTR';
+    return ctx._replace(code_after = ctx.code_after + """\
+	DWORD alloc_size = UTF8Length(ret);
+	LPSTR ret_ = (LPSTR)malloc(alloc_size);
+	ToUTF8(ret_, alloc_size, ret);
+""")
 
 def forwardA_all(ctx, typespecs):
     ctx.desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, ctx.desc_self.parameter_types)
