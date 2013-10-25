@@ -1,14 +1,18 @@
 """Converter functions"""
 
+def _wo_len_helper(target_type, ctx, typespec, coder):
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = (target_type, orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    before, after = coder(orig_type, orig_name)
+    return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
+
 def read_only_wo_len_imp(ctx, typespec):
     """
     """
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    code_before_ = ctx.code_before + "\tWSTR %s(%s);\n" % (orig_name + '_', orig_name)
-    return ctx._replace(code_before = code_before_)
+    return _wo_len_helper('LPCSTR', ctx, typespec, \
+        lambda orig_type, orig_name: ("\tWSTR %s(%s);\n" % (orig_name + '_', orig_name), ''))
 
 def read_only_wo_len_idx(idx):
     return lambda ctx, typespecs: reduce( \
@@ -30,13 +34,10 @@ def read_only_wo_len(ctx, typespecs):
 def write_only_wo_len_imp(ctx, typespec):
     """
     """
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = ('LPSTR', orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    before = "\tWSTR %s(MAX_PATH);\n" % (orig_name + '_')
-    after = "\t%s.get(%s, MAX_PATH);\n" % (orig_name + '_', orig_name)
-    return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
+    return _wo_len_helper('LPSTR', ctx, typespec, \
+        lambda orig_type, orig_name: (\
+            "\tWSTR %s(MAX_PATH);\n" % (orig_name + '_'), \
+            "\t%s.get(%s, MAX_PATH);\n" % (orig_name + '_', orig_name)))
 
 def write_only_wo_len_idx(idx):
     return lambda ctx, typespecs: reduce( \
@@ -55,6 +56,43 @@ def write_only_wo_len_all(ctx, typespecs):
 def write_only_wo_len(ctx, typespecs):
     return write_only_wo_len_imp(ctx, typespecs[0]) # for the first type spec
 
+def write_only_wo_len_ret_null_static_imp(size, ctx, typespec):
+    ctx.desc_self.result_type = 'LPSTR';
+    return _wo_len_helper('LPSTR', ctx, typespec, lambda orig_type, orig_name: ("""\
+	static char static_buf[%s * 3 + 1];
+	WSTR %s(%s);
+""" % (size, orig_name + '_', size), """\
+	LPSTR ret_ = 0;
+	if(ret) {
+		ret_ = %s ? %s : static_buf;
+		%s.get(ret_, %s.get_utf8_length()); // Assuming sufficient buffer
+	}
+""" % (orig_name, orig_name, orig_name + '_', orig_name + '_')))
+
+def write_only_wo_len_ret_null_static(size, idx):
+    """
+    """
+    return lambda ctx, typespecs: write_only_wo_len_ret_null_static_imp(size if isinstance(size, str) else str(size), ctx, typespecs[idx])
+
+def write_only_i_len_ret_buffer_alloc(str_idx, len_idx):
+    return lambda ctx, typespecs: write_only_i_len_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs)
+
+def write_only_wo_len_ret_imp(size, ctx, typespec):
+    ctx.desc_self.result_type = 'LPSTR';
+    return _wo_len_helper('LPSTR', ctx, typespec, lambda orig_type, orig_name: ("""\
+	WSTR %s(%s);
+""" % (orig_name + '_', size), """\
+	LPSTR ret_ = 0;
+	if(ret) {
+		ret_ = %s;
+		%s.get(ret_, %s.get_utf8_length()); // Assuming sufficient buffer
+	}
+""" % (orig_name, orig_name + '_', orig_name + '_')))
+
+def write_only_wo_len_ret(size, idx):
+    """
+    """
+    return lambda ctx, typespecs: write_only_wo_len_ret_imp(size if isinstance(size, str) else str(size), ctx, typespecs[idx])
 
 def _write_only_len_helper(str_idx, len_idx, ctx, typespecs, coder):
     str_index = ctx.desc_self.index_arg(typespecs[str_idx])
@@ -150,56 +188,6 @@ def write_only_i_len_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
 
 def write_only_i_len_ret_buffer_alloc(str_idx, len_idx):
     return lambda ctx, typespecs: write_only_i_len_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs)
-
-def write_only_wo_len_ret_null_static_imp(size, ctx, typespec):
-    ctx.desc_self.result_type = 'LPSTR';
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = ('LPSTR', orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    before = """\
-	static char static_buf[%s * 3 + 1];
-	WSTR %s(%s);
-""" % (size, orig_name + '_', size)
-    after = """\
-	LPSTR ret_ = 0;
-	if(ret) {
-		ret_ = %s ? %s : static_buf;
-		%s.get(ret_, %s.get_utf8_length()); // Assuming sufficient buffer
-	}
-""" % (orig_name, orig_name, orig_name + '_', orig_name + '_')
-    return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
-
-def write_only_wo_len_ret_null_static(size, idx):
-    """
-    """
-    return lambda ctx, typespecs: write_only_wo_len_ret_null_static_imp(size if isinstance(size, str) else str(size), ctx, typespecs[idx])
-
-def write_only_i_len_ret_buffer_alloc(str_idx, len_idx):
-    return lambda ctx, typespecs: write_only_i_len_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs)
-
-def write_only_wo_len_ret_imp(size, ctx, typespec):
-    ctx.desc_self.result_type = 'LPSTR';
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = ('LPSTR', orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    before = """\
-	WSTR %s(%s);
-""" % (orig_name + '_', size)
-    after = """\
-	LPSTR ret_ = 0;
-	if(ret) {
-		ret_ = %s;
-		%s.get(ret_, %s.get_utf8_length()); // Assuming sufficient buffer
-	}
-""" % (orig_name, orig_name + '_', orig_name + '_')
-    return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
-
-def write_only_wo_len_ret(size, idx):
-    """
-    """
-    return lambda ctx, typespecs: write_only_wo_len_ret_imp(size if isinstance(size, str) else str(size), ctx, typespecs[idx])
 
 def ret_alloc(ctx, typespecs):
     """
