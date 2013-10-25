@@ -12,13 +12,13 @@ from converter import *
 dispatcher = APIDispatcher()
 
 dispatcher.register([\
-    ['BinaryType', [('LPCWSTR', 'lpApplicationName')], read_only_wo_len],
-    ['lstrcmp', [('LPCWSTR', 'lpString1'), ('LPCWSTR', 'lpString2')], read_only_wo_len_all],
+    ['BinaryType', [('LPCWSTR', 'lpApplicationName')], ro_nolen],
+    ['lstrcmp', [('LPCWSTR', 'lpString1'), ('LPCWSTR', 'lpString2')], ro_nolen_all],
     ['GetLogicalDriveStrings', [('DWORD', 'nBufferLength'), ('LPWSTR', 'lpBuffer')], forwardA_all],
-    ['', [('LPCWSTR', 'lpPathName'), ('LPCWSTR', 'lpPrefixString'), ('LPWSTR', 'lpTempFileName')], [read_only_wo_len_idx([0,1]), write_only_wo_len_idx(2)]],
-    ['', [('LPCWSTR', 'lpPathName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpLibFileName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpExistingFileName'), ('LPCWSTR', 'lpNewFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpPathName'), ('LPCWSTR', 'lpPrefixString'), ('LPWSTR', 'lpTempFileName')], [ro_nolen_idx([0,1]), wo_nolen_idx(2)]],
+    ['', [('LPCWSTR', 'lpPathName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpLibFileName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpExistingFileName'), ('LPCWSTR', 'lpNewFileName')], ro_nolen_all],
 
 # Conversion not yet implemented:
 # DWORD GetPrivateProfileStringW(LPCWSTR lpAppName, LPCWSTR lpKeyName, LPCWSTR lpDefault, LPWSTR lpReturnedString, DWORD nSize, LPCWSTR lpFileName)
@@ -28,53 +28,53 @@ dispatcher.register([\
 # DWORD GetPrivateProfileSectionNamesW(LPWSTR lpszReturnBuffer, DWORD nSize, LPCWSTR lpFileName)
     ['', [('LPWSTR', 'lpszReturnBuffer'), ('DWORD', 'nSize'), ('LPCWSTR', 'lpFileName')], None],
 
-    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpKeyName'), ('LPCWSTR', 'lpString'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpKeyName'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpString'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpUNCServerName'), ('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpFileName'), ('LPCWSTR', 'lpExistingFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpKeyName'), ('LPCWSTR', 'lpString'), ('LPCWSTR', 'lpFileName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpKeyName'), ('LPCWSTR', 'lpFileName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpAppName'), ('LPCWSTR', 'lpString'), ('LPCWSTR', 'lpFileName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpUNCServerName'), ('LPCWSTR', 'lpFileName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpFileName'), ('LPCWSTR', 'lpExistingFileName')], ro_nolen_all],
 
 # Conversion not yet implemented:
 # DWORD SearchPathW(LPCWSTR lpPath, LPCWSTR lpFileName, LPCWSTR lpExtension, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
 # DWORD GetFullPathNameU(LPCSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
     ['', [('LPWSTR *', 'lpFilePart')], None],
 
-    ['', [('LPCWSTR', 'lpFileName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpFileName')], ro_nolen_all],
 # ShellMessageBoxW in shlwapi
-#   ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpText'), ('LPCWSTR', 'lpCaption')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpOutputString')], read_only_wo_len_all],
-    ['', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'nSize')], write_only_io_len_ret_bool(0,1)],
+#   ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpText'), ('LPCWSTR', 'lpCaption')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpOutputString')], ro_nolen_all],
+    ['', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'nSize')], wo_rwlen_ret_bool(0,1)],
 
-    ['', [('LPWSTR', 'lpBuffer'), ('DWORD', 'nBufferLength')], write_only_i_len_ret_len(0,1)],
-    ['', [('LPWSTR', 'lpBuffer'), ('UINT', 'uSize')], write_only_i_len_ret_len(0,1)],
+    ['', [('LPWSTR', 'lpBuffer'), ('DWORD', 'nBufferLength')], wo_rolen_ret_len(0,1)],
+    ['', [('LPWSTR', 'lpBuffer'), ('UINT', 'uSize')], wo_rolen_ret_len(0,1)],
 
-    ['', [('LPCWSTR', 'lpRootPathName'), ('LPWSTR', 'lpVolumeNameBuffer'), ('DWORD', 'nVolumeNameSize'), ('LPWSTR', 'lpFileSystemNameBuffer'), ('DWORD', 'nFileSystemNameSize')], [read_only_wo_len_idx(0), write_only_i_len_ret_zero(1,2), write_only_i_len_ret_zero(3,4)]],
+    ['', [('LPCWSTR', 'lpRootPathName'), ('LPWSTR', 'lpVolumeNameBuffer'), ('DWORD', 'nVolumeNameSize'), ('LPWSTR', 'lpFileSystemNameBuffer'), ('DWORD', 'nFileSystemNameSize')], [ro_nolen_idx(0), wo_rolen_ret_zero(1,2), wo_rolen_ret_zero(3,4)]],
     ['', [('LPCWSTR', 'lpRootPathName'), ('LPWSTR', 'lpVolumeNameBuffer'), ('DWORD', 'nVolumeNameSize'), ('LPWSTR', 'lpFileSystemNameBuffer'), ('DWORD', 'nFileSystemNameSize')], None],
 
-    ['', [('LPCWSTR', 'lpRootPathName'), ('LPCWSTR', 'lpVolumeName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpRootPathName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpRootPathName'), ('LPCWSTR', 'lpVolumeName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpRootPathName')], ro_nolen_all],
 
-    ['', [('LPCWSTR', 'lpDirectoryName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPCWSTR', 'lpszVolueName')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpszRootPathName'), ('LPWSTR', 'lpszVolumeMountPoint'), ('DWORD', 'cchBufferLength')], [read_only_wo_len_idx(0), write_only_i_len_ret_zero(1,2)]],
-    ['', [('LPWSTR', 'lpszVolumeMountPoint'), ('DWORD', 'cchBufferLength')], write_only_i_len_ret_zero(0,1)],
-    ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPWSTR', 'lpszVolumeName'), ('DWORD', 'cchBufferLength')], [read_only_wo_len_idx(0), write_only_i_len_ret_zero(1,2)]],
-    ['', [('LPCWSTR', 'lpszVolumeMountPoint')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpDirectoryName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPCWSTR', 'lpszVolueName')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpszRootPathName'), ('LPWSTR', 'lpszVolumeMountPoint'), ('DWORD', 'cchBufferLength')], [ro_nolen_idx(0), wo_rolen_ret_zero(1,2)]],
+    ['', [('LPWSTR', 'lpszVolumeMountPoint'), ('DWORD', 'cchBufferLength')], wo_rolen_ret_zero(0,1)],
+    ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPWSTR', 'lpszVolumeName'), ('DWORD', 'cchBufferLength')], [ro_nolen_idx(0), wo_rolen_ret_zero(1,2)]],
+    ['', [('LPCWSTR', 'lpszVolumeMountPoint')], ro_nolen_all],
 
-    ['', [('LPCWSTR', 'pszRootPath')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'pszRootPath')], ro_nolen_all],
 
-    ['', [('LPWCH', 'lpFilename'), ('DWORD', 'nSize')], write_only_i_len_ret_len(0,1)],
+    ['', [('LPWCH', 'lpFilename'), ('DWORD', 'nSize')], wo_rolen_ret_len(0,1)],
 
-    ['', [('LPCWSTR', 'lpModuleName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpModuleName')], ro_nolen_all],
 
 # Conversion not yet implemented:
 # LONG RegEnumKeyW(HKEY hKey, DWORD dwIndex, LPWSTR lpName, DWORD cchName)
 # LONG RegEnumKeyExW(HKEY hKey, DWORD dwIndex, LPWSTR lpName, LPDWORD lpcchName, LPDWORD lpReserved, LPWSTR lpClass, LPDWORD lpcchClass, PFILETIME lpftLastWriteTime)
-# maybe, write_only_io_len_ret_error
+# maybe, wo_rwlen_ret_error
     ['', [('LPWSTR', 'lpName'), ('LPDWORD', 'lpcchName'), ('LPWSTR', 'lpClass')], None],
 # LONG RegQueryValueW(HKEY hKey, LPCWSTR lpSubKey, LPWSTR lpData, PLONG lpcbData)
-# maybe, write_only_io_len_ret_error
+# maybe, wo_rwlen_ret_error
     ['', [('LPCWSTR', 'lpSubKey'), ('LPWSTR', 'lpData'), ('PLONG', 'lpcbData')], None],
 # LONG RegSetValueW(HKEY hKey, LPCWSTR lpSubKey, DWORD dwType, LPCWSTR lpData, DWORD cbData)
 # LONG RegSetValueExW(HKEY hKey, LPCWSTR lpValueName, DWORD Reserved, DWORD dwType, BYTE const * lpData, DWORD cbData)
@@ -89,16 +89,16 @@ dispatcher.register([\
 # pdwType dependent
     ['', [('LPCWSTR', 'lpSubKey'), ('LPCWSTR', 'lpValue'), ('LPDWORD', 'pdwType'), ('PVOID', 'pvData'), ('LPDWORD', 'pcbData')], None],
 
-    ['', [('LPCWSTR', 'lpSubKey'), ('LPWSTR', 'lpClass')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpSubKey'), ('LPCWSTR', 'lpFile')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpSubKey'), ('LPCWSTR', 'lpNewFile'), ('LPCWSTR', 'lpOldFile')], read_only_wo_len_all],
-    ['', [('LPCWSTR', 'lpSubKey')], read_only_wo_len_all],
-    ['', [('LPWSTR', 'lpClass')], read_only_wo_len_all],
-    ['Reg', [('LPCWSTR', 'lpFile')], read_only_wo_len_all],
-    ['Reg', [('LPCWSTR', 'lpMachineName')], read_only_wo_len_all],
-    ['RegDelete', [('LPCWSTR', 'lpValueName')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpSubKey'), ('LPWSTR', 'lpClass')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpSubKey'), ('LPCWSTR', 'lpFile')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpSubKey'), ('LPCWSTR', 'lpNewFile'), ('LPCWSTR', 'lpOldFile')], ro_nolen_all],
+    ['', [('LPCWSTR', 'lpSubKey')], ro_nolen_all],
+    ['', [('LPWSTR', 'lpClass')], ro_nolen_all],
+    ['Reg', [('LPCWSTR', 'lpFile')], ro_nolen_all],
+    ['Reg', [('LPCWSTR', 'lpMachineName')], ro_nolen_all],
+    ['RegDelete', [('LPCWSTR', 'lpValueName')], ro_nolen_all],
 
-    ['', [('LPCWSTR', 'lpszFormat')], read_only_wo_len_all],
+    ['', [('LPCWSTR', 'lpszFormat')], ro_nolen_all],
 ])
 
 index = clang.cindex.Index.create()
