@@ -38,6 +38,7 @@ class FunctionDescriptor(object):
         self._file = node.location.file
         self._result_type = dump_type(node.type.get_result())
         self._parameter_types = plist
+        self._is_variadic = node.type.is_function_variadic()
 
     def dump_func(self):
         """
@@ -47,11 +48,12 @@ class FunctionDescriptor(object):
     def make_func_decl(self):
         """
         """
-        return '%s %s(%s)' % (self._result_type, self._name, ', '.join([t + ' ' + n for t, n in self._parameter_types]))
+        return '%s %s(%s)' % (self._result_type, self._name, ', '.join([t + ' ' + n for t, n in self._parameter_types]) + (', ...' if self._is_variadic else ''))
 
     def make_func_call(self):
         """
         """
+        assert not self._is_variadic
         return '%s(%s)' % (self._name, ', '.join([n for t, n in self._parameter_types]))
 
     def index_arg(self, spec):
@@ -71,6 +73,7 @@ class FunctionDescriptor(object):
         cloned._file = self._file
         cloned._result_type = self._result_type
         cloned._parameter_types = self._parameter_types[:]
+        cloned._is_variadic = self._is_variadic
         return cloned
 
     def _get_name(self):
@@ -96,4 +99,10 @@ class FunctionDescriptor(object):
     def _set_parameter_types(self, parameter_types):
         self._parameter_types = parameter_types
     parameter_types = property(_get_parameter_types, _set_parameter_types)
+
+    def _get_is_variadic(self):
+        return self._is_variadic
+    def _set_is_variadic(self, is_variadic):
+        self._is_variadic = is_variadic
+    is_variadic = property(_get_is_variadic, _set_is_variadic)
 
