@@ -58,6 +58,70 @@ def roarray_nolen_idx(idx):
         ctx \
     )
 
+def _rova_nolen_imp(ctx, typespec):
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    ctx.desc_call.is_variadic = False
+    ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
+    before = """\
+	va_list %s_va;
+	std::vector<LPCWSTR> %s_arg;
+	std::vector<WSTR> %s_hold;
+	do {
+		LPSTR p = va_arg(%s_va, LPSTR);
+		%s_hold.push_back(WSTR(p));
+		%s_arg.push_back(%s_hold.back());
+	} while(%s_arg.back());
+	LPCWSTR* %s = &%s_arg[0];
+""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name)
+    return ctx._replace(code_before = ctx.code_before + before)
+
+def rova_nolen_idx(idx):
+    return lambda ctx, typespecs: reduce( \
+        lambda acc, x: _rova_nolen_imp(acc, x), \
+        map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
+        ctx \
+    )
+
+def _rova_nolen_withenv_imp(ctx, typespec):
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    ctx.desc_call.parameter_types.append(('LPCSTR*', orig_name + '__'))
+    ctx.desc_call.is_variadic = False
+    ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
+    before = """\
+	va_list %s_va;
+	std::vector<LPCWSTR> %s_arg;
+	std::vector<WSTR> %s_hold;
+	do {
+		LPSTR p = va_arg(%s_va, LPSTR);
+		%s_hold.push_back(WSTR(p));
+		%s_arg.push_back(%s_hold.back());
+	} while(%s_arg.back());
+	LPCWSTR* %s = &%s_arg[0];
+
+	LPCSTR* %s_env = va_arg(%s_va, LPCSTR*);
+	std::vector<LPCWSTR> %s_arg;
+	std::vector<WSTR> %s_hold;
+	int %s_idx = 0;
+	while(1) {
+		%s_hold.push_back(WSTR(%s_env[%s_idx]));
+		%s_arg.push_back(%s_hold.back());
+		if(! %s_arg.back()) break;
+		++%s_idx;
+	}
+	LPCWSTR* %s = &%s_arg[0];
+""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name, \
+        orig_name, orig_name, orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name, orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '__', orig_name + '_')
+    return ctx._replace(code_before = ctx.code_before + before)
+
+def rova_nolen_withenv_idx(idx):
+    return lambda ctx, typespecs: _rova_nolen_withenv_imp(ctx, typespecs[idx])
+
 def _wo_nolen_imp(ctx, typespec):
     """
     """
