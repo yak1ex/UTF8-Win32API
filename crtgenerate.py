@@ -62,6 +62,10 @@ spec = [ \
     [('_uexecve', '_wexecve', ['_execve'], ['_texecve']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList'), ('wchar_t const * const *', '_Env')], [ro_nolen_idx(0), roarray_nolen_idx([1,2])]],
     [('_uexecvp', '_wexecvp', ['_execvp'], ['_texecvp']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList')], [ro_nolen_idx(0), roarray_nolen_idx(1)]],
     [('_uexecvpe', '_wexecvpe', ['_execvpe'], ['_texecvpe']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList'), ('wchar_t const * const *', '_Env')], [ro_nolen_idx(0), roarray_nolen_idx([1,2])]],
+    [('_uspawnv', '_wspawnv', ['_spawnv'], ['_tspawnv']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList')], [ro_nolen_idx(0), roarray_nolen_idx(1)]],
+    [('_uspawnve', '_wspawnve', ['_spawnve'], ['_tspawnve']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList'), ('wchar_t const * const *', '_Env')], [ro_nolen_idx(0), roarray_nolen_idx([1,2])]],
+    [('_uspawnvp', '_wspawnvp', ['_spawnvp'], ['_tspawnvp']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList')], [ro_nolen_idx(0), roarray_nolen_idx(1)]],
+    [('_uspawnvpe', '_wspawnvpe', ['_spawnvpe'], ['_tspawnvpe']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList'), ('wchar_t const * const *', '_Env')], [ro_nolen_idx(0), roarray_nolen_idx([1,2])]],
 
 ]
 
