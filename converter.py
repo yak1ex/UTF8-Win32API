@@ -31,6 +31,33 @@ def ro_nolen_all(ctx, typespecs):
 def ro_nolen(ctx, typespecs):
     return _ro_nolen_imp(ctx, typespecs[0]) # for the first type spec
 
+
+def _roarray_nolen_imp(ctx, typespec):
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = ('LPCSTR*', orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    before = """\
+	std::vector<LPCWSTR> %s_arg;
+	std::vector<WSTR> %s_hold;
+	int %s_idx = 0;
+	while(1) {
+		%s_hold.push_back(WSTR(%s[%s_idx]));
+		%s_arg.push_back(%s_hold.back());
+		if(! %s_arg.back()) break;
+		++%s_idx;
+	}
+	LPCWSTR* %s = &%s_arg[0];
+""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name)
+    return ctx._replace(code_before = ctx.code_before + before)
+
+def roarray_nolen_idx(idx):
+    return lambda ctx, typespecs: reduce( \
+        lambda acc, x: _roarray_nolen_imp(acc, x), \
+        map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
+        ctx \
+    )
+
 def _wo_nolen_imp(ctx, typespec):
     """
     """

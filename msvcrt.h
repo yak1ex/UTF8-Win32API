@@ -1,1 +1,2 @@
-#include "wchar.h"
+#define intptr_t int
+#include <wchar.h>

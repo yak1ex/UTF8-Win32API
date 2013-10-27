@@ -25,6 +25,7 @@ class _Output(object):
             # FIXME: Inappropriate tight coupling
             if outname == 'msvcrt.h':
                 f.write("#define UTF8_WIN32_DONT_REPLACE_MSVCRT\n")
+                f.write("#include <vector>\n")
             f.write("#include <boost/type_traits/remove_pointer.hpp>\n")
             f.write("#include \"" + self._h_name(outname) + "\"\n")
             f.write("#include \"win32u_helper.hpp\"\n")
