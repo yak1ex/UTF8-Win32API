@@ -1,5 +1,7 @@
 """Converter functions"""
 
+from string import Template
+
 def _nolen_helper(target_type, ctx, typespec, coder):
     target_index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
@@ -12,7 +14,9 @@ def _ro_nolen_imp(ctx, typespec):
     """
     """
     return _nolen_helper('LPCSTR', ctx, typespec, \
-        lambda orig_type, orig_name: ("\tWSTR %s(%s);\n" % (orig_name + '_', orig_name), ''))
+        lambda orig_type, orig_name: (Template("""\
+	WSTR ${name}_($name);
+""").substitute(name = orig_name), ''))
 
 def ro_nolen_idx(idx):
     return lambda ctx, typespecs: reduce( \
@@ -37,18 +41,18 @@ def _roarray_nolen_imp(ctx, typespec):
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
     ctx.desc_self.parameter_types[target_index] = ('LPCSTR*', orig_name)
     ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    before = """\
-	std::vector<LPCWSTR> %s_arg;
-	std::vector<WSTR> %s_hold;
-	int %s_idx = 0;
+    before = Template("""\
+	std::vector<LPCWSTR> ${name}_arg;
+	std::vector<WSTR> ${name}_hold;
+	int ${name}_idx = 0;
 	while(1) {
-		%s_hold.push_back(WSTR(%s[%s_idx]));
-		%s_arg.push_back(%s_hold.back());
-		if(! %s_arg.back()) break;
-		++%s_idx;
+		${name}_hold.push_back(WSTR(${name}[${name}_idx]));
+		${name}_arg.push_back(${name}_hold.back());
+		if(! ${name}_arg.back()) break;
+		++${name}_idx;
 	}
-	LPCWSTR* %s = &%s_arg[0];
-""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name)
+	LPCWSTR* ${name}_ = &${name}_arg[0];
+""").substitute(name = orig_name)
     return ctx._replace(code_before = ctx.code_before + before)
 
 def roarray_nolen_idx(idx):
@@ -65,18 +69,18 @@ def _rova_nolen_imp(ctx, typespec):
     ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
     ctx.desc_call.is_variadic = False
     ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
-    before = """\
-	va_list %s_va;
-	va_start(%s_va, %s);
-	std::vector<LPCWSTR> %s_arg;
-	std::vector<WSTR> %s_hold;
+    before = Template("""\
+	va_list ${name}_va;
+	va_start(${name}_va, $name);
+	std::vector<LPCWSTR> ${name}_arg;
+	std::vector<WSTR> ${name}_hold;
 	do {
-		LPSTR p = va_arg(%s_va, LPSTR);
-		%s_hold.push_back(WSTR(p));
-		%s_arg.push_back(%s_hold.back());
-	} while(%s_arg.back());
-	LPCWSTR* %s = &%s_arg[0];
-""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name)
+		LPSTR p = va_arg(${name}_va, LPSTR);
+		${name}_hold.push_back(WSTR(p));
+		${name}_arg.push_back(${name}_hold.back());
+	} while(${name}_arg.back());
+	LPCWSTR* ${name}_ = &${name}_arg[0];
+""").substitute(name = orig_name)
     return ctx._replace(code_before = ctx.code_before + before)
 
 def rova_nolen_idx(idx):
@@ -91,34 +95,33 @@ def _rova_nolen_withenv_imp(ctx, typespec):
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
     ctx.desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
     ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    ctx.desc_call.parameter_types.append(('LPCSTR*', orig_name + '__'))
+    ctx.desc_call.parameter_types.append(('LPCSTR*', orig_name + '_env_'))
     ctx.desc_call.is_variadic = False
     ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
-    before = """\
-	va_list %s_va;
-	va_start(%s_va, %s);
-	std::vector<LPCWSTR> %s_arg;
-	std::vector<WSTR> %s_hold;
+    before = Template("""\
+	va_list ${name}_va;
+	va_start(${name}_va, $name);
+	std::vector<LPCWSTR> ${name}_arg;
+	std::vector<WSTR> ${name}_hold;
 	do {
-		LPSTR p = va_arg(%s_va, LPSTR);
-		%s_hold.push_back(WSTR(p));
-		%s_arg.push_back(%s_hold.back());
-	} while(%s_arg.back());
-	LPCWSTR* %s = &%s_arg[0];
+		LPSTR p = va_arg(${name}_va, LPSTR);
+		${name}_hold.push_back(WSTR(p));
+		${name}_arg.push_back(${name}_hold.back());
+	} while(${name}_arg.back());
+	LPCWSTR* ${name}_ = &${name}_arg[0];
 
-	LPCSTR* %s_env = va_arg(%s_va, LPCSTR*);
-	std::vector<LPCWSTR> %s_arg;
-	std::vector<WSTR> %s_hold;
-	int %s_idx = 0;
+	LPCSTR* ${name}_env = va_arg(${name}_va, LPCSTR*);
+	std::vector<LPCWSTR> ${name}_env_arg;
+	std::vector<WSTR> ${name}_env_hold;
+	int ${name}_env_idx = 0;
 	while(1) {
-		%s_hold.push_back(WSTR(%s_env[%s_idx]));
-		%s_arg.push_back(%s_hold.back());
-		if(! %s_arg.back()) break;
-		++%s_idx;
+		${name}_env_hold.push_back(WSTR(${name}_env[${name}_env_idx]));
+		${name}_env_arg.push_back(${name}_env_hold.back());
+		if(! ${name}_env_arg.back()) break;
+		++${name}_env_idx;
 	}
-	LPCWSTR* %s = &%s_arg[0];
-""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name, \
-        orig_name, orig_name, orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name, orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '__', orig_name + '_')
+	LPCWSTR* ${name}_env_ = &${name}_env_arg[0];
+""").substitute(name = orig_name)
     return ctx._replace(code_before = ctx.code_before + before)
 
 def rova_nolen_withenv_idx(idx):
@@ -129,8 +132,12 @@ def _wo_nolen_imp(ctx, typespec):
     """
     return _nolen_helper('LPSTR', ctx, typespec, \
         lambda orig_type, orig_name: (\
-            "\tWSTR %s(MAX_PATH);\n" % (orig_name + '_'), \
-            "\t%s.get(%s, MAX_PATH);\n" % (orig_name + '_', orig_name)))
+            Template("""\
+	WSTR ${name}_(MAX_PATH);
+""").substitute(name = orig_name), \
+            Template("""\
+	${name}_.get($name, MAX_PATH);
+""").substitute(name = orig_name)))
 
 def wo_nolen_idx(idx):
     return lambda ctx, typespecs: reduce( \
@@ -151,16 +158,16 @@ def wo_nolen(ctx, typespecs):
 
 def _wo_nolen_ret_null_static_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
-    return _nolen_helper('LPSTR', ctx, typespec, lambda orig_type, orig_name: ("""\
-	static char static_buf[%s * 3 + 1];
-	WSTR %s(%s);
-""" % (size, orig_name + '_', size), """\
+    return _nolen_helper('LPSTR', ctx, typespec, lambda orig_type, orig_name: (Template("""\
+	static char static_buf[$size * 3 + 1];
+	WSTR ${name}_($name);
+""").substitute(size = size, name = orig_name), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
-		ret_ = %s ? %s : static_buf;
-		%s.get(ret_, %s.get_utf8_length()); // Assuming sufficient buffer
+		ret_ = $name ? $name : static_buf;
+		${name}_.get(ret_, ${name}_.get_utf8_length()); // Assuming sufficient buffer
 	}
-""" % (orig_name, orig_name, orig_name + '_', orig_name + '_')))
+""").substitute(name = orig_name)))
 
 def wo_nolen_ret_null_static(size, idx):
     """
@@ -172,15 +179,15 @@ def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
 
 def _wo_nolen_ret_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
-    return _nolen_helper('LPSTR', ctx, typespec, lambda orig_type, orig_name: ("""\
-	WSTR %s(%s);
-""" % (orig_name + '_', size), """\
+    return _nolen_helper('LPSTR', ctx, typespec, lambda orig_type, orig_name: (Template("""\
+	WSTR ${name}_($size);
+""").substitute(size = size, name = orig_name), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
-		ret_ = %s;
-		%s.get(ret_, %s.get_utf8_length()); // Assuming sufficient buffer
+		ret_ = ${name};
+		${name}_.get(ret_, ${name}_.get_utf8_length()); // Assuming sufficient buffer
 	}
-""" % (orig_name, orig_name + '_', orig_name + '_')))
+""").substitute(name = orig_name)))
 
 def wo_nolen_ret(size, idx):
     """
@@ -202,82 +209,82 @@ def wo_rwlen_ret_bool(str_idx, len_idx):
     """
     """
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
-        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
-	WSTR %s(*%s * 3 + 1);
-	boost::remove_pointer<%s>::type %s = *%s * 3 + 1;
-	%s %s = &%s;
-""" % (orig_str_name + '_', orig_len_name, orig_len_type, orig_len_name + '__', orig_len_name, orig_len_type, orig_len_name + '_', orig_len_name + '__'), """\
-	if(%s.get_utf8_length() <= *%s) {
-		*%s = %s.get(%s, *%s);
+        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
+	WSTR ${str_name}_(*${len_name} * 3 + 1);
+	boost::remove_pointer<$len_type>::type ${len_name}__ = *$len_name * 3 + 1;
+	$len_type ${len_name}_ = &${len_name}__;
+""").substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
+	if(${str_name}_.get_utf8_length() <= *$len_name) {
+		*$len_name = ${str_name}_.get($str_name, *$len_name);
 	} else {
 		SetLastError(ERROR_BUFFER_OVERFLOW);
 		ret = FALSE;
 	}
-""" % (orig_str_name + '_', orig_len_name, orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name)))
+""").substitute(str_name = orig_str_name, len_name = orig_len_name)))
 
 def wo_rolen_ret_len(str_idx, len_idx):
     """
     """
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
-        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
-	WSTR %s(%s * 3 + 1);
-	%s %s = %s * 3 + 1;
-""" % (orig_str_name + '_', orig_len_name, orig_len_type, orig_len_name + '_', orig_len_name), """\
+        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
+	WSTR ${str_name}_($len_name * 3 + 1);
+	$len_type ${len_name}_ = $len_name * 3 + 1;
+""").substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(ret) {
-		if(%s.get_utf8_length() <= %s) {
-			ret = %s.get(%s, %s) - 1;
+		if(${str_name}_.get_utf8_length() <= $len_name) {
+			ret = ${str_name}_.get($str_name, $len_name) - 1;
 		} else {
-			ret = %s.get_utf8_length();
+			ret = ${str_name}_.get_utf8_length();
 		}
 	}
-""" % (orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name, orig_str_name + '_')))
+""").substitute(str_name = orig_str_name, len_name = orig_len_name)))
 
 def wo_rolen_ret_zero(str_idx, len_idx):
     """
     """
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
-        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
-	WSTR %s(%s * 3 + 1);
-	%s %s = %s * 3 + 1;
-""" % (orig_str_name + '_', orig_len_name, orig_len_type, orig_len_name + '_', orig_len_name), """\
+        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
+	WSTR ${str_name}_($len_name * 3 + 1);
+	$len_type ${len_name}_ = $len_name * 3 + 1;
+""").substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(ret) {
-		if(%s.get_utf8_length() <= %s) {
-			%s.get(%s, %s);
+		if(${str_name}_.get_utf8_length() <= $len_name) {
+			${str_name}_.get($str_name, $len_name);
 		} else {
 			SetLastError(ERROR_BUFFER_OVERFLOW);
 			ret = 0;
 		}
 	}
-""" % (orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name, orig_len_name)))
+""").substitute(str_name = orig_str_name, len_name = orig_len_name)))
 
 def _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
     ctx.desc_self.result_type = 'LPSTR';
     return _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
-        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: ("""\
-	WSTR %s(%s * 3 + 1);
-	%s %s = %s * 3 + 1;
-""" % (orig_str_name + '_', orig_len_name, orig_len_type, orig_len_name + '_', orig_len_name), """\
+        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
+	WSTR ${str_name}_($len_name * 3 + 1);
+	$len_type ${len_name}_ = $len_name * 3 + 1;
+""").substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
-		if(%s) {
-			ret_ = %s;
+		if($str_name) {
+			ret_ = $str_name;
 		} else {
-			ret_ = (LPSTR)malloc(%s.get_utf8_length() < %s ? %s : %s.get_utf8_length());
+			ret_ = (LPSTR)malloc(${str_name}_.get_utf8_length() < $len_name ? $len_name : ${str_name}_.get_utf8_length());
 			if(ret_) {
-				%s = %s.get_utf8_length();
+				$len_name = ${str_name}_.get_utf8_length();
 			} else {
 				errno = ENOMEM;
 				ret_ = 0;
 			}
 		}
-		if(%s.get_utf8_length() <= %s) {
-			%s.get(ret_, %s);
+		if(${str_name}_.get_utf8_length() <= $len_name) {
+			${str_name}_.get(ret_, $len_name);
 		} else {
 			errno = ERANGE;
 			ret_ = 0;
 		}
 	}
-""" % (orig_str_name, orig_str_name, orig_str_name + '_', orig_len_name, orig_len_name, orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_str_name + '_', orig_len_name, orig_str_name + '_', orig_len_name)))
+""").substitute(str_name = orig_str_name, len_name = orig_len_name)))
 
 def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
     return lambda ctx, typespecs: _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs)
