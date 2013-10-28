@@ -67,6 +67,7 @@ def _rova_nolen_imp(ctx, typespec):
     ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
     before = """\
 	va_list %s_va;
+	va_start(%s_va, %s);
 	std::vector<LPCWSTR> %s_arg;
 	std::vector<WSTR> %s_hold;
 	do {
@@ -75,7 +76,7 @@ def _rova_nolen_imp(ctx, typespec):
 		%s_arg.push_back(%s_hold.back());
 	} while(%s_arg.back());
 	LPCWSTR* %s = &%s_arg[0];
-""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name)
+""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name)
     return ctx._replace(code_before = ctx.code_before + before)
 
 def rova_nolen_idx(idx):
@@ -95,6 +96,7 @@ def _rova_nolen_withenv_imp(ctx, typespec):
     ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
     before = """\
 	va_list %s_va;
+	va_start(%s_va, %s);
 	std::vector<LPCWSTR> %s_arg;
 	std::vector<WSTR> %s_hold;
 	do {
@@ -115,7 +117,7 @@ def _rova_nolen_withenv_imp(ctx, typespec):
 		++%s_idx;
 	}
 	LPCWSTR* %s = &%s_arg[0];
-""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name, \
+""" % (orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name, orig_name + '_', orig_name, \
         orig_name, orig_name, orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name, orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '_', orig_name + '__', orig_name + '_')
     return ctx._replace(code_before = ctx.code_before + before)
 
