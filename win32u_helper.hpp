@@ -1,13 +1,41 @@
 #ifndef WIN32U_H
 #define WIN32U_H
 
+#include <algorithm>
 #include <windows.h>
-#include <boost/scoped_array.hpp>
+
+template<typename T>
+struct my_remove_pointer
+{
+	typedef T type;
+};
+
+template<typename T>
+struct my_remove_pointer<T*>
+{
+	typedef T type;
+};
+
+template<typename T>
+class my_scoped_array
+{
+	T *m;
+	my_scoped_array(const my_scoped_array&);
+	my_scoped_array& operator=(const my_scoped_array&);
+public:
+	my_scoped_array(T *p = 0) : m(p) {}
+	~my_scoped_array() { delete[] m; }
+	T* get() { return m; }
+	const T* get() const { return m; }
+	T& operator[](std::size_t idx) { return m[idx]; }
+	const T& operator[](std::size_t idx) const { return m[idx]; }
+	void swap(my_scoped_array& other) { std::swap(m, other.m); }
+};
 
 class WSTR
 {
 	DWORD m_size;
-	boost::scoped_array<WCHAR> m_wstr;
+	my_scoped_array<WCHAR> m_wstr;
 public:
 	explicit WSTR(LPCSTR str, int len = -1);
 	WSTR(const WSTR& r);

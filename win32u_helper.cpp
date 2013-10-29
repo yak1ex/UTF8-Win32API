@@ -46,7 +46,7 @@ DWORD WSTR::get_truncated(LPSTR buffer, DWORD length) const
 	DWORD dwLen = get_utf8_length();
 	if(dwLen <= length) return get(buffer, length);
 
-	boost::scoped_array<unsigned char> temp(new unsigned char[dwLen]);
+	my_scoped_array<unsigned char> temp(new unsigned char[dwLen]);
 	get(static_cast<LPSTR>(static_cast<void*>(temp.get())), dwLen);
 
 	unsigned char *source = temp.get(), *dest = static_cast<unsigned char*>(static_cast<void*>(buffer)), *terminator = NULL;

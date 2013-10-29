@@ -211,7 +211,7 @@ def wo_rwlen_ret_bool(str_idx, len_idx):
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
 	WSTR ${str_name}_(*${len_name} * 3 + 1);
-	boost::remove_pointer<$len_type>::type ${len_name}__ = *$len_name * 3 + 1;
+	my_remove_pointer<$len_type>::type ${len_name}__ = *$len_name * 3 + 1;
 	$len_type ${len_name}_ = &${len_name}__;
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(${str_name}_.get_utf8_length() <= *$len_name) {
