@@ -1,0 +1,69 @@
+diff -urN perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
+--- perl-5.18.1-orig/win32/makefile.mk	2013-08-12 11:44:49.000000000 +0900
++++ perl-5.18.1/win32/makefile.mk	2013-10-31 08:00:45.238145800 +0900
+@@ -409,7 +409,7 @@
+ # Options
+ #
+ 
+-INCLUDES	= -I.\include -I. -I.. -I$(COREDIR)
++INCLUDES	= -I.\include -I. -I.. -I$(COREDIR) -I$(PWD)/../..
+ DEFINES		= -DWIN32
+ .IF "$(WIN64)" == "define"
+ DEFINES		+= -DWIN64 -DCONSERVATIVE
+@@ -425,6 +425,7 @@
+ 
+ # same libs as MSVC
+ LIBFILES	= $(LIBC) \
++		  -lwin32u \
+ 		  -lmoldname -lkernel32 -luser32 -lgdi32 \
+ 		  -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 \
+ 		  -loleaut32 -lnetapi32 -luuid -lws2_32 -lmpr \
+@@ -440,7 +441,7 @@
+ 
+ EXTRACFLAGS	=
+ CFLAGS		= $(EXTRACFLAGS) $(INCLUDES) $(DEFINES) $(LOCDEFS) $(OPTIMIZE)
+-LINK_FLAGS	= $(LINK_DBG) -L"$(INST_COREDIR)" -L"$(CCLIBDIR)"
++LINK_FLAGS	= $(LINK_DBG) -L"$(INST_COREDIR)" -L"$(CCLIBDIR)" -L"$(PWD)/../.."
+ OBJOUT_FLAG	= -o
+ EXEOUT_FLAG	= -o
+ LIBOUT_FLAG	=
+Binary files perl-5.18.1-orig/win32/perl.base and perl-5.18.1/win32/perl.base differ
+diff -urN perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
+--- perl-5.18.1-orig/win32/win32.c	2013-08-12 11:44:49.000000000 +0900
++++ perl-5.18.1/win32/win32.c	2013-10-31 08:06:27.323350900 +0900
+@@ -8,9 +8,10 @@
+  *    License or the Artistic License, as specified in the README file.
+  */
+ #define PERLIO_NOT_STDIO 0
+-#define WIN32_LEAN_AND_MEAN
++/*#define WIN32_LEAN_AND_MEAN*/
+ #define WIN32IO_IS_STDIO
+ #include <tchar.h>
++#include "msvcrtu.h"
+ 
+ #ifdef __GNUC__
+ #  define Win32_Winsock
+@@ -21,6 +22,7 @@
+ #endif
+ 
+ #include <windows.h>
++#include "windowsu.h"
+ 
+ #ifndef HWND_MESSAGE
+ #  define HWND_MESSAGE ((HWND)-3)
+diff -urN perl-5.18.1-orig/win32/win32io.c perl-5.18.1/win32/win32io.c
+--- perl-5.18.1-orig/win32/win32io.c	2013-08-12 11:44:49.000000000 +0900
++++ perl-5.18.1/win32/win32io.c	2013-10-31 08:00:24.474069600 +0900
+@@ -2,10 +2,12 @@
+ #define WIN32_LEAN_AND_MEAN
+ #define WIN32IO_IS_STDIO
+ #include <tchar.h>
++#include "msvcrtu.h"
+ #ifdef __GNUC__
+ #define Win32_Winsock
+ #endif
+ #include <windows.h>
++#include "windowsu.h"
+ 
+ #include <sys/stat.h>
+ #include "EXTERN.h"
