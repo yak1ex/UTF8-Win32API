@@ -7,3 +7,8 @@
 *u.txt
 *.pyc
 .generate
+*.BAK
+perl-*/
+perl-*-orig/
+perl-*.tar.gz
+perl*.txt
