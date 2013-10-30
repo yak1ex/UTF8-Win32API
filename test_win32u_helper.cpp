@@ -1,4 +1,5 @@
 #include <boost/test/auto_unit_test.hpp>
+#include <boost/type_traits/is_same.hpp>
 
 #include "win32u_helper.hpp"
 #include <iostream>
@@ -153,4 +154,29 @@ BOOST_AUTO_TEST_CASE(test_WSTR_extend)
 	WSTR ws2(1024);
 	BOOST_CHECK(ws2.size() == 1024);
 	BOOST_CHECK(ws2.extend(1) == 2048);
+}
+
+BOOST_AUTO_TEST_CASE(test_my_remove_pointer)
+{
+	using boost::is_same;
+
+	BOOST_CHECK((is_same<my_remove_pointer<int>::type, int>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<const int>::type, const int>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<volatile int>::type, volatile int>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<const volatile int>::type, const volatile int>::value));
+
+	BOOST_CHECK((is_same<my_remove_pointer<int*>::type, int>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<const int*>::type, const int>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<volatile int*>::type, volatile int>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<const volatile int*>::type, const volatile int>::value));
+
+	BOOST_CHECK((is_same<my_remove_pointer<int&>::type, int&>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<const int&>::type, const int&>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<volatile int&>::type, volatile int&>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<const volatile int&>::type, const volatile int&>::value));
+
+	BOOST_CHECK((is_same<my_remove_pointer<int*&>::type, int*&>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<const int*&>::type, const int*&>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<volatile int*&>::type, volatile int*&>::value));
+	BOOST_CHECK((is_same<my_remove_pointer<const volatile int*&>::type, const volatile int*&>::value));
 }
