@@ -1,9 +1,21 @@
+ifeq ($(MAKECMD),dmake)
+CXX=g++
+OBJS=$(subst,u.cpp,u.o $(shell ls *u.cpp))
+
+%.o: %.cpp
+	$(CXX) -c -o $@ $<
+
+else
+
 CC=i686-w64-mingw32-gcc
 CXX=i686-w64-mingw32-g++
 CFLAGS=-Wall -pedantic -DWINVER=0x0500 -I.
 CXXFLAGS=-Wall -pedantic -Ic:/cygwin/usr/local/include -DWINVER=0x0500
-
 OBJS=$(patsubst %u.cpp,%u.o,$(wildcard *u.cpp))
+
+endif
+
+all: libwin32u.a
 
 test: libwin32u.a test.o
 	$(CXX) -static -o $@ $^ -L. -lwin32u
