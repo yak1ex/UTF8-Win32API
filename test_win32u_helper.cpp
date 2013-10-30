@@ -180,3 +180,18 @@ BOOST_AUTO_TEST_CASE(test_my_remove_pointer)
 	BOOST_CHECK((is_same<my_remove_pointer<volatile int*&>::type, volatile int*&>::value));
 	BOOST_CHECK((is_same<my_remove_pointer<const volatile int*&>::type, const volatile int*&>::value));
 }
+
+BOOST_AUTO_TEST_CASE(test_my_scoped_array)
+{
+	my_scoped_array<char> p;
+	BOOST_CHECK(p.get() == 0);
+	//p.swap(my_scoped_array<char>(new char[10]()));
+	my_scoped_array<char>(new char[10]()).swap(p);
+	BOOST_CHECK(p.get() != 0);
+	p[0] = 5;
+	BOOST_CHECK(p[0] == 5);
+	{
+		const my_scoped_array<char> & cp = p;
+		BOOST_CHECK(cp[0] == 5);
+	}
+}
