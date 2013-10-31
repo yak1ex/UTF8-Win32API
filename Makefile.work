@@ -1,6 +1,6 @@
 ifeq ($(MAKECMD),dmake)
 CXX=g++
-OBJS=$(subst,u.cpp,u.o $(shell ls *u.cpp))
+OBJS=$(subst,u.cpp,u.o $(shell cmd.exe /c dir.exe /b *u.cpp))
 
 %.o: %.cpp
 	$(CXX) -c -o $@ $<
