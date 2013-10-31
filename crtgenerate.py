@@ -18,7 +18,7 @@ spec = [ \
     [('_upopen', '_wpopen', ['_popen'], ['_tpopen']), [('wchar_t const *', '_Command'), ('wchar_t const *', '_Mode')], ro_nolen],
     [('_uremove', '_wremove', ['remove'], ['_tremove']), [('wchar_t const *', '_Filename')], ro_nolen],
     [('_utmpnam', '_wtmpnam', ['tmpnam'], ['_ttmpnam']), [('wchar_t *', '_Buffer')], wo_nolen_ret_null_static('MAX_PATH', 0)],
-    [('_utempnam', '_wtempnam', ['_tempnam'], ['_ttempnam']), [('wchar_t const *', '_Directory'), ('wchar_t const *', '_FilePrefix')], [ro_nolen_all, ret_alloc]],
+    [('_utempnam', '_wtempnam', ['_tempnam'], ['_ttempnam']), [('wchar_t const *', '_Directory'), ('wchar_t const *', '_FilePrefix')], [ro_nolen, ret_alloc]],
 
 # direct.h
     [('_uchdir', '_wchdir', ['_chdir'], ['_tchdir']), [('wchar_t const *', '_Path')], ro_nolen],

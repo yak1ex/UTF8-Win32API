@@ -25,16 +25,12 @@ def ro_nolen_idx(idx):
         ctx \
     )
 
-def ro_nolen_all(ctx, typespecs):
+def ro_nolen(ctx, typespecs):
     return reduce( \
         lambda acc, x: _ro_nolen_imp(acc, x), \
         typespecs, \
         ctx \
     )
-
-def ro_nolen(ctx, typespecs):
-    return _ro_nolen_imp(ctx, typespecs[0]) # for the first type spec
-
 
 def _roarray_nolen_imp(ctx, typespec):
     target_index = ctx.desc_self.index_arg(typespec)
@@ -146,15 +142,12 @@ def wo_nolen_idx(idx):
         ctx \
     )
 
-def wo_nolen_all(ctx, typespecs):
+def wo_nolen(ctx, typespecs):
     return reduce( \
         lambda acc, x: _wo_nolen_imp(acc, x), \
         typespecs, \
         ctx \
     )
-
-def wo_nolen(ctx, typespecs):
-    return _wo_nolen_imp(ctx, typespecs[0]) # for the first type spec
 
 def _wo_nolen_ret_null_static_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
@@ -299,7 +292,7 @@ def ret_alloc(ctx, typespecs):
 	ToUTF8(ret_, alloc_size, ret);
 """)
 
-def forwardA_all(ctx, typespecs):
+def forwardA(ctx, typespecs):
     ctx.desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, ctx.desc_self.parameter_types)
     ctx.desc_call.name = ctx.desc_call.name[:-1] + 'A'
     return ctx
