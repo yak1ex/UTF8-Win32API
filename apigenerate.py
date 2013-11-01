@@ -50,7 +50,6 @@ dispatcher.register([\
     ['', [('LPWSTR', 'lpBuffer'), ('UINT', 'uSize')], wo_rolen_ret_len(0,1)],
 
     ['', [('LPCWSTR', 'lpRootPathName'), ('LPWSTR', 'lpVolumeNameBuffer'), ('DWORD', 'nVolumeNameSize'), ('LPWSTR', 'lpFileSystemNameBuffer'), ('DWORD', 'nFileSystemNameSize')], [ro_nolen_idx(0), wo_rolen_ret_zero(1,2), wo_rolen_ret_zero(3,4)]],
-    ['', [('LPCWSTR', 'lpRootPathName'), ('LPWSTR', 'lpVolumeNameBuffer'), ('DWORD', 'nVolumeNameSize'), ('LPWSTR', 'lpFileSystemNameBuffer'), ('DWORD', 'nFileSystemNameSize')], None],
 
     ['', [('LPCWSTR', 'lpRootPathName'), ('LPCWSTR', 'lpVolumeName')], ro_nolen],
     ['', [('LPCWSTR', 'lpRootPathName')], ro_nolen],
