@@ -35,7 +35,7 @@ def ro_nolen(ctx, typespecs):
 def _roarray_nolen_imp(ctx, typespec):
     target_index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = ('LPCSTR*', orig_name)
+    ctx.desc_self.parameter_types[target_index] = ('LPCSTR const *', orig_name)
     ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
     before = Template("""\
 	std::vector<LPCWSTR> ${name}_arg;
