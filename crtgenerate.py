@@ -45,11 +45,11 @@ spec = [ \
 
 # sys/stat.h
 
-    [('_ustat', '_wstat', ['_stat'], ['_tstat']), [('wchar_t const *', '_Name')], ro_nolen],
-    [('_ustat32', '_wstat32', ['_stat32'], ['_tstat32']), [('wchar_t const *', '_Name')], ro_nolen],
-    [('_ustat32i64', '_wstat32i64', ['_stat32i64'], ['_tstat32i64']), [('wchar_t const *', '_Name')], ro_nolen],
-    [('_ustat64i32', '_wstat64i32', ['_stat64i32'], ['_tstat64i32']), [('wchar_t const *', '_Name')], ro_nolen],
-    [('_ustat64', '_wstat64', ['_stat64'], ['_tstat64']), [('wchar_t const *', '_Name')], ro_nolen],
+    [('_ustat', '_wstat', [], ['_tstat']), [('wchar_t const *', '_Name')], ro_nolen],
+    [('_ustat32', '_wstat32', [], ['_tstat32']), [('wchar_t const *', '_Name')], ro_nolen],
+    [('_ustat32i64', '_wstat32i64', [], ['_tstat32i64']), [('wchar_t const *', '_Name')], ro_nolen],
+    [('_ustat64i32', '_wstat64i32', [], ['_tstat64i32']), [('wchar_t const *', '_Name')], ro_nolen],
+    [('_ustat64', '_wstat64', [], ['_tstat64']), [('wchar_t const *', '_Name')], ro_nolen],
 
 # sys/utime.h
 
