@@ -1,9 +1,10 @@
 ifeq ($(MAKECMD),dmake)
 CXX=g++
+CXXFLAGS= -Wall -pedantic -DWINVER=0x0500
 OBJS=$(subst,u.cpp,u.o $(shell cmd.exe /c dir.exe /b *u.cpp))
 
 %.o: %.cpp
-	$(CXX) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 else
 
