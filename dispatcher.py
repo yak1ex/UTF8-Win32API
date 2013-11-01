@@ -68,9 +68,11 @@ from collections import namedtuple
 
 convctx = namedtuple('ConvCtx', 'desc_self desc_call code_before code_after')
 
-SPEC_REGEXP = 0
-SPEC_TYPES = 1
-SPEC_FUNC = 2
+class _Spec:
+# conversion spec
+    REGEXP, TYPES, FUNC = range(3)
+# in REGEXP for CRT
+    SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
 
 class Dispatcher(object):
     _output = _Output()
@@ -87,20 +89,20 @@ class Dispatcher(object):
                 continue
 
             flag = True
-            for argspec in onespec[SPEC_TYPES]:
+            for argspec in onespec[_Spec.TYPES]:
                 if desc.index_arg(argspec) == -1:
                     flag = False
                     break
             if(flag):
-                if onespec[SPEC_FUNC] is None:
+                if onespec[_Spec.FUNC] is None:
                     break
 
                 processed = True
 
                 ctx = convctx(desc.clone(), desc.clone(), '', '')
                 ctx = self._adjust(ctx, onespec)
-                funcs = onespec[SPEC_FUNC] if isinstance(onespec[SPEC_FUNC], list) else [onespec[SPEC_FUNC]]
-                ctx = reduce(lambda acc, func: func(acc, onespec[SPEC_TYPES]), funcs, ctx)
+                funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
+                ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
 
                 macro = self._macro(ctx, onespec)
 
@@ -139,7 +141,7 @@ class Dispatcher(object):
 
 class APIDispatcher(Dispatcher):
     def _match(self, onespec, desc):
-        return re.search(onespec[SPEC_REGEXP], desc.name)
+        return re.search(onespec[_Spec.REGEXP], desc.name)
 
     def _outname(self, desc):
         return os.path.basename("%s" % desc.file)
@@ -159,22 +161,19 @@ class APIDispatcher(Dispatcher):
             f.write("\n#endif\n")
         Dispatcher.__del__(self)
 
-class _Spec:
-    SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
-
 class CRTDispatcher(Dispatcher):
     def _match(self, onespec, desc):
-        return desc.name == onespec[SPEC_REGEXP][_Spec.CALL]
+        return desc.name == onespec[_Spec.REGEXP][_Spec.CALL]
 
     def _outname(self, desc):
         return 'msvcrt.h'
 
     def _adjust(self, ctx, onespec):
-        ctx.desc_self.name = onespec[SPEC_REGEXP][_Spec.SELF]
-        ctx.desc_call.name = onespec[SPEC_REGEXP][_Spec.CALL]
+        ctx.desc_self.name = onespec[_Spec.REGEXP][_Spec.SELF]
+        ctx.desc_call.name = onespec[_Spec.REGEXP][_Spec.CALL]
         return ctx
 
     def _macro(self, ctx, onespec):
-        macro = map(lambda x: (False, x), onespec[SPEC_REGEXP][_Spec.ALIAS_OPT])
-        macro.extend(map(lambda x: (True, x), onespec[SPEC_REGEXP][_Spec.ALIAS_ALL]))
+        macro = map(lambda x: (False, x), onespec[_Spec.REGEXP][_Spec.ALIAS_OPT])
+        macro.extend(map(lambda x: (True, x), onespec[_Spec.REGEXP][_Spec.ALIAS_ALL]))
         return macro
