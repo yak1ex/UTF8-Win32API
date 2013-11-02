@@ -73,6 +73,8 @@ class _Spec:
     REGEXP, TYPES, FUNC = range(3)
 # in REGEXP for CRT
     SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
+# macro type
+    NORMAL, CRT_OPT, API_OPT = range(3)
 
 class Dispatcher(object):
     _output = _Output()
@@ -122,12 +124,12 @@ class Dispatcher(object):
                 )
                 self._output.h(outname, \
                     "\n".join(map( \
-                        lambda x: ("#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT\n" if not x[0] else "") + \
+                        lambda x: ("#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT\n" if x[0] == _Spec.CRT_OPT else "#ifndef UTF8_WIN32_DONT_REPLACE_ANSI\n" if x[0] == _Spec.API_OPT else "") + \
                             "#ifdef " + x[1] + "\n" + \
                             "#undef " + x[1] + "\n" + \
                             "#endif\n" + \
                             "#define " + x[1] + ' ' + ctx.desc_self.name + "\n" + \
-                            ("#endif\n" if not x[0] else ""), macro)) + \
+                            ("#endif\n" if x[0] == _Spec.CRT_OPT or x[0] == _Spec.API_OPT else ""), macro)) + \
                     "extern " + ctx.desc_self.make_func_decl() + ";\n\n" \
                 )
                 break
@@ -151,7 +153,7 @@ class APIDispatcher(Dispatcher):
         return ctx
 
     def _macro(self, ctx, onespec):
-        return [(True, ctx.desc_self.name[:-1])]
+        return [(_Spec.NORMAL, ctx.desc_self.name[:-1]), (_Spec.API_OPT, ctx.desc_self.name[:-1] + 'A')]
 
     def __del__(self):
         with open('windowsu.h', 'a') as f:
@@ -174,6 +176,6 @@ class CRTDispatcher(Dispatcher):
         return ctx
 
     def _macro(self, ctx, onespec):
-        macro = map(lambda x: (False, x), onespec[_Spec.REGEXP][_Spec.ALIAS_OPT])
-        macro.extend(map(lambda x: (True, x), onespec[_Spec.REGEXP][_Spec.ALIAS_ALL]))
+        macro = map(lambda x: (_Spec.CRT_OPT, x), onespec[_Spec.REGEXP][_Spec.ALIAS_OPT])
+        macro.extend(map(lambda x: (_Spec.NORMAL, x), onespec[_Spec.REGEXP][_Spec.ALIAS_ALL]))
         return macro
