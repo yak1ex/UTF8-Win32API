@@ -33,9 +33,8 @@ spec = [ \
     [('_ucreat', '_wcreat', ['_creat'], ['_tcreat']), [('wchar_t const *', '_Filename')], ro_nolen],
     [('_uunlink', '_wunlink', ['_unlink'], ['_tunlink']), [('wchar_t const *', '_Filename')], ro_nolen],
     [('_urename', '_wrename', ['rename'], ['_trename']), [('wchar_t const *', '_OldFilename'), ('wchar_t const *', '_NewFilename')], ro_nolen],
-# variadic
-#    [('_uopen', '_wopen', ['_open'], ['_topen']), [('wchar_t const *', '_Filename')], ro_nolen],
-#    [('_usopen', '_wsopen', ['_sopen'], ['_tsopen']), [('wchar_t const *', '_Filename')], ro_nolen],
+    [('_uopen', '_wopen', ['_open'], ['_topen']), [('wchar_t const *', '_Filename'), ('int', '_OpenFlag')], [ro_nolen_idx(0), optional(1, 'int')]],
+    [('_usopen', '_wsopen', ['_sopen'], ['_tsopen']), [('wchar_t const *', '_Filename'), ('int', '_ShareFlag')], [ro_nolen_idx(0), optional(1, 'int')]],
     [('_umktemp', '_wmktemp', ['_mktemp'], ['_tmktemp']), [('wchar_t *', '_TemplateName')], wo_nolen_ret("MAX_PATH", 0)],
 
 # stdlib.h

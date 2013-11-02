@@ -296,3 +296,18 @@ def forwardA(ctx, typespecs):
     ctx.desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, ctx.desc_self.parameter_types)
     ctx.desc_call.name = ctx.desc_call.name[:-1] + 'A'
     return ctx
+
+def _optional_imp(ctx, typespec, args):
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_call.parameter_types.extend(map(lambda x: (x[1], 'optional_' + str(x[0])), enumerate(args)))
+    ctx.desc_call.is_variadic = False
+    return ctx._replace(code_before = ctx.code_before + Template("""\
+	va_list optional_va;
+	va_start(optional_va, $name);
+""").substitute(name = orig_name) + "\n".join(map(lambda x: Template("""\
+	$type optional_$idx = va_arg(optional_va, $type);
+""").substitute(idx = x[0], type = x[1]), enumerate(args))) + "\n")
+
+def optional(idx, *args):
+    return lambda ctx, typespecs: _optional_imp(ctx, typespecs[idx], args)
