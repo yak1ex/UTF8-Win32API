@@ -13,7 +13,7 @@ spec = [ \
 
 # stdio.h
     [('_ufsopen', '_wfsopen', ['_fsopen'], ['_tfsopen']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_Mode')], ro_nolen],
-        [('_ufopen', '_wfopen', ['fopen'], ['_tfopen']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_Mode')], ro_nolen],
+    [('_ufopen', '_wfopen', ['fopen'], ['_tfopen']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_Mode')], ro_nolen],
     [('_ufreopen', '_wfreopen', ['freopen'], ['_tfreopen']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_Mode')], ro_nolen],
     [('_upopen', '_wpopen', ['_popen'], ['_tpopen']), [('wchar_t const *', '_Command'), ('wchar_t const *', '_Mode')], ro_nolen],
     [('_uremove', '_wremove', ['remove'], ['_tremove']), [('wchar_t const *', '_Filename')], ro_nolen],
