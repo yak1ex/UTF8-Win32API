@@ -59,17 +59,25 @@ spec = [ \
 # process.h
 
     [('_uexecv', '_wexecv', ['_execv'], ['_texecv']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList')], [ro_nolen_idx(0), roarray_nolen_idx(1)]],
+    [('_uexecv_', '_uexecv', ['execv'], []), [], forward],
     [('_uexecve', '_wexecve', ['_execve'], ['_texecve']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList'), ('wchar_t const * const *', '_Env')], [ro_nolen_idx(0), roarray_nolen_idx([1,2])]],
+    [('_uexecve_', '_uexecve', ['execve'], []), [], forward],
     [('_uexecvp', '_wexecvp', ['_execvp'], ['_texecvp']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList')], [ro_nolen_idx(0), roarray_nolen_idx(1)]],
+    [('_uexecvp_', '_uexecvp', ['execvp'], []), [], forward],
     [('_uexecvpe', '_wexecvpe', ['_execvpe'], ['_texecvpe']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList'), ('wchar_t const * const *', '_Env')], [ro_nolen_idx(0), roarray_nolen_idx([1,2])]],
+    [('_uexecvpe_', '_uexecvpe', ['execvpe'], []), [], forward],
     [('_uexecl', '_wexecl', ['_execl'], ['_texecl']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_ArgList')], [ro_nolen_idx(0), rova_nolen_idx(1)]],
     [('_uexecle', '_wexecle', ['_execle'], ['_texecle']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_ArgList')], [ro_nolen_idx(0), rova_nolen_withenv_idx(1)]],
     [('_uexeclp', '_wexeclp', ['_execlp'], ['_texeclp']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_ArgList')], [ro_nolen_idx(0), rova_nolen_idx(1)]],
     [('_uexeclpe', '_wexeclpe', ['_execlpe'], ['_texeclpe']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_ArgList')], [ro_nolen_idx(0), rova_nolen_withenv_idx(1)]],
     [('_uspawnv', '_wspawnv', ['_spawnv'], ['_tspawnv']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList')], [ro_nolen_idx(0), roarray_nolen_idx(1)]],
+    [('_uspawnv_', '_uspawnv', ['spawnv'], []), [], forward],
     [('_uspawnve', '_wspawnve', ['_spawnve'], ['_tspawnve']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList'), ('wchar_t const * const *', '_Env')], [ro_nolen_idx(0), roarray_nolen_idx([1,2])]],
+    [('_uspawnve_', '_uspawnve', ['spawnve'], []), [], forward],
     [('_uspawnvp', '_wspawnvp', ['_spawnvp'], ['_tspawnvp']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList')], [ro_nolen_idx(0), roarray_nolen_idx(1)]],
+    [('_uspawnvp_', '_uspawnvp', ['spawnvp'], []), [], forward],
     [('_uspawnvpe', '_wspawnvpe', ['_spawnvpe'], ['_tspawnvpe']), [('wchar_t const *', '_Filename'), ('wchar_t const * const *', '_ArgList'), ('wchar_t const * const *', '_Env')], [ro_nolen_idx(0), roarray_nolen_idx([1,2])]],
+    [('_uspawnvpe_', '_uspawnvpe', ['spawnvpe'], []), [], forward],
     [('_uspawnl', '_wspawnl', ['_spawnl'], ['_tspawnl']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_ArgList')], [ro_nolen_idx(0), rova_nolen_idx(1)]],
     [('_uspawnle', '_wspawnle', ['_spawnle'], ['_tspawnle']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_ArgList')], [ro_nolen_idx(0), rova_nolen_withenv_idx(1)]],
     [('_uspawnlp', '_wspawnlp', ['_spawnlp'], ['_tspawnlp']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_ArgList')], [ro_nolen_idx(0), rova_nolen_idx(1)]],
@@ -86,6 +94,6 @@ tu = index.parse(sys.argv[2], ['-I', sys.argv[1]])
 print 'Translation unit:', tu.spelling
 for c in tu.cursor.get_children():
     #dump(0, c)
-    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('^_w(?!rite|to|csto)', c.spelling)):
+    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('^_w(?!rite|to|csto)|^_u(exec|spawn)v', c.spelling)):
         desc = FunctionDescriptor(c)
         dispatcher.dispatch(desc)

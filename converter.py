@@ -297,6 +297,9 @@ def forwardA(ctx, typespecs):
     ctx.desc_call.name = ctx.desc_call.name[:-1] + 'A'
     return ctx
 
+def forward(ctx, typespecs):
+    return ctx
+
 def _optional_imp(ctx, typespec, args):
     target_index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]

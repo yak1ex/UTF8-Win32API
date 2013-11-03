@@ -177,8 +177,9 @@ class CRTDispatcher(Dispatcher):
         ctx.desc_call.name = onespec[_Spec.REGEXP][_Spec.CALL]
         return ctx
 
+# FIXME: specific action should be moved elsewhere
     def _macro(self, ctx, onespec):
-        macro = map(lambda x: (_Spec.CRT_OPT, x), onespec[_Spec.REGEXP][_Spec.ALIAS_OPT])
-        macro.extend(map(lambda x: (_Spec.CRT_OLD, x.replace('_', '')), onespec[_Spec.REGEXP][_Spec.ALIAS_OPT]))
-        macro.extend(map(lambda x: (_Spec.NORMAL, x), onespec[_Spec.REGEXP][_Spec.ALIAS_ALL]))
+        macro = [((_Spec.CRT_OLD if re.match('(exec|spawn)v', x) else _Spec.CRT_OPT), x) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_OPT]]
+        macro.extend([(_Spec.CRT_OLD, x.replace('_', '')) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_OPT] if '_' in x and not re.search('_(exec|spawn)v', x)])
+        macro.extend([(_Spec.NORMAL, x) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_ALL]])
         return macro

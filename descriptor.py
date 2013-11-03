@@ -19,6 +19,8 @@ def dump_type(type):
             result = dump_type(type.get_pointee()) + " *"
         elif type.kind.name == "UNEXPOSED":
             result = ("struct " if type.get_declaration().kind.name == "STRUCT_DECL" else "") + type.get_declaration().spelling
+        elif type.kind.name == "CHAR_S":
+            result = 'char'
         else:
             result = type.kind.name.lower()
     result += " const" if type.is_const_qualified() else ""
