@@ -74,7 +74,7 @@ class _Spec:
 # in REGEXP for CRT
     SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
 # macro type
-    NORMAL, CRT_OPT, API_OPT = range(3)
+    NORMAL, CRT_OLD, CRT_OPT, API_OPT = range(4)
 
 class Dispatcher(object):
     _output = _Output()
@@ -124,12 +124,14 @@ class Dispatcher(object):
                 )
                 self._output.h(outname, \
                     "\n".join(map( \
-                        lambda x: ("#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT\n" if x[0] == _Spec.CRT_OPT else "#ifndef UTF8_WIN32_DONT_REPLACE_ANSI\n" if x[0] == _Spec.API_OPT else "") + \
+                        lambda x: ("#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT\n" if (x[0] == _Spec.CRT_OPT or x[0] == _Spec.CRT_OLD) else "#ifndef UTF8_WIN32_DONT_REPLACE_ANSI\n" if x[0] == _Spec.API_OPT else "") + \
+                            ("#ifndef NO_OLDNAMES\n" if x[0] == _Spec.CRT_OLD else "") + \
                             "#ifdef " + x[1] + "\n" + \
                             "#undef " + x[1] + "\n" + \
                             "#endif\n" + \
                             "#define " + x[1] + ' ' + ctx.desc_self.name + "\n" + \
-                            ("#endif\n" if x[0] == _Spec.CRT_OPT or x[0] == _Spec.API_OPT else ""), macro)) + \
+                            ("#endif\n" if x[0] == _Spec.CRT_OLD else "") + \
+                            ("#endif\n" if x[0] == _Spec.CRT_OPT or (x[0] == _Spec.API_OPT or x[0] == _Spec.CRT_OLD) else ""), macro)) + \
                     "extern " + ctx.desc_self.make_func_decl() + ";\n\n" \
                 )
                 break
@@ -177,5 +179,6 @@ class CRTDispatcher(Dispatcher):
 
     def _macro(self, ctx, onespec):
         macro = map(lambda x: (_Spec.CRT_OPT, x), onespec[_Spec.REGEXP][_Spec.ALIAS_OPT])
+        macro.extend(map(lambda x: (_Spec.CRT_OLD, x.replace('_', '')), onespec[_Spec.REGEXP][_Spec.ALIAS_OPT]))
         macro.extend(map(lambda x: (_Spec.NORMAL, x), onespec[_Spec.REGEXP][_Spec.ALIAS_ALL]))
         return macro
