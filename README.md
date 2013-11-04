@@ -1,7 +1,7 @@
 UTF-8 Win32 API
 ===============
 
-Not yet working. Just under development.
+Perl 5.18.1 is compilable by perl-5.18.1.patch. Little part, such as open(), can handle UTF-8 strings in native Win32.
 
 Author
 ------
