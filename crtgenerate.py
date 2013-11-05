@@ -44,7 +44,6 @@ spec = [ \
 
 # sys/stat.h
 
-    [('_ustat', '_wstat', [], ['_tstat']), [('wchar_t const *', '_Name')], ro_nolen],
     [('_ustat32', '_wstat32', [], ['_tstat32']), [('wchar_t const *', '_Name')], ro_nolen],
     [('_ustat32i64', '_wstat32i64', [], ['_tstat32i64']), [('wchar_t const *', '_Name')], ro_nolen],
     [('_ustat64i32', '_wstat64i32', [], ['_tstat64i32']), [('wchar_t const *', '_Name')], ro_nolen],
