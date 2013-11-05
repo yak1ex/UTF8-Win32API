@@ -1,4 +1,5 @@
 #include "windowsu.h"
+#include "msvcrtu.h"
 
 /* TODO: establish test framework */
 
@@ -7,6 +8,7 @@ int main(void)
 	HANDLE hFile;
 	char buf[1024];
 	DWORD len;
+	struct _stat st;
 
 	DeleteFile("開発.txt");
 	OutputDebugString("ユニコードで出力される？");
@@ -43,5 +45,8 @@ int main(void)
 		}
 	}
 	SHEmptyRecycleBin(NULL, "C:\\cygwin\\home\\atarashi\\work\\win32u\\ソフト", 0);
+	if(!_stat("開発.txt", &st)) {
+		MessageBox(NULL, buf, "_stat", MB_OK);
+	}
 	return 0;
 }
