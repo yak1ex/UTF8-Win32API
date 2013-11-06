@@ -38,7 +38,8 @@ dispatcher.register([\
 # DWORD SearchPathW(LPCWSTR lpPath, LPCWSTR lpFileName, LPCWSTR lpExtension, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
 # DWORD GetFullPathNameU(LPCSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
     ['', [('LPWSTR *', 'lpFilePart')], None],
-
+# HANDLE FindFirstFileW(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData)
+    ['', [('LPCWSTR', 'lpFileName'), ('LPWIN32_FIND_DATAW', 'lpFindFileData')], None],
     ['', [('LPCWSTR', 'lpFileName')], ro_nolen],
 # ShellMessageBoxW in shlwapi
 #   ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], ro_nolen],
