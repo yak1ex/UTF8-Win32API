@@ -314,3 +314,43 @@ def _optional_imp(ctx, typespec, args):
 
 def optional(idx, *args):
     return lambda ctx, typespecs: _optional_imp(ctx, typespecs[idx], args)
+
+def _fakecp_imp(ctx, typespec_cp, typespec_flag):
+    target_index_cp = ctx.desc_self.index_arg(typespec_cp)
+    orig_type_cp, orig_name_cp = ctx.desc_self.parameter_types[target_index_cp]
+    target_index_flag = ctx.desc_self.index_arg(typespec_flag)
+    orig_type_flag, orig_name_flag = ctx.desc_self.parameter_types[target_index_flag]
+    return ctx._replace(code_before = ctx.code_before + Template("""\
+	if($cpname == CP_ACP) {
+		$cpname = CP_UTF8;
+//		$flagname &= WC_ERR_INVALID_CHARS; // Applicable only for Windows Vista and later
+		$flagname = 0;
+	}
+""").substitute(cpname = orig_name_cp, flagname = orig_name_flag))
+
+def fakecp(idx_cp, idx_flag):
+    return lambda ctx, typespecs: _fakecp_imp(ctx, typespecs[idx_cp], typespecs[idx_flag])
+
+def _adjustdef_imp(ctx, typespec_cp, typespec_flag, typespec_def, typespec_used):
+    target_index_cp = ctx.desc_self.index_arg(typespec_cp)
+    orig_type_cp, orig_name_cp = ctx.desc_self.parameter_types[target_index_cp]
+    target_index_flag = ctx.desc_self.index_arg(typespec_flag)
+    orig_type_flag, orig_name_flag = ctx.desc_self.parameter_types[target_index_flag]
+    target_index_def = ctx.desc_self.index_arg(typespec_def)
+    orig_type_def, orig_name_def = ctx.desc_self.parameter_types[target_index_def]
+    target_index_used = ctx.desc_self.index_arg(typespec_used)
+    orig_type_used, orig_name_used = ctx.desc_self.parameter_types[target_index_used]
+    return ctx._replace(code_before = ctx.code_before + Template("""\
+	if($cpname == CP_ACP) {
+		$cpname = CP_UTF8;
+		$flagname &= MB_ERR_INVALID_CHARS;
+		if($usedname) {
+			*$usedname = FALSE;
+			$usedname = 0;
+		}
+		$defname = 0;
+	}
+""").substitute(cpname = orig_name_cp, flagname = orig_name_flag, defname = orig_name_def, usedname = orig_name_used))
+
+def adjustdef(idx_cp, idx_flag, idx_def, idx_used):
+    return lambda ctx, typespecs: _adjustdef_imp(ctx, typespecs[idx_cp], typespecs[idx_flag], typespecs[idx_def], typespecs[idx_used])

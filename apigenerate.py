@@ -100,6 +100,10 @@ dispatcher.register([\
     ['RegDelete', [('LPCWSTR', 'lpValueName')], ro_nolen],
 
     ['', [('LPCWSTR', 'lpszFormat')], ro_nolen],
+
+# FIXME: miniperl is compilable but fails to run
+    ['MultiByteToWideChar', [('UINT', 'CodePage'), ('DWORD', 'dwFlags')], fakecp(0, 1)],
+    ['WideCharToMultiByte', [('UINT', 'CodePage'), ('DWORD', 'dwFlags'), ('LPCCH', 'lpDefaultChar'), ('LPBOOL', 'lpUsedDefaultChar')], adjustdef(0, 1, 2, 3)],
 ])
 
 index = clang.cindex.Index.create()
@@ -107,6 +111,6 @@ tu = index.parse(sys.argv[1])
 print 'Translation unit:', tu.spelling
 #dump(0, tu.cursor)
 for c in tu.cursor.get_children():
-    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('W$', c.spelling)):
+    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('W$|WideChar', c.spelling)):
         desc = FunctionDescriptor(c)
         dispatcher.dispatch(desc)

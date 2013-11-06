@@ -151,11 +151,17 @@ class APIDispatcher(Dispatcher):
         return os.path.basename("%s" % desc.file)
 
     def _adjust(self, ctx, onespec):
-        ctx.desc_self.name = ctx.desc_self.name[:-1] + 'U'
+        if ctx.desc_self.name[-1] == 'W':
+            ctx.desc_self.name = ctx.desc_self.name[:-1] + 'U'
+        else:
+            ctx.desc_self.name = ctx.desc_self.name + 'U'
         return ctx
 
     def _macro(self, ctx, onespec):
-        return [(_Spec.NORMAL, ctx.desc_self.name[:-1]), (_Spec.API_OPT, ctx.desc_self.name[:-1] + 'A')]
+        if ctx.desc_call.name[-1] == 'W':
+            return [(_Spec.NORMAL, ctx.desc_self.name[:-1]), (_Spec.API_OPT, ctx.desc_self.name[:-1] + 'A')]
+        else:
+            return [(_Spec.API_OPT, ctx.desc_self.name[:-1])]
 
     def __del__(self):
         with open('windowsu.h', 'a') as f:
