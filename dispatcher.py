@@ -191,10 +191,14 @@ class CRTDispatcher(Dispatcher):
         return macro
 
 # FIXME: specific action should be moved elsewhere
-    def __init__(self):
+    def __del__(self):
         self._output.h('msvcrt.h', """\
 
 #ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT
+
+/* Need to include before the following macro, to avoid type conflicts */
+#include <sys/stat.h>
+
 #ifdef _USE_32BIT_TIME_T
 
 #ifdef _stat
@@ -306,3 +310,4 @@ class CRTDispatcher(Dispatcher):
 #endif
 
 """)
+        Dispatcher.__del__(self)
