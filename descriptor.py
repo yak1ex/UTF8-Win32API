@@ -58,6 +58,11 @@ class FunctionDescriptor(object):
         assert not self._is_variadic
         return '%s(%s)' % (self._name, ', '.join([n for t, n in self._parameter_types]))
 
+    def make_trace_arg(self):
+        """
+        """
+        return ' << '.join(['" ' + n + ': " << ' + n for t, n in self._parameter_types])
+
     def index_arg(self, spec):
         """search argument corresponding to the specified spec"""
         for i,v in enumerate(self._parameter_types):

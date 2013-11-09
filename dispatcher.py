@@ -31,6 +31,7 @@ class _Output(object):
                 f.write("#define UTF8_WIN32_DONT_REPLACE_ANSI\n")
             f.write("#include \"" + self._h_name(outname) + "\"\n")
             f.write("#include \"win32u_helper.hpp\"\n")
+            f.write("#include \"odstream/odstream.hpp\"\n")
 
     def _h_header(self, outname):
         actualname = self._h_name(outname)
@@ -122,6 +123,7 @@ class Dispatcher(object):
 
                 self._output.cpp(outname, \
                     ctx.desc_self.make_func_decl() + "\n{\n" + \
+                    '\tODS(<< "' + ctx.desc_self.name + '" << " : "' + ctx.desc_self.make_trace_arg() + " << std::endl);\n" + \
                     ctx.code_before + "\t" + call + ctx.code_after + "\t" + ret + "}\n" \
                 )
                 self._output.h(outname, \
