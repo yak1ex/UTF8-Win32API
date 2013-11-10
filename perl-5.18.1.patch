@@ -1,6 +1,15 @@
 diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
 --- perl-5.18.1-orig/win32/makefile.mk	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/makefile.mk	2013-11-10 10:54:04.312697100 +0900
++++ perl-5.18.1/win32/makefile.mk	2013-11-10 19:13:24.823325000 +0900
+@@ -27,7 +27,7 @@
+ #
+ # Uncomment if you want to build a 32-bit Perl using a 32-bit compiler
+ # on a 64-bit version of Windows.
+-#WIN64		*= undef
++WIN64		*= undef
+ 
+ #
+ # Comment this out if you DON'T want your perl installation to be versioned.
 @@ -409,7 +409,7 @@
  # Options
  #
@@ -29,7 +38,7 @@ diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
  LIBOUT_FLAG	=
 diff -ur perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
 --- perl-5.18.1-orig/win32/win32.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/win32.c	2013-11-10 10:54:04.312697100 +0900
++++ perl-5.18.1/win32/win32.c	2013-11-10 13:35:35.219492100 +0900
 @@ -8,9 +8,10 @@
   *    License or the Artistic License, as specified in the README file.
   */
@@ -52,7 +61,7 @@ diff -ur perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
  #  define HWND_MESSAGE ((HWND)-3)
 diff -ur perl-5.18.1-orig/win32/win32io.c perl-5.18.1/win32/win32io.c
 --- perl-5.18.1-orig/win32/win32io.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/win32io.c	2013-11-10 10:54:04.328297400 +0900
++++ perl-5.18.1/win32/win32io.c	2013-11-10 13:35:35.222492400 +0900
 @@ -2,10 +2,12 @@
  #define WIN32_LEAN_AND_MEAN
  #define WIN32IO_IS_STDIO
