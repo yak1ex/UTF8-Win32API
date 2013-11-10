@@ -10,4 +10,5 @@ rename 'ソフト開発.txt' => 'ソフト開発_.txt';
 print join(' ', stat('ソフト開発_.txt')), "\n";
 
 opendir DIR, '.';
-print join(' ', map { Encode::encode('cp932', $_) } grep { /\.txt/ } readdir DIR), "\n";
+print join(' ', map { Encode::encode('cp932', Encode::decode('utf-8', $_)) } grep { /\.txt/ } readdir DIR), "\n";
+closedir DIR;
