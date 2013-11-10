@@ -1,6 +1,6 @@
-diff -urN perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
+diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
 --- perl-5.18.1-orig/win32/makefile.mk	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/makefile.mk	2013-11-08 08:34:04.965190400 +0900
++++ perl-5.18.1/win32/makefile.mk	2013-11-10 10:54:04.312697100 +0900
 @@ -409,7 +409,7 @@
  # Options
  #
@@ -27,20 +27,9 @@ diff -urN perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
  OBJOUT_FLAG	= -o
  EXEOUT_FLAG	= -o
  LIBOUT_FLAG	=
-diff -urN perl-5.18.1-orig/win32/perlglob.c perl-5.18.1/win32/perlglob.c
---- perl-5.18.1-orig/win32/perlglob.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/perlglob.c	2013-11-08 08:34:05.020190400 +0900
-@@ -22,6 +22,7 @@
- #include <fcntl.h>
- #include <string.h>
- #include <windows.h>
-+#include "windowsu.h"
- 
- int
- main(int argc, char *argv[])
-diff -urN perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
+diff -ur perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
 --- perl-5.18.1-orig/win32/win32.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/win32.c	2013-11-08 08:34:05.055190400 +0900
++++ perl-5.18.1/win32/win32.c	2013-11-10 10:54:04.312697100 +0900
 @@ -8,9 +8,10 @@
   *    License or the Artistic License, as specified in the README file.
   */
@@ -61,9 +50,9 @@ diff -urN perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
  
  #ifndef HWND_MESSAGE
  #  define HWND_MESSAGE ((HWND)-3)
-diff -urN perl-5.18.1-orig/win32/win32io.c perl-5.18.1/win32/win32io.c
+diff -ur perl-5.18.1-orig/win32/win32io.c perl-5.18.1/win32/win32io.c
 --- perl-5.18.1-orig/win32/win32io.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/win32io.c	2013-11-08 08:34:05.079190400 +0900
++++ perl-5.18.1/win32/win32io.c	2013-11-10 10:54:04.328297400 +0900
 @@ -2,10 +2,12 @@
  #define WIN32_LEAN_AND_MEAN
  #define WIN32IO_IS_STDIO
