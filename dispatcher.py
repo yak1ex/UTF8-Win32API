@@ -31,6 +31,7 @@ class _Output(object):
                 f.write("#define UTF8_WIN32_DONT_REPLACE_ANSI\n")
             f.write("#include \"" + self._h_name(outname) + "\"\n")
             f.write("#include \"win32u_helper.hpp\"\n")
+            f.write("#include \"win32u_helperi.hpp\"\n")
             f.write("#include \"odstream/odstream.hpp\"\n")
 
     def _h_header(self, outname):
