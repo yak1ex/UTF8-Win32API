@@ -1,3 +1,15 @@
+diff -ur perl-5.18.1-orig/dosish.h perl-5.18.1/dosish.h
+--- perl-5.18.1-orig/dosish.h	2013-08-12 11:44:48.000000000 +0900
++++ perl-5.18.1/dosish.h	2013-11-13 05:46:16.931288900 +0900
+@@ -140,7 +140,7 @@
+ #else
+ #   define Fflush(fp)      fflush(fp)
+ #endif
+-#define Mkdir(path,mode)   mkdir((path),(mode))
++#define Mkdir(path,mode)   mkdir((path))
+ 
+ #ifndef WIN32
+ #  define Stat(fname,bufptr) stat((fname),(bufptr))
 diff -ur perl-5.18.1-orig/iperlsys.h perl-5.18.1/iperlsys.h
 --- perl-5.18.1-orig/iperlsys.h	2013-08-12 11:44:48.000000000 +0900
 +++ perl-5.18.1/iperlsys.h	2013-11-13 05:23:47.764295200 +0900
