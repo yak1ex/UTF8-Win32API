@@ -1,6 +1,18 @@
+diff -ur perl-5.18.1-orig/iperlsys.h perl-5.18.1/iperlsys.h
+--- perl-5.18.1-orig/iperlsys.h	2013-08-12 11:44:48.000000000 +0900
++++ perl-5.18.1/iperlsys.h	2013-11-13 05:23:47.764295200 +0900
+@@ -1408,6 +1408,8 @@
+ #define PerlSock_closesocket(s)		closesocket(s)
+ #endif
+ 
++#include "msvcrtu.h"
++
+ #endif	/* PERL_IMPLICIT_SYS */
+ 
+ #endif	/* __Inc__IPerl___ */
 diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
 --- perl-5.18.1-orig/win32/makefile.mk	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/makefile.mk	2013-11-10 19:13:24.823325000 +0900
++++ perl-5.18.1/win32/makefile.mk	2013-11-13 05:21:41.955715600 +0900
 @@ -27,7 +27,7 @@
  #
  # Uncomment if you want to build a 32-bit Perl using a 32-bit compiler
@@ -38,7 +50,7 @@ diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
  LIBOUT_FLAG	=
 diff -ur perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
 --- perl-5.18.1-orig/win32/win32.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/win32.c	2013-11-10 13:35:35.219492100 +0900
++++ perl-5.18.1/win32/win32.c	2013-11-13 05:21:41.963716400 +0900
 @@ -8,9 +8,10 @@
   *    License or the Artistic License, as specified in the README file.
   */
@@ -61,7 +73,7 @@ diff -ur perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
  #  define HWND_MESSAGE ((HWND)-3)
 diff -ur perl-5.18.1-orig/win32/win32io.c perl-5.18.1/win32/win32io.c
 --- perl-5.18.1-orig/win32/win32io.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/win32io.c	2013-11-10 13:35:35.222492400 +0900
++++ perl-5.18.1/win32/win32io.c	2013-11-13 05:21:41.968716900 +0900
 @@ -2,10 +2,12 @@
  #define WIN32_LEAN_AND_MEAN
  #define WIN32IO_IS_STDIO
