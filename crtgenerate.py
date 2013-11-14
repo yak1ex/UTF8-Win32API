@@ -52,7 +52,8 @@ spec = [ \
 # sys/utime.h
 
     [('_uutime', '_wutime', ['_utime'], ['_tutime']), [('wchar_t const *', '_Filename')], ro_nolen],
-    [('_uutime32', '_wutime32', ['_utime32'], ['_tutime32']), [('wchar_t const *', '_Filename')], ro_nolen],
+# Plain msvcrt may not have _utime32
+#   [('_uutime32', '_wutime32', ['_utime32'], ['_tutime32']), [('wchar_t const *', '_Filename')], ro_nolen],
     [('_uutime64', '_wutime64', ['_utime64'], ['_tutime64']), [('wchar_t const *', '_Filename')], ro_nolen],
 
 # process.h

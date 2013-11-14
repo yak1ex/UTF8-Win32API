@@ -47,6 +47,7 @@ class _Output(object):
             # FIXME: Inappropriate tight coupling
             if outname == 'msvcrt.h':
                 f.write("#include <wchar.h>\n\n")
+                f.write("#include <sys/utime.h>\n\n")
             f.write("#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n")
 
     def cpp(self, outname, str):
