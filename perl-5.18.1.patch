@@ -1,6 +1,6 @@
 diff -ur perl-5.18.1-orig/dosish.h perl-5.18.1/dosish.h
 --- perl-5.18.1-orig/dosish.h	2013-08-12 11:44:48.000000000 +0900
-+++ perl-5.18.1/dosish.h	2013-11-15 00:48:16.415935900 +0900
++++ perl-5.18.1/dosish.h	2013-11-15 17:48:28.673468300 +0900
 @@ -140,7 +140,7 @@
  #else
  #   define Fflush(fp)      fflush(fp)
@@ -12,7 +12,7 @@ diff -ur perl-5.18.1-orig/dosish.h perl-5.18.1/dosish.h
  #  define Stat(fname,bufptr) stat((fname),(bufptr))
 diff -ur perl-5.18.1-orig/iperlsys.h perl-5.18.1/iperlsys.h
 --- perl-5.18.1-orig/iperlsys.h	2013-08-12 11:44:48.000000000 +0900
-+++ perl-5.18.1/iperlsys.h	2013-11-15 00:48:16.420935900 +0900
++++ perl-5.18.1/iperlsys.h	2013-11-15 17:48:28.693470300 +0900
 @@ -1408,6 +1408,8 @@
  #define PerlSock_closesocket(s)		closesocket(s)
  #endif
@@ -24,7 +24,7 @@ diff -ur perl-5.18.1-orig/iperlsys.h perl-5.18.1/iperlsys.h
  #endif	/* __Inc__IPerl___ */
 diff -ur perl-5.18.1-orig/perl.c perl-5.18.1/perl.c
 --- perl-5.18.1-orig/perl.c	2013-08-12 11:44:48.000000000 +0900
-+++ perl-5.18.1/perl.c	2013-11-15 00:48:16.425935900 +0900
++++ perl-5.18.1/perl.c	2013-11-15 17:48:28.725473500 +0900
 @@ -58,6 +58,8 @@
  
  #endif
@@ -36,7 +36,7 @@ diff -ur perl-5.18.1-orig/perl.c perl-5.18.1/perl.c
  #    define HZ CLK_TCK
 diff -ur perl-5.18.1-orig/pp_sys.c perl-5.18.1/pp_sys.c
 --- perl-5.18.1-orig/pp_sys.c	2013-08-12 11:44:48.000000000 +0900
-+++ perl-5.18.1/pp_sys.c	2013-11-15 00:48:16.431935900 +0900
++++ perl-5.18.1/pp_sys.c	2013-11-15 17:48:28.750476000 +0900
 @@ -31,6 +31,7 @@
  #include "perl.h"
  #include "time64.h"
@@ -47,7 +47,7 @@ diff -ur perl-5.18.1-orig/pp_sys.c perl-5.18.1/pp_sys.c
  /* Shadow password support for solaris - pdo@cs.umd.edu
 diff -ur perl-5.18.1-orig/util.c perl-5.18.1/util.c
 --- perl-5.18.1-orig/util.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/util.c	2013-11-15 00:48:16.437935900 +0900
++++ perl-5.18.1/util.c	2013-11-15 17:48:28.772478200 +0900
 @@ -48,6 +48,8 @@
  # endif
  #endif
@@ -59,7 +59,7 @@ diff -ur perl-5.18.1-orig/util.c perl-5.18.1/util.c
  #if defined(HAS_FCNTL) && defined(F_SETFD) && !defined(FD_CLOEXEC)
 diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
 --- perl-5.18.1-orig/win32/makefile.mk	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/makefile.mk	2013-11-15 00:48:16.442935900 +0900
++++ perl-5.18.1/win32/makefile.mk	2013-11-15 17:48:28.788479800 +0900
 @@ -27,7 +27,7 @@
  #
  # Uncomment if you want to build a 32-bit Perl using a 32-bit compiler
@@ -97,18 +97,19 @@ diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
  LIBOUT_FLAG	=
 diff -ur perl-5.18.1-orig/win32/vdir.h perl-5.18.1/win32/vdir.h
 --- perl-5.18.1-orig/win32/vdir.h	2013-02-27 06:28:28.000000000 +0900
-+++ perl-5.18.1/win32/vdir.h	2013-11-15 00:51:41.630935900 +0900
-@@ -10,6 +10,7 @@
++++ perl-5.18.1/win32/vdir.h	2013-11-15 18:20:25.315002700 +0900
+@@ -10,6 +10,8 @@
  #ifndef ___VDir_H___
  #define ___VDir_H___
  
++#undef WORD
 +#include "windowsu.h"
  /*
   * Allow one slot for each possible drive letter
   * and one additional slot for a UNC name
 diff -ur perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
 --- perl-5.18.1-orig/win32/win32.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/win32.c	2013-11-15 00:48:16.448935900 +0900
++++ perl-5.18.1/win32/win32.c	2013-11-15 17:48:28.827483700 +0900
 @@ -8,9 +8,10 @@
   *    License or the Artistic License, as specified in the README file.
   */
@@ -131,7 +132,7 @@ diff -ur perl-5.18.1-orig/win32/win32.c perl-5.18.1/win32/win32.c
  #  define HWND_MESSAGE ((HWND)-3)
 diff -ur perl-5.18.1-orig/win32/win32io.c perl-5.18.1/win32/win32io.c
 --- perl-5.18.1-orig/win32/win32io.c	2013-08-12 11:44:49.000000000 +0900
-+++ perl-5.18.1/win32/win32io.c	2013-11-15 00:48:16.451935900 +0900
++++ perl-5.18.1/win32/win32io.c	2013-11-15 17:48:28.848485800 +0900
 @@ -2,10 +2,12 @@
  #define WIN32_LEAN_AND_MEAN
  #define WIN32IO_IS_STDIO
