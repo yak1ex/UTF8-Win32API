@@ -45,7 +45,9 @@ dispatcher.register([\
 #   ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], ro_nolen],
     ['', [('LPCWSTR', 'lpText'), ('LPCWSTR', 'lpCaption')], ro_nolen],
     ['', [('LPCWSTR', 'lpOutputString')], ro_nolen],
-    ['', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'nSize')], wo_rwlen_ret_bool(0,1)],
+    ['GetComputerNameEx', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'nSize')], wo_rwlen_ret_bool(0,1,'ERROR_MORE_DATA')],
+    ['GetComputerName', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'nSize')], wo_rwlen_ret_bool(0,1,'ERROR_BUFFER_OVERFLOW')],
+    ['', [('LPWSTR', 'lpBuffer'), ('LPDWORD', 'pcbBuffer')], wo_rwlen_ret_bool(0,1,'ERROR_INSUFFICIENT_BUFFER')],
 
     ['', [('LPWSTR', 'lpBuffer'), ('DWORD', 'nBufferLength')], wo_rolen_ret_len(0,1)],
     ['', [('LPWSTR', 'lpBuffer'), ('UINT', 'uSize')], wo_rolen_ret_len(0,1)],

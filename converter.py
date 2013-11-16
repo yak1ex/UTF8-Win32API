@@ -198,7 +198,7 @@ def _wo_len_helper(str_idx, len_idx, ctx, typespecs, coder):
     before, after = coder(orig_str_type, orig_str_name, orig_len_type, orig_len_name)
     return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
 
-def wo_rwlen_ret_bool(str_idx, len_idx):
+def wo_rwlen_ret_bool(str_idx, len_idx, error):
     """
     """
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
@@ -210,10 +210,10 @@ def wo_rwlen_ret_bool(str_idx, len_idx):
 	if(${str_name}_.get_utf8_length() <= *$len_name) {
 		*$len_name = ${str_name}_.get($str_name, *$len_name);
 	} else {
-		SetLastError(ERROR_BUFFER_OVERFLOW);
+		SetLastError($error_code);
 		ret = FALSE;
 	}
-""").substitute(str_name = orig_str_name, len_name = orig_len_name)))
+""").substitute(str_name = orig_str_name, len_name = orig_len_name, error_code = error)))
 
 def wo_rolen_ret_len(str_idx, len_idx):
     """
