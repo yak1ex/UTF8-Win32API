@@ -103,6 +103,9 @@ dispatcher.register([\
 
     ['', [('LPCWSTR', 'lpszFormat')], ro_nolen],
 
+    ['', [('LPCWSTR', 'lpName'), ('LPWSTR', 'lpBuffer'), ('DWORD', 'nSize')], [ro_nolen_idx(0), wo_rolen_ret_len(1,2)]],
+    ['', [('LPCWSTR', 'lpName'), ('LPCWSTR', 'lpValue')], ro_nolen],
+
 # FIXME: miniperl is compilable but fails to run
     ['MultiByteToWideChar', [('UINT', 'CodePage'), ('DWORD', 'dwFlags')], fakecp(0, 1)],
     ['WideCharToMultiByte', [('UINT', 'CodePage'), ('DWORD', 'dwFlags'), ('LPCCH', 'lpDefaultChar'), ('LPBOOL', 'lpUsedDefaultChar')], adjustdef(0, 1, 2, 3)],
