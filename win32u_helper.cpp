@@ -20,7 +20,7 @@ WSTR::WSTR(const WSTR& r) : m_size(r.m_size), m_wstr(r.m_wstr.get() ? new WCHAR[
 		CopyMemory(m_wstr.get(), r, m_size * sizeof(WCHAR));
 }
 
-WSTR::WSTR(DWORD size) : m_size(size), m_wstr(new WCHAR[size])
+WSTR::WSTR(DWORD size) : m_size(size), m_wstr(size ? new WCHAR[size] : 0)
 {
 }
 
