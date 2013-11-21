@@ -44,6 +44,13 @@ BOOST_AUTO_TEST_CASE(test_WSTR_null_with_size)
 	test_WSTR_null_(ws);
 }
 
+BOOST_AUTO_TEST_CASE(atest_WSTR_zero_as_null)
+{
+	DWORD dw = 0;
+	WSTR ws(dw); // Just to pass 0 leads ambiguous error
+	test_WSTR_null_(ws);
+}
+
 BOOST_AUTO_TEST_CASE(test_WSTR_null_swap)
 {
 	char buf[1024];
