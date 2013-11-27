@@ -2,6 +2,7 @@
 
 import os.path
 import re
+from string import Template
 
 class _Output(object):
     _cpp = {}
@@ -23,23 +24,27 @@ class _Output(object):
         self._cpp[actualname] = 1
         with open(actualname, 'a') as f:
             # FIXME: Inappropriate tight coupling
-            if outname == 'msvcrt.h':
-                f.write("#define UTF8_WIN32_DONT_REPLACE_MSVCRT\n")
-                f.write("#include <vector>\n")
-                f.write("#include <errno.h>\n")
-                f.write("#include <stdio.h>\n")
-                f.write("#include <direct.h>\n")
-                f.write("#include <io.h>\n")
-                f.write("#include <stdlib.h>\n")
-                f.write("#include <sys/stat.h>\n")
-                f.write("#include <sys/utime.h>\n")
-                f.write("#include <process.h>\n")
-            else:
-                f.write("#define UTF8_WIN32_DONT_REPLACE_ANSI\n")
-            f.write("#include \"" + self._h_name(outname) + "\"\n")
-            f.write("#include \"win32u_helper.hpp\"\n")
-            f.write("#include \"win32u_helperi.hpp\"\n")
-            f.write("#include \"odstream/odstream.hpp\"\n")
+            f.write(('''\
+#define UTF8_WIN32_DONT_REPLACE_MSVCRT
+#include <vector>
+#include <errno.h>
+#include <stdio.h>
+#include <direct.h>
+#include <io.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/utime.h>
+#include <process.h>
+''' if outname == 'msvcrt.h' else '''\
+#define UTF8_WIN32_DONT_REPLACE_ANSI
+''') + Template('''\
+#include "$header"
+
+#include "win32u_helper.hpp"
+#include "win32u_helperi.hpp"
+#include "odstream/odstream.hpp"
+
+''').substitute(header = self._h_name(outname)))
 
     def _h_header(self, outname):
         actualname = self._h_name(outname)
@@ -48,14 +53,22 @@ class _Output(object):
         self._h[actualname] = 1
         guard_name = actualname.upper().replace('.', '_')
         with open(actualname, 'a') as f:
-            f.write("#ifndef " + guard_name + "\n")
-            f.write("#define " + guard_name + "\n\n")
-            f.write("#include <windows.h>\n\n")
             # FIXME: Inappropriate tight coupling
-            if outname == 'msvcrt.h':
-                f.write("#include <wchar.h>\n\n")
-                f.write("#include <sys/utime.h>\n\n")
-            f.write("#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n")
+            f.write(Template('''\
+#ifndef $guard
+#define $guard
+
+#include <windows.h>
+$header
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+''').substitute(guard = guard_name, header = '''\
+#include <wchar.h>
+#include <sys/utime.h>
+
+''' if outname == 'msvcrt.h' else "\n"))
 
     def cpp(self, outname, str):
         self._cpp_header(outname)
@@ -74,7 +87,13 @@ class _Output(object):
     def cleanup(self):
         for actualname in self._h:
             with open(actualname, 'a') as f:
-                f.write("\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n")
+                f.write('''
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+''')
 
 from collections import namedtuple
 
@@ -94,6 +113,15 @@ class Dispatcher(object):
 
     def register(self, spec):
         self._table.extend(spec)
+
+    def _make_def(self, decl, name, trace, body):
+        return Template('''
+$decl
+{
+	ODS(<< "$name" << " : "$trace << std::endl);
+$body
+}
+''').substitute(decl = decl, name = name, trace = trace, body = body)
 
     def dispatch(self, desc):
         processed = False
@@ -122,29 +150,34 @@ class Dispatcher(object):
                 macro = self._macro(ctx, onespec)
 
                 if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
-                    call = ctx.desc_call.make_func_call() + ";\n"
-                    ret = "return;\n"
+                    call = ctx.desc_call.make_func_call() + ";"
+                    ret = "return;"
                     if desc_fallback_call is not None:
-                        fallback_call = desc_fallback_call.make_func_call() + ";\n"
+                        fallback_call = desc_fallback_call.make_func_call() + ";"
                 elif ctx.desc_self.result_type == ctx.desc_call.result_type:
-                    call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";\n"
-                    ret = "return ret;\n"
+                    call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";"
+                    ret = "return ret;"
                     if desc_fallback_call is not None:
-                        fallback_call = "return " + desc_fallback_call.make_func_call() + ";\n"
+                        fallback_call = "return " + desc_fallback_call.make_func_call() + ";"
                 else:
-                    call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";\n"
-                    ret = "return ret_;\n" # ret_ MUST be defined in conversion
+                    call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";"
+                    ret = "return ret_;" # ret_ MUST be defined in conversion
                     if desc_fallback_call is not None:
-                        fallback_call = "return " + desc_fallback_call.make_func_call() + ";\n"
+                        fallback_call = "return " + desc_fallback_call.make_func_call() + ";"
 
                 self._output.cpp(outname, \
-                    ctx.desc_self.make_func_decl() + "\n{\n" + \
-                    '\tODS(<< "' + ctx.desc_self.name + '" << " : "' + ctx.desc_self.make_trace_arg() + " << std::endl);\n" + \
-                    ctx.code_before + "\t" + call + ctx.code_after + "\t" + ret + "}\n" +
-                    ((desc_fallback.make_func_decl() + "\n{\n" + \
-                    '\tODS(<< "' + desc_fallback.name + '" << " : "' + desc_fallback.make_trace_arg() + " << std::endl);\n" + \
-                    "\t" + fallback_call + "}\n") if desc_fallback is not None else "") \
+                    self._make_def( \
+                        ctx.desc_self.make_func_decl(), \
+                        ctx.desc_self.name, \
+                        ctx.desc_self.make_trace_arg(), \
+                        ctx.code_before + "\t" + call + "\n" + ctx.code_after + "\t" + ret) + \
+                    (self._make_def( \
+                        desc_fallback.make_func_decl(), \
+                        desc_fallback.name, \
+                        desc_fallback.make_trace_arg(), \
+                        "\t" + fallback_call) if desc_fallback is not None else '')
                 )
+
                 self._output.h(outname, \
                     "\n".join(map( \
                         lambda x: ("#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT\n" if (x[0] == _Spec.CRT_OPT or x[0] == _Spec.CRT_OLD) else "#ifndef UTF8_WIN32_DONT_REPLACE_ANSI\n" if x[0] == _Spec.API_OPT else "") + \
