@@ -27,6 +27,13 @@ class _Output(object):
                 f.write("#define UTF8_WIN32_DONT_REPLACE_MSVCRT\n")
                 f.write("#include <vector>\n")
                 f.write("#include <errno.h>\n")
+                f.write("#include <stdio.h>\n")
+                f.write("#include <direct.h>\n")
+                f.write("#include <io.h>\n")
+                f.write("#include <stdlib.h>\n")
+                f.write("#include <sys/stat.h>\n")
+                f.write("#include <sys/utime.h>\n")
+                f.write("#include <process.h>\n")
             else:
                 f.write("#define UTF8_WIN32_DONT_REPLACE_ANSI\n")
             f.write("#include \"" + self._h_name(outname) + "\"\n")
@@ -111,22 +118,32 @@ class Dispatcher(object):
                 funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
                 ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
 
+                desc_fallback, desc_fallback_call = self._fallback(ctx, onespec)
                 macro = self._macro(ctx, onespec)
 
                 if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
                     call = ctx.desc_call.make_func_call() + ";\n"
                     ret = "return;\n"
+                    if desc_fallback_call is not None:
+                        fallback_call = desc_fallback_call.make_func_call() + ";\n"
                 elif ctx.desc_self.result_type == ctx.desc_call.result_type:
                     call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";\n"
                     ret = "return ret;\n"
+                    if desc_fallback_call is not None:
+                        fallback_call = "return " + desc_fallback_call.make_func_call() + ";\n"
                 else:
                     call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";\n"
                     ret = "return ret_;\n" # ret_ MUST be defined in conversion
+                    if desc_fallback_call is not None:
+                        fallback_call = "return " + desc_fallback_call.make_func_call() + ";\n"
 
                 self._output.cpp(outname, \
                     ctx.desc_self.make_func_decl() + "\n{\n" + \
                     '\tODS(<< "' + ctx.desc_self.name + '" << " : "' + ctx.desc_self.make_trace_arg() + " << std::endl);\n" + \
-                    ctx.code_before + "\t" + call + ctx.code_after + "\t" + ret + "}\n" \
+                    ctx.code_before + "\t" + call + ctx.code_after + "\t" + ret + "}\n" +
+                    ((desc_fallback.make_func_decl() + "\n{\n" + \
+                    '\tODS(<< "' + desc_fallback.name + '" << " : "' + desc_fallback.make_trace_arg() + " << std::endl);\n" + \
+                    "\t" + fallback_call + "}\n") if desc_fallback is not None else "") \
                 )
                 self._output.h(outname, \
                     "\n".join(map( \
@@ -138,7 +155,8 @@ class Dispatcher(object):
                             "#define " + x[1] + ' ' + ctx.desc_self.name + "\n" + \
                             ("#endif\n" if x[0] == _Spec.CRT_OLD else "") + \
                             ("#endif\n" if x[0] == _Spec.CRT_OPT or (x[0] == _Spec.API_OPT or x[0] == _Spec.CRT_OLD) else ""), macro)) + \
-                    "extern " + ctx.desc_self.make_func_decl() + ";\n\n" \
+                    "extern " + ctx.desc_self.make_func_decl() + ";\n\n" + \
+                    (("extern " + desc_fallback.make_func_decl() + ";\n\n") if desc_fallback is not None else "") \
                 )
                 break
         if not processed:
@@ -162,6 +180,18 @@ class APIDispatcher(Dispatcher):
         else:
             ctx.desc_self.name = ctx.desc_self.name + 'U'
         return ctx
+
+    def _fallback(self, ctx, onespec):
+        if ctx.desc_call.name == 'FindFirstStreamW':
+            return None, None
+        fallback, fallback_call = ctx.desc_self.clone(), ctx.desc_self.clone()
+        if ctx.desc_call.name[-1] == 'W':
+            fallback.name = fallback.name[:-1] + 'A_'
+            fallback_call.name = fallback_call.name[:-1] + 'A'
+        else:
+            fallback.name = fallback.name[:-1] + '_'
+            fallback_call.name = fallback_call.name[:-1]
+        return fallback, fallback_call
 
     def _macro(self, ctx, onespec):
         if ctx.desc_call.name[-1] == 'W':
@@ -188,6 +218,14 @@ class CRTDispatcher(Dispatcher):
         ctx.desc_self.name = onespec[_Spec.REGEXP][_Spec.SELF]
         ctx.desc_call.name = onespec[_Spec.REGEXP][_Spec.CALL]
         return ctx
+
+    def _fallback(self, ctx, onespec):
+        if ctx.desc_self.is_variadic or len(onespec[_Spec.REGEXP][_Spec.ALIAS_OPT]) == 0:
+            return None, None
+        fallback, fallback_call = ctx.desc_self.clone(), ctx.desc_self.clone()
+        fallback.name = onespec[_Spec.REGEXP][_Spec.ALIAS_OPT][0] + '_'
+        fallback_call.name = onespec[_Spec.REGEXP][_Spec.ALIAS_OPT][0]
+        return fallback, fallback_call
 
 # FIXME: specific action should be moved elsewhere
     def _macro(self, ctx, onespec):
