@@ -58,7 +58,7 @@ dispatcher.register([\
     ['', [('LPCWSTR', 'lpRootPathName')], ro_nolen],
 
     ['', [('LPCWSTR', 'lpDirectoryName')], ro_nolen],
-    ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPCWSTR', 'lpszVolueName')], ro_nolen],
+    ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPCWSTR', 'lpszVolumeName')], ro_nolen],
     ['', [('LPCWSTR', 'lpszRootPathName'), ('LPWSTR', 'lpszVolumeMountPoint'), ('DWORD', 'cchBufferLength')], [ro_nolen_idx(0), wo_rolen_ret_zero(1,2)]],
     ['', [('LPWSTR', 'lpszVolumeMountPoint'), ('DWORD', 'cchBufferLength')], wo_rolen_ret_zero(0,1)],
     ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPWSTR', 'lpszVolumeName'), ('DWORD', 'cchBufferLength')], [ro_nolen_idx(0), wo_rolen_ret_zero(1,2)]],
