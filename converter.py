@@ -2,9 +2,10 @@
 
 from string import Template
 
-def _nolen_helper(target_type, ctx, typespec, coder):
+def _nolen_helper(ctx, typespec, coder):
     target_index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    target_type = "LPSTR" if orig_type == "LPWSTR" or orig_type == "wchar_t *" else "LPCSTR"
     ctx.desc_self.parameter_types[target_index] = (target_type, orig_name)
     ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
     before, after = coder(orig_type, orig_name)
@@ -13,7 +14,7 @@ def _nolen_helper(target_type, ctx, typespec, coder):
 def _ro_nolen_imp(ctx, typespec):
     """
     """
-    return _nolen_helper('LPCSTR', ctx, typespec, \
+    return _nolen_helper(ctx, typespec, \
         lambda orig_type, orig_name: (Template("""\
 	WSTR ${name}_($name);
 """).substitute(name = orig_name), ''))
@@ -126,7 +127,7 @@ def rova_nolen_withenv_idx(idx):
 def _wo_nolen_imp(ctx, typespec):
     """
     """
-    return _nolen_helper('LPSTR', ctx, typespec, \
+    return _nolen_helper(ctx, typespec, \
         lambda orig_type, orig_name: (\
             Template("""\
 	WSTR ${name}_($name ? MAX_PATH : 0);
@@ -151,7 +152,7 @@ def wo_nolen(ctx, typespecs):
 
 def _wo_nolen_ret_null_static_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
-    return _nolen_helper('LPSTR', ctx, typespec, lambda orig_type, orig_name: (Template("""\
+    return _nolen_helper(ctx, typespec, lambda orig_type, orig_name: (Template("""\
 	static char static_buf[$size * 3 + 1];
 	WSTR ${name}_($name);
 """).substitute(size = size, name = orig_name), Template("""\
@@ -172,7 +173,7 @@ def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
 
 def _wo_nolen_ret_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
-    return _nolen_helper('LPSTR', ctx, typespec, lambda orig_type, orig_name: (Template("""\
+    return _nolen_helper(ctx, typespec, lambda orig_type, orig_name: (Template("""\
 	WSTR ${name}_($size);
 """).substitute(size = size, name = orig_name), Template("""\
 	LPSTR ret_ = 0;
