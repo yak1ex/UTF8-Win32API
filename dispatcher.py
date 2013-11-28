@@ -104,8 +104,12 @@ class _Spec:
     REGEXP, TYPES, FUNC = range(3)
 # in REGEXP for CRT
     SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
-# macro type
-    NORMAL, CRT_OLD, CRT_OPT, API_OPT = range(4)
+# macro spec
+    GUARD, REPLACEMENT = range(2)
+    NORMAL = []
+    CRT_OLD = ['UTF8_WIN32_DONT_REPLACE_MSVCRT', 'NO_OLDNAMES']
+    CRT_OPT = ['UTF8_WIN32_DONT_REPLACE_MSVCRT']
+    API_OPT = ['UTF8_WIN32_DONT_REPLACE_ANSI']
 
 class Dispatcher(object):
     _output = _Output()
@@ -179,17 +183,18 @@ $body
                 )
 
                 self._output.h(outname, \
-                    "\n".join(map( \
-                        lambda x: ("#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT\n" if (x[0] == _Spec.CRT_OPT or x[0] == _Spec.CRT_OLD) else "#ifndef UTF8_WIN32_DONT_REPLACE_ANSI\n" if x[0] == _Spec.API_OPT else "") + \
-                            ("#ifndef NO_OLDNAMES\n" if x[0] == _Spec.CRT_OLD else "") + \
-                            "#ifdef " + x[1] + "\n" + \
-                            "#undef " + x[1] + "\n" + \
-                            "#endif\n" + \
-                            "#define " + x[1] + ' ' + ctx.desc_self.name + "\n" + \
-                            ("#endif\n" if x[0] == _Spec.CRT_OLD else "") + \
-                            ("#endif\n" if x[0] == _Spec.CRT_OPT or (x[0] == _Spec.API_OPT or x[0] == _Spec.CRT_OLD) else ""), macro)) + \
-                    "extern " + ctx.desc_self.make_func_decl() + ";\n\n" + \
-                    (("extern " + desc_fallback.make_func_decl() + ";\n\n") if desc_fallback is not None else "") \
+                    "\n" + ''.join(map( \
+                        lambda x: reduce(lambda acc, guard: Template('''\
+#ifndef $guard
+$body#endif
+'''                         ).substitute(guard = guard, body = acc), reversed(x[_Spec.GUARD]), Template('''\
+#ifdef $target
+#undef $target
+#define $target $name
+#endif
+'''                         ).substitute(target = x[_Spec.REPLACEMENT], name = ctx.desc_self.name)), macro)) + \
+                    "extern " + ctx.desc_self.make_func_decl() + ";\n" + \
+                    (("extern " + desc_fallback.make_func_decl() + ";\n") if desc_fallback is not None else "") \
                 )
                 break
         if not processed:
@@ -262,7 +267,7 @@ class CRTDispatcher(Dispatcher):
 
 # FIXME: specific action should be moved elsewhere
     def _macro(self, ctx, onespec):
-        macro = [((_Spec.CRT_OLD if re.match('(exec|spawn)v', x) else _Spec.CRT_OPT), x) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_OPT]]
+        macro = [(_Spec.CRT_OLD if re.match('(exec|spawn)v', x) else _Spec.CRT_OPT, x) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_OPT]]
         macro.extend([(_Spec.CRT_OLD, x.replace('_', '')) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_OPT] if '_' in x and not re.search('_(exec|spawn)v', x)])
         macro.extend([(_Spec.NORMAL, x) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_ALL]])
         return macro
