@@ -1,7 +1,7 @@
 ifeq ($(MAKECMD),dmake)
 CXX=g++
 CXXFLAGS= -Wall -pedantic -DWINVER=0x0500 -DDEBUG
-OBJS=$(subst,u.cpp,u.o $(shell cmd.exe /c dir.exe /b *u.cpp)) odstream/odstream.o
+OBJS=$(subst,u.cpp,u.o $(shell cmd.exe /c dir.exe /b *u.cpp)) $(subst,u_.cpp,u_.o $(shell cmd.exe /c dir.exe /b *u_.cpp)) odstream/odstream.o
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -12,7 +12,7 @@ CC=i686-w64-mingw32-gcc
 CXX=i686-w64-mingw32-g++
 CFLAGS=-Wall -pedantic -DWINVER=0x0500 -I.
 CXXFLAGS=-Wall -pedantic -Ic:/cygwin/usr/local/include -DWINVER=0x0500 -DDEBUG -I.
-OBJS=$(patsubst %u.cpp,%u.o,$(wildcard *u.cpp)) odstream/odstream.o
+OBJS=$(patsubst %u.cpp,%u.o,$(wildcard *u.cpp)) $(patsubst %u_.cpp,%u_.o,$(wildcard *u_.cpp)) odstream/odstream.o
 
 endif
 

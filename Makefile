@@ -6,7 +6,7 @@ generate:
 	$(MAKE) -f Makefile.generate .generate
 
 clean:
-	-rm -rf *.o *.a *.exe *u.txt *u.cpp *u.h *.pyc .generate odstream/*.o
+	-rm -rf *.o *.a *.exe *u.txt *u.cpp *u_.cpp *u.h *.pyc .generate odstream/*.o
 
 test: generate
 testrun: generate

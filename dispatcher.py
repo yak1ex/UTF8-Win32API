@@ -11,6 +11,9 @@ class _Output(object):
     def _cpp_name(self, outname):
         return outname.replace('.h', 'u.cpp')
 
+    def _cpp2_name(self, outname):
+        return outname.replace('.h', 'u_.cpp')
+
     def _h_name(self, outname):
         return outname.replace('.h', 'u.h')
 
@@ -18,7 +21,12 @@ class _Output(object):
         return outname.replace('.h', 'u.txt')
 
     def _cpp_header(self, outname):
-        actualname = self._cpp_name(outname)
+        self._cpp_header_(outname, self._cpp_name(outname))
+
+    def _cpp2_header(self, outname):
+        self._cpp_header_(outname, self._cpp2_name(outname))
+
+    def _cpp_header_(self, outname, actualname):
         if actualname in self._cpp:
             return
         self._cpp[actualname] = 1
@@ -73,6 +81,11 @@ extern "C" {
     def cpp(self, outname, str):
         self._cpp_header(outname)
         with open(self._cpp_name(outname), 'a') as f:
+            f.write(str)
+
+    def cpp2(self, outname, str):
+        self._cpp2_header(outname)
+        with open(self._cpp2_name(outname), 'a') as f:
             f.write(str)
 
     def h(self, outname, str):
@@ -174,13 +187,15 @@ $body
                         ctx.desc_self.make_func_decl(), \
                         ctx.desc_self.name, \
                         ctx.desc_self.make_trace_arg(), \
-                        ctx.code_before + "\t" + call + "\n" + ctx.code_after + "\t" + ret) + \
-                    (self._make_def( \
-                        desc_fallback.make_func_decl(), \
-                        desc_fallback.name, \
-                        desc_fallback.make_trace_arg(), \
-                        "\t" + fallback_call) if desc_fallback is not None else '')
-                )
+                        ctx.code_before + "\t" + call + "\n" + ctx.code_after + "\t" + ret))
+
+                if desc_fallback is not None:
+                    self._output.cpp2(outname, \
+                        self._make_def( \
+                            desc_fallback.make_func_decl(), \
+                            desc_fallback.name, \
+                            desc_fallback.make_trace_arg(), \
+                            "\t" + fallback_call))
 
                 self._output.h(outname, \
                     "\n" + ''.join(map( \
