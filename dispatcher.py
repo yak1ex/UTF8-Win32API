@@ -246,6 +246,9 @@ class APIDispatcher(Dispatcher):
         Dispatcher.__del__(self)
 
 class CRTDispatcher(Dispatcher):
+    def __init__(self):
+        self._prolog()
+
     def _match(self, onespec, desc):
         return desc.name == onespec[_Spec.REGEXP][_Spec.CALL]
 
@@ -273,7 +276,7 @@ class CRTDispatcher(Dispatcher):
         return macro
 
 # FIXME: specific action should be moved elsewhere
-    def __del__(self):
+    def _prolog(self):
         self._output.h('msvcrt.h', """\
 
 #ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT
@@ -392,4 +395,3 @@ class CRTDispatcher(Dispatcher):
 #endif
 
 """)
-        Dispatcher.__del__(self)
