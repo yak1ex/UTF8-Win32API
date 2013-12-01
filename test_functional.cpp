@@ -9,11 +9,11 @@ BOOST_AUTO_TEST_CASE(test_file)
 	BOOST_CHECK(hFile != INVALID_HANDLE_VALUE);
 	BOOST_CHECK(CloseHandle(hFile));
 	BOOST_CHECK(MoveFile("ソソソソ開発.txt", "開発.txt"));
-//	struct __stat st;
-//	BOOST_CHECK(_stat("開発.txt", &st) == 0);
+	struct _stat st;
+	BOOST_CHECK(_stat("開発.txt", &st) == 0);
 	BOOST_CHECK(SetFileAttributes("開発.txt", FILE_ATTRIBUTE_HIDDEN));
 	BOOST_CHECK(DeleteFile("開発.txt"));
-//	BOOST_CHECK(_stat("開発.txt", &st));
+	BOOST_CHECK(_stat("開発.txt", &st));
 }
 
 BOOST_AUTO_TEST_CASE(test_query_fs)
