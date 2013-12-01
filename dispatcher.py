@@ -190,8 +190,8 @@ $body#endif
 '''                         ).substitute(guard = guard, body = acc), reversed(x[_Spec.GUARD]), Template('''\
 #ifdef $target
 #undef $target
-#define $target $name
 #endif
+#define $target $name
 '''                         ).substitute(target = x[_Spec.REPLACEMENT], name = ctx.desc_self.name)), macro)) + \
                     "extern " + ctx.desc_self.make_func_decl() + ";\n" + \
                     (("extern " + desc_fallback.make_func_decl() + ";\n") if desc_fallback is not None else "") \
