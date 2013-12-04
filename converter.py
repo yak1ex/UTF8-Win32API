@@ -71,6 +71,8 @@ def _rova_nolen_imp(ctx, typespec):
 	va_start(${name}_va, $name);
 	std::vector<LPCWSTR> ${name}_arg;
 	std::vector<WSTR> ${name}_hold;
+	${name}_hold.push_back(WSTR($name));
+	${name}_arg.push_back(${name}_hold.back());
 	do {
 		LPSTR p = va_arg(${name}_va, LPSTR);
 		${name}_hold.push_back(WSTR(p));
@@ -100,6 +102,8 @@ def _rova_nolen_withenv_imp(ctx, typespec):
 	va_start(${name}_va, $name);
 	std::vector<LPCWSTR> ${name}_arg;
 	std::vector<WSTR> ${name}_hold;
+	${name}_hold.push_back(WSTR($name));
+	${name}_arg.push_back(${name}_hold.back());
 	do {
 		LPSTR p = va_arg(${name}_va, LPSTR);
 		${name}_hold.push_back(WSTR(p));
