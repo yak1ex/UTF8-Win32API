@@ -3,6 +3,7 @@
 *.o
 *.a
 *u.cpp
+*u_.cpp
 *u.h
 *u.txt
 *.pyc
