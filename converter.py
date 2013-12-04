@@ -217,6 +217,7 @@ def wo_rwlen_ret_bool(str_idx, len_idx, error):
 	}
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, error_code = error)))
 
+# TODO: currently, returns length more than required
 def wo_rolen_ret_len(str_idx, len_idx):
     """
     """
@@ -226,7 +227,9 @@ def wo_rolen_ret_len(str_idx, len_idx):
 	WSTR ${str_name}_(${len_name}_);
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(ret) {
-		if(${str_name}_.get_utf8_length() <= $len_name) {
+		if(! $str_name) {
+			ret = ret * 3;
+		} else if(${str_name}_.get_utf8_length() <= $len_name) {
 			ret = ${str_name}_.get($str_name, $len_name) - 1;
 		} else {
 			ret = ${str_name}_.get_utf8_length();
