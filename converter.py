@@ -39,14 +39,16 @@ def _roarray_nolen_imp(ctx, typespec):
     ctx.desc_self.parameter_types[target_index] = ('LPCSTR const *', orig_name)
     ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
     before = Template("""\
-	std::vector<LPCWSTR> ${name}_arg;
 	std::vector<WSTR> ${name}_hold;
 	int ${name}_idx = 0;
 	while(1) {
 		${name}_hold.push_back(WSTR(${name}[${name}_idx]));
-		${name}_arg.push_back(${name}_hold.back());
-		if(! ${name}_arg.back()) break;
+		if(! ${name}_hold.back()) break;
 		++${name}_idx;
+	}
+	std::vector<LPCWSTR> ${name}_arg;
+	for(std::size_t ${name}_hold_idx = 0; ${name}_hold_idx != ${name}_hold.size(); ++${name}_hold_idx) {
+		${name}_arg.push_back(${name}_hold[${name}_hold_idx]);
 	}
 	LPCWSTR* ${name}_ = &${name}_arg[0];
 """).substitute(name = orig_name)
@@ -69,15 +71,16 @@ def _rova_nolen_imp(ctx, typespec):
     before = Template("""\
 	va_list ${name}_va;
 	va_start(${name}_va, $name);
-	std::vector<LPCWSTR> ${name}_arg;
 	std::vector<WSTR> ${name}_hold;
 	${name}_hold.push_back(WSTR($name));
-	${name}_arg.push_back(${name}_hold.back());
 	do {
 		LPSTR p = va_arg(${name}_va, LPSTR);
 		${name}_hold.push_back(WSTR(p));
-		${name}_arg.push_back(${name}_hold.back());
-	} while(${name}_arg.back());
+	} while(${name}_hold.back());
+	std::vector<LPCWSTR> ${name}_arg;
+	for(std::size_t ${name}_hold_idx = 0; ${name}_hold_idx != ${name}_hold.size(); ++${name}_hold_idx) {
+		${name}_arg.push_back(${name}_hold[${name}_hold_idx]);
+	}
 	LPCWSTR* ${name}_ = &${name}_arg[0];
 """).substitute(name = orig_name)
     return ctx._replace(code_before = ctx.code_before + before)
@@ -100,26 +103,29 @@ def _rova_nolen_withenv_imp(ctx, typespec):
     before = Template("""\
 	va_list ${name}_va;
 	va_start(${name}_va, $name);
-	std::vector<LPCWSTR> ${name}_arg;
 	std::vector<WSTR> ${name}_hold;
 	${name}_hold.push_back(WSTR($name));
-	${name}_arg.push_back(${name}_hold.back());
 	do {
 		LPSTR p = va_arg(${name}_va, LPSTR);
 		${name}_hold.push_back(WSTR(p));
-		${name}_arg.push_back(${name}_hold.back());
-	} while(${name}_arg.back());
+	} while(${name}_hold.back());
+	std::vector<LPCWSTR> ${name}_arg;
+	for(std::size_t ${name}_hold_idx = 0; ${name}_hold_idx != ${name}_hold.size(); ++${name}_hold_idx) {
+		${name}_arg.push_back(${name}_hold[${name}_hold_idx]);
+	}
 	LPCWSTR* ${name}_ = &${name}_arg[0];
 
 	LPCSTR* ${name}_env = va_arg(${name}_va, LPCSTR*);
-	std::vector<LPCWSTR> ${name}_env_arg;
 	std::vector<WSTR> ${name}_env_hold;
 	int ${name}_env_idx = 0;
 	while(1) {
 		${name}_env_hold.push_back(WSTR(${name}_env[${name}_env_idx]));
-		${name}_env_arg.push_back(${name}_env_hold.back());
-		if(! ${name}_env_arg.back()) break;
+		if(! ${name}_env_hold.back()) break;
 		++${name}_env_idx;
+	}
+	std::vector<LPCWSTR> ${name}_env_arg;
+	for(std::size_t ${name}_env_hold_idx = 0; ${name}_env_hold_idx != ${name}_env_hold.size(); ++${name}_env_hold_idx) {
+		${name}_env_arg.push_back(${name}_env_hold[${name}_env_hold_idx]);
 	}
 	LPCWSTR* ${name}_env_ = &${name}_env_arg[0];
 """).substitute(name = orig_name)
