@@ -6,7 +6,7 @@ generate:
 	$(MAKE) -f Makefile.generate .generate
 
 clean:
-	-rm -rf {gensrc,helper,odstream}/*.o *.a *.exe gensrc/*u.{txt,cpp} gensrc/*u_.cpp include/*u.h *.pyc .generate
+	-rm -rf {gensrc,helper,odstream}/*.o *.a *.exe gensrc/*.{txt,cpp} include/*u.h *.pyc .generate
 
 test: generate
 testrun: generate

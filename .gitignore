@@ -2,8 +2,7 @@
 *.exe
 *.o
 *.a
-gensrc/*u.cpp
-gensrc/*u_.cpp
+gensrc/*.cpp
 include/*u.h
 gensrc/*u.txt
 *.pyc
