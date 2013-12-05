@@ -9,10 +9,10 @@ class _Output(object):
     _h = {}
 
     def _cpp_name(self, outname):
-        return 'gensrc/'+ outname.replace('.h', 'u.cpp')
+        return 'gensrc/'+ outname.replace('.h', 'u_' + str(self._cpp[outname]) + '.cpp')
 
     def _cpp2_name(self, outname):
-        return 'gensrc/' + outname.replace('.h', 'u_.cpp')
+        return 'gensrc/' + outname.replace('.h', 'u_' + str(self._cpp[outname]) + '_.cpp')
 
     def _h_name(self, outname):
         return 'include/' + outname.replace('.h', 'u.h')
@@ -77,6 +77,11 @@ extern "C" {
 #include <sys/utime.h>
 
 ''' if outname == 'msvcrt.h' else "\n"))
+
+    def cpp_renew(self, outname):
+        if not outname in self._cpp:
+            self._cpp[outname] = 0
+        self._cpp[outname] += 1
 
     def cpp(self, outname, str):
         self._cpp_header(outname)
@@ -182,6 +187,7 @@ $body
                     if desc_fallback_call is not None:
                         fallback_call = "return " + desc_fallback_call.make_func_call() + ";"
 
+                self._output.cpp_renew(outname)
                 self._output.cpp(outname, \
                     self._make_def( \
                         ctx.desc_self.make_func_decl(), \
