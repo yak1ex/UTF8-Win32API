@@ -2,10 +2,10 @@
 *.exe
 *.o
 *.a
-*u.cpp
-*u_.cpp
-*u.h
-*u.txt
+gensrc/*u.cpp
+gensrc/*u_.cpp
+include/*u.h
+gensrc/*u.txt
 *.pyc
 .generate
 .extract

@@ -1,7 +1,7 @@
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/type_traits/is_same.hpp>
 
-#include "win32u_helper.hpp"
+#include "helper/win32u_helper.hpp"
 #include <iostream>
 
 //const char pszDevJ[] = "\xe9\x96\x8b\xe7\x99\xba";

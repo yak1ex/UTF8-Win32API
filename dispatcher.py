@@ -9,16 +9,16 @@ class _Output(object):
     _h = {}
 
     def _cpp_name(self, outname):
-        return outname.replace('.h', 'u.cpp')
+        return 'gensrc/'+ outname.replace('.h', 'u.cpp')
 
     def _cpp2_name(self, outname):
-        return outname.replace('.h', 'u_.cpp')
+        return 'gensrc/' + outname.replace('.h', 'u_.cpp')
 
     def _h_name(self, outname):
-        return outname.replace('.h', 'u.h')
+        return 'include/' + outname.replace('.h', 'u.h')
 
     def _txt_name(self, outname):
-        return outname.replace('.h', 'u.txt')
+        return 'gensrc/' + outname.replace('.h', 'u.txt')
 
     def _cpp_header(self, outname):
         self._cpp_header_(outname, self._cpp_name(outname))
@@ -48,18 +48,18 @@ class _Output(object):
 ''') + Template('''\
 #include "$header"
 
-#include "win32u_helper.hpp"
-#include "win32u_helperi.hpp"
+#include "helper/win32u_helper.hpp"
+#include "helper/win32u_helperi.hpp"
 #include "odstream/odstream.hpp"
 
-''').substitute(header = self._h_name(outname)))
+''').substitute(header = self._h_name(outname).partition('/')[2]))
 
     def _h_header(self, outname):
         actualname = self._h_name(outname)
         if actualname in self._h:
             return
         self._h[actualname] = 1
-        guard_name = actualname.upper().replace('.', '_')
+        guard_name = actualname.partition('/')[2].upper().replace('.', '_')
         with open(actualname, 'a') as f:
             # FIXME: Inappropriate tight coupling
             f.write(Template('''\
@@ -253,10 +253,10 @@ class APIDispatcher(Dispatcher):
             return [(_Spec.API_OPT, ctx.desc_self.name[:-1])]
 
     def __del__(self):
-        with open('windowsu.h', 'a') as f:
+        with open('include/windowsu.h', 'a') as f:
             f.write("#ifndef WINDOWSU_H\n#define WINDOWSU_H\n\n")
             for actualname in self._output._h:
-                f.write("#include <" + actualname + ">\n")
+                f.write("#include <" + actualname.partition('/')[2] + ">\n")
             f.write("\n#endif\n")
         Dispatcher.__del__(self)
 

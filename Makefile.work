@@ -1,7 +1,8 @@
 ifeq ($(MAKECMD),dmake)
 CXX=g++
-CXXFLAGS= -Wall -pedantic -DWINVER=0x0500 -DDEBUG
-OBJS=$(subst,u.cpp,u.o $(shell cmd.exe /c dir.exe /b *u.cpp)) $(subst,u_.cpp,u_.o $(shell cmd.exe /c dir.exe /b *u_.cpp)) odstream/odstream.o
+CXXFLAGS= -Wall -pedantic -DWINVER=0x0500 -DDEBUG -Iinclude -I.
+OBJS_=$(subst,u.cpp,u.o $(shell cmd.exe /c dir /b gensrc\*u.cpp)) $(subst,u_.cpp,u_.o $(shell cmd.exe /c dir /b gensrc\*u_.cpp))
+OBJS=$(foreach,i,$(OBJS_) gensrc/$i) odstream/odstream.o
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -10,9 +11,9 @@ else
 
 CC=i686-w64-mingw32-gcc
 CXX=i686-w64-mingw32-g++
-CFLAGS=-Wall -pedantic -DWINVER=0x0500 -I.
-CXXFLAGS=-Wall -pedantic -Ic:/cygwin/usr/local/include -DWINVER=0x0500 -DDEBUG -I.
-OBJS=$(patsubst %u.cpp,%u.o,$(wildcard *u.cpp)) $(patsubst %u_.cpp,%u_.o,$(wildcard *u_.cpp)) odstream/odstream.o
+CFLAGS=-Wall -pedantic -DWINVER=0x0500 -Iinclude -I.
+CXXFLAGS=-Wall -pedantic -Ic:/cygwin/usr/local/include -DWINVER=0x0500 -DDEBUG -Iinclude -I.
+OBJS=$(patsubst %u.cpp,%u.o,$(wildcard gensrc/*u.cpp)) $(patsubst %u_.cpp,%u_.o,$(wildcard gensrc/*u_.cpp)) odstream/odstream.o
 
 endif
 
@@ -24,11 +25,11 @@ test: libwin32u.a test.o
 testrun: testrunner
 	./testrunner --log_level=message
 
-testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test_*.c)) $(patsubst test%.cpp,test%.o,$(wildcard test*.cpp)) libwin32u.a
+testrunner: $(patsubst test_%.c,test_%.o,$(wildcard test/test_*.c)) $(patsubst test%.cpp,test%.o,$(wildcard test/test*.cpp)) libwin32u.a
 	$(CXX) -static -o $@ $^
 
-libwin32u.a: win32u_helper.o $(OBJS)
-	$(AR) ru $@ win32u_helper.o $(OBJS)
+libwin32u.a: helper/win32u_helper.o $(OBJS)
+	$(AR) ru $@ helper/win32u_helper.o $(OBJS)
 
 %.h: %.txt
 	perl header.pl $< $@

@@ -74,7 +74,7 @@ diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
  #
  
 -INCLUDES	= -I.\include -I. -I.. -I$(COREDIR)
-+INCLUDES	= -I.\include -I. -I.. -I$(COREDIR) -I$(PWD)/../..
++INCLUDES	= -I.\include -I. -I.. -I$(COREDIR) -I$(PWD)/../../include
  DEFINES		= -DWIN32
  .IF "$(WIN64)" == "define"
  DEFINES		+= -DWIN64 -DCONSERVATIVE
