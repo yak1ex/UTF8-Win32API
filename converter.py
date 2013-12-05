@@ -163,7 +163,7 @@ def wo_nolen(ctx, typespecs):
 def _wo_nolen_ret_null_static_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
     return _nolen_helper(ctx, typespec, lambda orig_type, orig_name: (Template("""\
-	static char static_buf[$size * 3 + 1];
+	static char static_buf[$size * 3];
 	WSTR ${name}_($name);
 """).substitute(size = size, name = orig_name), Template("""\
 	LPSTR ret_ = 0;
@@ -215,8 +215,8 @@ def wo_rwlen_ret_bool(str_idx, len_idx, error):
     """
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
-	WSTR ${str_name}_(*${len_name} * 3 + 1);
-	my_remove_pointer<$len_type>::type ${len_name}__ = *$len_name * 3 + 1;
+	WSTR ${str_name}_(*${len_name});
+	my_remove_pointer<$len_type>::type ${len_name}__ = *$len_name;
 	$len_type ${len_name}_ = &${len_name}__;
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(${str_name}_.get_utf8_length() <= *$len_name) {
@@ -233,7 +233,7 @@ def wo_rolen_ret_len(str_idx, len_idx):
     """
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
-	$len_type ${len_name}_ = $len_name ? $len_name * 3 + 1 : 0;
+	$len_type ${len_name}_ = $len_name;
 	WSTR ${str_name}_(${len_name}_);
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(ret) {
@@ -252,7 +252,7 @@ def wo_rolen_ret_zero(str_idx, len_idx):
     """
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
-	$len_type ${len_name}_ = $len_name ? $len_name * 3 + 1 : 0;
+	$len_type ${len_name}_ = $len_name;
 	WSTR ${str_name}_(${len_name}_);
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(ret) {
@@ -269,7 +269,7 @@ def _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
     ctx.desc_self.result_type = 'LPSTR';
     return _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
-	$len_type ${len_name}_ = $len_name ? $len_name * 3 + 1 : 0;
+	$len_type ${len_name}_ = $len_name;
 	WSTR ${str_name}_(${len_name}_);
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	LPSTR ret_ = 0;
