@@ -1,18 +1,24 @@
 .PHONY: all
 all: libwin32u.a
 
-.PHONY: generate
+.PHONY: generate sgenerate
 generate:
 	$(MAKE) -f Makefile.generate .generate
 
+sgenerate:
+	$(MAKE) -f Makefile.generate .sgenerate
+
+.generated:
+	$(MAKE) -f Makefile.generate .generate
+
 clean:
-	-rm -rf {gensrc,helper,odstream}/*.o *.a *.exe gensrc/*.{txt,cpp} include/*u.h *.pyc .generate
+	-rm -rf {gensrc,helper,odstream}/*.o *.a *.exe gensrc/*.{txt,cpp} include/*u.h *.pyc .generate .sgenerate .generated
 
-test: generate
-testrun: generate
-testrunner: generate
+test: .generated
+testrun: .generated
+testrunner: .generated
 
-%.a: generate
+%.a: .generated
 	$(MAKE) -f Makefile.work $@
 
 %:

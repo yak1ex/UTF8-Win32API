@@ -1,5 +1,13 @@
 .generate: $(wildcard *.py)
-	touch .generate
+	-rm -f .sgenerate
 	-rm -f include/*u.h gensrc/*.{txt,cpp}
-	-python apigenerate.py /usr/include/w32api/windows.h
-	-python crtgenerate.py /usr/i686-w64-mingw32/sys-root/mingw/include msvcrt.h
+	-python apigenerate.py False /usr/include/w32api/windows.h
+	-python crtgenerate.py False /usr/i686-w64-mingw32/sys-root/mingw/include msvcrt.h
+	touch .generate .generated
+
+.sgenerate: $(wildcard *.py)
+	-rm -f .generate
+	-rm -f include/*u.h gensrc/*.{txt,cpp}
+	-python apigenerate.py True /usr/include/w32api/windows.h
+	-python crtgenerate.py True /usr/i686-w64-mingw32/sys-root/mingw/include msvcrt.h
+	touch .sgenerate .generated

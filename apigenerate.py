@@ -9,7 +9,7 @@ from descriptor import FunctionDescriptor
 from dispatcher import APIDispatcher
 from converter import *
 
-dispatcher = APIDispatcher()
+dispatcher = APIDispatcher(sys.argv[1].lower() != 'false')
 
 dispatcher.register([\
     ['BinaryType', [('LPCWSTR', 'lpApplicationName')], ro_nolen],
@@ -112,7 +112,7 @@ dispatcher.register([\
 ])
 
 index = clang.cindex.Index.create()
-tu = index.parse(sys.argv[1])
+tu = index.parse(sys.argv[2])
 print 'Translation unit:', tu.spelling
 #dump(0, tu.cursor)
 for c in tu.cursor.get_children():

@@ -85,12 +85,12 @@ spec = [ \
 
 ]
 
-dispatcher = CRTDispatcher()
+dispatcher = CRTDispatcher(sys.argv[1].lower() != 'false')
 
 dispatcher.register(spec)
 
 index = clang.cindex.Index.create()
-tu = index.parse(sys.argv[2], ['-I', sys.argv[1]])
+tu = index.parse(sys.argv[3], ['-I', sys.argv[2]])
 print 'Translation unit:', tu.spelling
 for c in tu.cursor.get_children():
     #dump(0, c)

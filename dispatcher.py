@@ -8,17 +8,26 @@ class _Output(object):
     _cpp = {}
     _h = {}
 
+    def __init__(self, split = False, header_dir = 'include', source_dir = 'gensrc'):
+        self._header_dir = header_dir
+        self._source_dir = source_dir
+        self._split = split
+
     def _cpp_name(self, outname):
-        return 'gensrc/'+ outname.replace('.h', 'u_' + str(self._cpp[outname]) + '.cpp')
+        if self._split:
+            return self._source_dir + '/'+ outname.replace('.h', 'u_' + str(self._cpp[outname]) + '.cpp')
+        return self._source_dir + '/'+ outname.replace('.h', 'u.cpp')
 
     def _cpp2_name(self, outname):
-        return 'gensrc/' + outname.replace('.h', 'u_' + str(self._cpp[outname]) + '_.cpp')
+        if self._split:
+            return self._source_dir + '/' + outname.replace('.h', 'u_' + str(self._cpp[outname]) + '_.cpp')
+        return self._source_dir + '/' + outname.replace('.h', 'u_.cpp')
 
     def _h_name(self, outname):
-        return 'include/' + outname.replace('.h', 'u.h')
+        return self._header_dir + '/' + outname.replace('.h', 'u.h')
 
     def _txt_name(self, outname):
-        return 'gensrc/' + outname.replace('.h', 'u.txt')
+        return self._source_dir + '/' + outname.replace('.h', 'u.txt')
 
     def _cpp_header(self, outname):
         self._cpp_header_(outname, self._cpp_name(outname))
@@ -130,8 +139,10 @@ class _Spec:
     API_OPT = ['UTF8_WIN32_DONT_REPLACE_ANSI']
 
 class Dispatcher(object):
-    _output = _Output()
     _table = []
+
+    def __init__(self, split = False, header_dir = 'include', source_dir = 'gensrc'):
+        self._output = _Output(split, header_dir, source_dir)
 
     def register(self, spec):
         self._table.extend(spec)
@@ -227,6 +238,9 @@ $body#endif
         self._output.cleanup()
 
 class APIDispatcher(Dispatcher):
+    def __init__(self, split = False, header_dir = 'include', source_dir = 'gensrc'):
+        Dispatcher.__init__(self, split, header_dir, source_dir)
+
     def _match(self, onespec, desc):
         return re.search(onespec[_Spec.REGEXP], desc.name)
 
@@ -267,7 +281,8 @@ class APIDispatcher(Dispatcher):
         Dispatcher.__del__(self)
 
 class CRTDispatcher(Dispatcher):
-    def __init__(self):
+    def __init__(self, split = False, header_dir = 'include', source_dir = 'gensrc'):
+        Dispatcher.__init__(self, split, header_dir, source_dir)
         self._prolog()
 
     def _match(self, onespec, desc):
