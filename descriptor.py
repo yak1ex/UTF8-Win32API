@@ -12,7 +12,7 @@ def dump_type(type):
     """
     """
     if type.kind.name == "TYPEDEF":
-#       result = type.get_declaration().spelling + '=(' + dump_type(type.get_declaration().underlying_typedef_type) + ')'
+#       result = '%s=(%s)' % (type.get_declaration().spelling, dump_type(type.get_declaration().underlying_typedef_type))
         result = type.get_declaration().spelling
     else:
         if type.kind.name == "POINTER":
@@ -45,12 +45,12 @@ class FunctionDescriptor(object):
     def dump_func(self):
         """
         """
-        print '%s %s(%s) at %s' % (self._result_type, self._name, ', '.join([t + ' ' + n for t, n in self._parameter_types]), self._file)
+        print '%s %s(%s) at %s' % (self._result_type, self._name, ', '.join(['%s %s' % (t, n) for t, n in self._parameter_types]), self._file)
 
     def make_func_decl(self):
         """
         """
-        return '%s %s(%s)' % (self._result_type, self._name, ', '.join([t + ' ' + n for t, n in self._parameter_types]) + (', ...' if self._is_variadic else ''))
+        return '%s %s(%s)' % (self._result_type, self._name, ', '.join(['%s %s' % (t, n) for t, n in self._parameter_types]) + (', ...' if self._is_variadic else ''))
 
     def make_func_call(self):
         """
@@ -61,7 +61,7 @@ class FunctionDescriptor(object):
     def make_trace_arg(self):
         """
         """
-        return ' << '.join(['" ' + n + ': " << dwrap(' + n + ')' for t, n in self._parameter_types])
+        return ' << '.join(['" %s: " << dwrap(%s)' % (n, n) for t, n in self._parameter_types])
 
     def index_arg(self, spec):
         """search argument corresponding to the specified spec"""

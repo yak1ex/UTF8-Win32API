@@ -15,19 +15,19 @@ class _Output(object):
 
     def _cpp_name(self, outname):
         if self._split:
-            return self._source_dir + '/'+ outname.replace('.h', 'u_' + str(self._cpp[outname]) + '.cpp')
-        return self._source_dir + '/'+ outname.replace('.h', 'u.cpp')
+            return '%s/%s' % (self._source_dir, outname.replace('.h', 'u_%s.cpp' % self._cpp[outname]))
+        return '%s/%s' % (self._source_dir, outname.replace('.h', 'u.cpp'))
 
     def _cpp2_name(self, outname):
         if self._split:
-            return self._source_dir + '/' + outname.replace('.h', 'u_' + str(self._cpp[outname]) + '_.cpp')
-        return self._source_dir + '/' + outname.replace('.h', 'u_.cpp')
+            return '%s/%s' % (self._source_dir, outname.replace('.h', 'u_%s_.cpp' % self._cpp[outname]))
+        return '%s/%s' % (self._source_dir,  outname.replace('.h', 'u_.cpp'))
 
     def _h_name(self, outname):
-        return self._header_dir + '/' + outname.replace('.h', 'u.h')
+        return '%s/%s' % (self._header_dir, outname.replace('.h', 'u.h'))
 
     def _txt_name(self, outname):
-        return self._source_dir + '/' + outname.replace('.h', 'u.txt')
+        return '%s/%s' % (self._source_dir, outname.replace('.h', 'u.txt'))
 
     def _cpp_header(self, outname):
         self._cpp_header_(outname, self._cpp_name(outname))
@@ -183,20 +183,20 @@ $body
                 macro = self._macro(ctx, onespec)
 
                 if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
-                    call = ctx.desc_call.make_func_call() + ";"
-                    ret = "return;"
+                    call = ctx.desc_call.make_func_call() + ';'
+                    ret = 'return;'
                     if desc_fallback_call is not None:
-                        fallback_call = desc_fallback_call.make_func_call() + ";"
+                        fallback_call = desc_fallback_call.make_func_call() + ';'
                 elif ctx.desc_self.result_type == ctx.desc_call.result_type:
-                    call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";"
-                    ret = "return ret;"
+                    call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
+                    ret = 'return ret;'
                     if desc_fallback_call is not None:
-                        fallback_call = "return " + desc_fallback_call.make_func_call() + ";"
+                        fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
                 else:
-                    call = ctx.desc_call.result_type + ' ret = ' + ctx.desc_call.make_func_call() + ";"
-                    ret = "return ret_;" # ret_ MUST be defined in conversion
+                    call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
+                    ret = 'return ret_;' # ret_ MUST be defined in conversion
                     if desc_fallback_call is not None:
-                        fallback_call = "return " + desc_fallback_call.make_func_call() + ";"
+                        fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
 
                 self._output.cpp_renew(outname)
                 self._output.cpp(outname, \
@@ -204,7 +204,7 @@ $body
                         ctx.desc_self.make_func_decl(), \
                         ctx.desc_self.name, \
                         ctx.desc_self.make_trace_arg(), \
-                        ctx.code_before + "\t" + call + "\n" + ctx.code_after + "\t" + ret))
+                        "%s\t%s\n%s\t%s" % (ctx.code_before, call, ctx.code_after, ret)))
 
                 if desc_fallback is not None:
                     self._output.cpp2(outname, \
@@ -225,8 +225,8 @@ $body#endif
 #endif
 #define $target $name
 '''                         ).substitute(target = x[_Spec.REPLACEMENT], name = ctx.desc_self.name)), macro)) + \
-                    "extern " + ctx.desc_self.make_func_decl() + ";\n" + \
-                    (("extern " + desc_fallback.make_func_decl() + ";\n") if desc_fallback is not None else "") \
+                    "extern %s;\n%s" % (ctx.desc_self.make_func_decl(), \
+                        "extern %s;\n" % desc_fallback.make_func_decl() if desc_fallback is not None else "") \
                 )
                 break
         if not processed:
@@ -276,7 +276,7 @@ class APIDispatcher(Dispatcher):
         with open('include/windowsu.h', 'a') as f:
             f.write("#ifndef WINDOWSU_H\n#define WINDOWSU_H\n\n")
             for actualname in self._output._h:
-                f.write("#include <" + actualname.partition('/')[2] + ">\n")
+                f.write("#include <%s>\n" % actualname.partition('/')[2])
             f.write("\n#endif\n")
         Dispatcher.__del__(self)
 
