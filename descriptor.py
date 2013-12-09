@@ -18,7 +18,8 @@ def dump_type(type):
         if type.kind.name == "POINTER":
             result = dump_type(type.get_pointee()) + " *"
         elif type.kind.name == "UNEXPOSED":
-            result = ("struct " if type.get_declaration().kind.name == "STRUCT_DECL" else "") + type.get_declaration().spelling
+            result = ("struct " if type.get_declaration().kind.name == "STRUCT_DECL" else "") + \
+                     (type.get_declaration().spelling if type.get_declaration().spelling is not None else '__UNKNOWN__')
         elif type.kind.name == "CHAR_S":
             result = 'char'
         else:
