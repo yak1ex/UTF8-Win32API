@@ -362,3 +362,32 @@ def _adjustdef_imp(ctx, typespec_cp, typespec_flag, typespec_def, typespec_used)
 
 def adjustdef(idx_cp, idx_flag, idx_def, idx_used):
     return lambda ctx, typespecs: _adjustdef_imp(ctx, typespecs[idx_cp], typespecs[idx_flag], typespecs[idx_def], typespecs[idx_used])
+
+# TODO: conversion in code_before, necessary to access struct info
+def _w2u_imp(ctx, typespec):
+    target_index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
+    ctx.desc_self.parameter_types[target_index] = (orig_type[:-1] + 'U', orig_name)
+    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    return ctx
+
+def w2u(idx):
+    return lambda ctx, typespecs: reduce( \
+        lambda acc, x: _w2u_imp(acc, x), \
+        map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
+        ctx \
+    )
+
+# Converters for struct
+
+def struct_u2a(struct_name):
+    """Create aliases for struct SomethingU to SomethingA"""
+    uname = struct_name[:-1] + 'U'
+    aname = struct_name[:-1] + 'A'
+    return Template('''\
+#ifndef $uname
+#define $uname $aname
+#define LP$uname LP$aname
+#define LPC$uname LPC$aname
+#endif
+''').substitute(uname = uname, aname = aname)
