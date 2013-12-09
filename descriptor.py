@@ -124,3 +124,36 @@ class FunctionDescriptor(object):
         self._is_variadic = is_variadic
     is_variadic = property(_get_is_variadic, _set_is_variadic)
 
+class StructDescriptor(object):
+    @staticmethod
+    def is_target(node):
+        return (node.kind.name == 'TYPEDEF_DECL' and
+                node.underlying_typedef_type.kind.name == 'UNEXPOSED' and
+                node.underlying_typedef_type.get_declaration().kind.name == 'STRUCT_DECL')
+
+    def __init__(self, node = None):
+        """Create struct descriptor from libclang node"""
+        if node is None:
+            return
+        decl = node.underlying_typedef_type.get_declaration()
+        self._name = node.spelling
+        self._file = node.location.file
+        self._fields = [(dump_type(p.type),p.spelling) for p in decl.get_children() if p.kind.name == 'FIELD_DECL']
+
+    def _get_name(self):
+        return self._name
+    def _set_name(self, name):
+        self._name = name
+    name = property(_get_name, _set_name)
+
+    def _get_file(self):
+        return self._file
+    def _set_file(self, file):
+        self._file = file
+    file = property(_get_file, _set_file)
+
+    def _get_fields(self):
+        return self._fields
+    def _set_fields(self, fields):
+        self._fields = fields
+    fields = property(_get_fields, _set_fields)

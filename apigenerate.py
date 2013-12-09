@@ -5,7 +5,7 @@
 import sys
 import re
 import clang.cindex
-from descriptor import FunctionDescriptor
+from descriptor import FunctionDescriptor, StructDescriptor
 from dispatcher import APIDispatcher
 from converter import *
 
@@ -119,3 +119,6 @@ for c in tu.cursor.get_children():
     if(c.type.kind.name == "FUNCTIONPROTO" and re.search('W$|WideChar', c.spelling)):
         desc = FunctionDescriptor(c)
         dispatcher.dispatch(desc)
+    if(StructDescriptor.is_target(c)):
+        desc = StructDescriptor(c)
+        dispatcher.dispatch_struct(desc)

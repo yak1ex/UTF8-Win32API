@@ -234,6 +234,9 @@ $body#endif
                 desc.make_func_decl() + "\n" \
             )
 
+    def dispatch_struct(self, desc):
+        pass
+
     def __del__(self):
         self._output.cleanup()
 
