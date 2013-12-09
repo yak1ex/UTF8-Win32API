@@ -8,6 +8,7 @@ def dump(level, node):
     for c in node.get_children():
         dump(level + 1, c)
 
+# TODO: Handle CONSTANTARRAY, necesary to use element_type, element_count
 def dump_type(type):
     """
     """
