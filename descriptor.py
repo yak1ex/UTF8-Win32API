@@ -30,6 +30,10 @@ def dump_type(type):
     return result
 
 class FunctionDescriptor(object):
+    @staticmethod
+    def is_target(node):
+        return node.type.kind.name == "FUNCTIONPROTO"
+
     def __init__(self, node = None):
         """Create function descriptor from libclang node"""
         if node is None:

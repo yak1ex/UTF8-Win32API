@@ -116,9 +116,7 @@ tu = index.parse(sys.argv[2])
 print 'Translation unit:', tu.spelling
 #dump(0, tu.cursor)
 for c in tu.cursor.get_children():
-    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('W$|WideChar', c.spelling)):
-        desc = FunctionDescriptor(c)
-        dispatcher.dispatch(desc)
+    if(FunctionDescriptor.is_target(c) and re.search('W$|WideChar', c.spelling)):
+        dispatcher.dispatch(FunctionDescriptor(c))
     if(StructDescriptor.is_target(c)):
-        desc = StructDescriptor(c)
-        dispatcher.dispatch_struct(desc)
+        dispatcher.dispatch_struct(StructDescriptor(c))

@@ -94,6 +94,5 @@ tu = index.parse(sys.argv[3], ['-I', sys.argv[2]])
 print 'Translation unit:', tu.spelling
 for c in tu.cursor.get_children():
     #dump(0, c)
-    if(c.type.kind.name == "FUNCTIONPROTO" and re.search('^_w(?!rite|to|csto)|^_u(exec|spawn)v', c.spelling)):
-        desc = FunctionDescriptor(c)
-        dispatcher.dispatch(desc)
+    if(FunctionDescriptor.is_target(c) and re.search('^_w(?!rite|to|csto)|^_u(exec|spawn)v', c.spelling)):
+        dispatcher.dispatch(FunctionDescriptor(c))
