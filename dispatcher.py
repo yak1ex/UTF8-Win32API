@@ -138,6 +138,9 @@ class _Spec:
     CRT_OPT = ['UTF8_WIN32_DONT_REPLACE_MSVCRT']
     API_OPT = ['UTF8_WIN32_DONT_REPLACE_ANSI']
 
+import clang.cindex
+from descriptor import FunctionDescriptor, StructDescriptor
+
 class Dispatcher(object):
     _table = []
 
@@ -156,7 +159,18 @@ $body
 }
 ''').substitute(decl = decl, name = name, trace = trace, body = body)
 
-    def dispatch(self, desc):
+    def run(self, input, target, option = []):
+        index = clang.cindex.Index.create()
+        tu = index.parse(input, option)
+        print 'Translation unit:', tu.spelling
+#       dump(0, tu.cursor)
+        for c in tu.cursor.get_children():
+            if(FunctionDescriptor.is_target(c) and re.search(target, c.spelling)):
+                self._dispatch(FunctionDescriptor(c))
+            if(StructDescriptor.is_target(c)):
+                self._dispatch_struct(StructDescriptor(c))
+
+    def _dispatch(self, desc):
         processed = False
         outname = self._outname(desc)
         for onespec in self._table:
@@ -234,7 +248,7 @@ $body#endif
                 desc.make_func_decl() + "\n" \
             )
 
-    def dispatch_struct(self, desc):
+    def _dispatch_struct(self, desc):
         pass
 
     def __del__(self):

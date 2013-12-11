@@ -2,16 +2,10 @@
 """ Usage: call with <filename>
 """
 
-import sys
-import re
-import clang.cindex
-from descriptor import FunctionDescriptor, StructDescriptor
-from dispatcher import APIDispatcher
 from converter import *
 
-dispatcher = APIDispatcher(sys.argv[1].lower() != 'false')
+spec = [
 
-dispatcher.register([\
     ['BinaryType', [('LPCWSTR', 'lpApplicationName')], ro_nolen],
     ['lstrcmp', [('LPCWSTR', 'lpString1'), ('LPCWSTR', 'lpString2')], ro_nolen],
     ['GetLogicalDriveStrings', [('DWORD', 'nBufferLength'), ('LPWSTR', 'lpBuffer')], forwardA],
@@ -109,14 +103,11 @@ dispatcher.register([\
 # FIXME: miniperl is compilable but fails to run
     ['MultiByteToWideChar', [('UINT', 'CodePage'), ('DWORD', 'dwFlags')], fakecp(0, 1)],
     ['WideCharToMultiByte', [('UINT', 'CodePage'), ('DWORD', 'dwFlags'), ('LPCCH', 'lpDefaultChar'), ('LPBOOL', 'lpUsedDefaultChar')], adjustdef(0, 1, 2, 3)],
-])
+]
 
-index = clang.cindex.Index.create()
-tu = index.parse(sys.argv[2])
-print 'Translation unit:', tu.spelling
-#dump(0, tu.cursor)
-for c in tu.cursor.get_children():
-    if(FunctionDescriptor.is_target(c) and re.search('W$|WideChar', c.spelling)):
-        dispatcher.dispatch(FunctionDescriptor(c))
-    if(StructDescriptor.is_target(c)):
-        dispatcher.dispatch_struct(StructDescriptor(c))
+import sys
+from dispatcher import APIDispatcher
+
+dispatcher = APIDispatcher(sys.argv[1].lower() != 'false')
+dispatcher.register(spec)
+dispatcher.run(sys.argv[2], 'W$|WideChar')

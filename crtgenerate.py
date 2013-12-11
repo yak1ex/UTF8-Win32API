@@ -2,14 +2,9 @@
 """ Usage: call with <filename>
 """
 
-import sys
-import re
-import clang.cindex
-from descriptor import dump, FunctionDescriptor
-from dispatcher import CRTDispatcher
 from converter import *
 
-spec = [ \
+spec = [
 
 # stdio.h
     [('_ufsopen', '_wfsopen', ['_fsopen'], ['_tfsopen']), [('wchar_t const *', '_Filename'), ('wchar_t const *', '_Mode')], ro_nolen],
@@ -85,14 +80,9 @@ spec = [ \
 
 ]
 
+import sys
+from dispatcher import CRTDispatcher
+
 dispatcher = CRTDispatcher(sys.argv[1].lower() != 'false')
-
 dispatcher.register(spec)
-
-index = clang.cindex.Index.create()
-tu = index.parse(sys.argv[3], ['-I', sys.argv[2]])
-print 'Translation unit:', tu.spelling
-for c in tu.cursor.get_children():
-    #dump(0, c)
-    if(FunctionDescriptor.is_target(c) and re.search('^_w(?!rite|to|csto)|^_u(exec|spawn)v', c.spelling)):
-        dispatcher.dispatch(FunctionDescriptor(c))
+dispatcher.run(sys.argv[3], '^_w(?!rite|to|csto)|^_u(exec|spawn)v', ['-I', sys.argv[2]])
