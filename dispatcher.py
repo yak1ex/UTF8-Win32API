@@ -170,6 +170,62 @@ $body
             if(StructDescriptor.is_target(c)):
                 self._dispatch_struct(StructDescriptor(c))
 
+    def _process(self, desc, onespec, outname):
+        ctx = convctx(desc.clone(), desc.clone(), '', '')
+        ctx = self._adjust(ctx, onespec)
+        funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
+        ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
+
+        desc_fallback, desc_fallback_call = self._fallback(ctx, onespec)
+        macro = self._macro(ctx, onespec)
+
+        if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
+            call = ctx.desc_call.make_func_call() + ';'
+            ret = 'return;'
+            if desc_fallback_call is not None:
+                fallback_call = desc_fallback_call.make_func_call() + ';'
+        elif ctx.desc_self.result_type == ctx.desc_call.result_type:
+            call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
+            ret = 'return ret;'
+            if desc_fallback_call is not None:
+                fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
+        else:
+            call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
+            ret = 'return ret_;' # ret_ MUST be defined in conversion
+            if desc_fallback_call is not None:
+                fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
+
+        self._output.cpp_renew(outname)
+        self._output.cpp(outname,
+            self._make_def(
+                ctx.desc_self.make_func_decl(),
+                ctx.desc_self.name,
+                ctx.desc_self.make_trace_arg(),
+                "%s\t%s\n%s\t%s" % (ctx.code_before, call, ctx.code_after, ret)))
+
+        if desc_fallback is not None:
+            self._output.cpp2(outname,
+                self._make_def(
+                    desc_fallback.make_func_decl(),
+                    desc_fallback.name,
+                    desc_fallback.make_trace_arg(),
+                    "\t" + fallback_call))
+
+        self._output.h(outname,
+            "\n" + ''.join(map(
+                lambda x: reduce(lambda acc, guard: Template('''\
+#ifndef $guard
+$body#endif
+'''                 ).substitute(guard = guard, body = acc), reversed(x[_Spec.GUARD]), Template('''\
+#ifdef $target
+#undef $target
+#endif
+#define $target $name
+'''                     ).substitute(target = x[_Spec.REPLACEMENT], name = ctx.desc_self.name)), macro)) +
+            "extern %s;\n%s" % (ctx.desc_self.make_func_decl(),
+                "extern %s;\n" % desc_fallback.make_func_decl() if desc_fallback is not None else "")
+        )
+
     def _dispatch(self, desc):
         processed = False
         outname = self._outname(desc)
@@ -182,70 +238,18 @@ $body
                 if desc.index_arg(argspec) == -1:
                     flag = False
                     break
+
             if(flag):
                 if onespec[_Spec.FUNC] is None:
                     break
 
+                self._process(desc, onespec, outname)
                 processed = True
-
-                ctx = convctx(desc.clone(), desc.clone(), '', '')
-                ctx = self._adjust(ctx, onespec)
-                funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
-                ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
-
-                desc_fallback, desc_fallback_call = self._fallback(ctx, onespec)
-                macro = self._macro(ctx, onespec)
-
-                if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
-                    call = ctx.desc_call.make_func_call() + ';'
-                    ret = 'return;'
-                    if desc_fallback_call is not None:
-                        fallback_call = desc_fallback_call.make_func_call() + ';'
-                elif ctx.desc_self.result_type == ctx.desc_call.result_type:
-                    call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
-                    ret = 'return ret;'
-                    if desc_fallback_call is not None:
-                        fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
-                else:
-                    call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
-                    ret = 'return ret_;' # ret_ MUST be defined in conversion
-                    if desc_fallback_call is not None:
-                        fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
-
-                self._output.cpp_renew(outname)
-                self._output.cpp(outname, \
-                    self._make_def( \
-                        ctx.desc_self.make_func_decl(), \
-                        ctx.desc_self.name, \
-                        ctx.desc_self.make_trace_arg(), \
-                        "%s\t%s\n%s\t%s" % (ctx.code_before, call, ctx.code_after, ret)))
-
-                if desc_fallback is not None:
-                    self._output.cpp2(outname, \
-                        self._make_def( \
-                            desc_fallback.make_func_decl(), \
-                            desc_fallback.name, \
-                            desc_fallback.make_trace_arg(), \
-                            "\t" + fallback_call))
-
-                self._output.h(outname, \
-                    "\n" + ''.join(map( \
-                        lambda x: reduce(lambda acc, guard: Template('''\
-#ifndef $guard
-$body#endif
-'''                         ).substitute(guard = guard, body = acc), reversed(x[_Spec.GUARD]), Template('''\
-#ifdef $target
-#undef $target
-#endif
-#define $target $name
-'''                         ).substitute(target = x[_Spec.REPLACEMENT], name = ctx.desc_self.name)), macro)) + \
-                    "extern %s;\n%s" % (ctx.desc_self.make_func_decl(), \
-                        "extern %s;\n" % desc_fallback.make_func_decl() if desc_fallback is not None else "") \
-                )
                 break
+
         if not processed:
-            self._output.txt(outname, \
-                desc.make_func_decl() + "\n" \
+            self._output.txt(outname,
+                desc.make_func_decl() + "\n"
             )
 
     def _dispatch_struct(self, desc):
