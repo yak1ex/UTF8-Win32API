@@ -363,7 +363,6 @@ def _adjustdef_imp(ctx, typespec_cp, typespec_flag, typespec_def, typespec_used)
 def adjustdef(idx_cp, idx_flag, idx_def, idx_used):
     return lambda ctx, typespecs: _adjustdef_imp(ctx, typespecs[idx_cp], typespecs[idx_flag], typespecs[idx_def], typespecs[idx_used])
 
-# TODO: conversion in code_before, necessary to access struct info
 def _w2u_imp(ctx, typespec):
     target_index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
