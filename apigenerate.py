@@ -6,6 +6,9 @@ from converter import *
 
 spec = [
 
+# LPVOID lpEnvironment
+# FIXME: Move struct definition
+    ['CreateProcessW$', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx([0,1,2]), w2u(3)]],
     ['BinaryType', [('LPCWSTR', 'lpApplicationName')], ro_nolen],
     ['lstrcmp', [('LPCWSTR', 'lpString1'), ('LPCWSTR', 'lpString2')], ro_nolen],
     ['GetLogicalDriveStrings', [('DWORD', 'nBufferLength'), ('LPWSTR', 'lpBuffer')], forwardA],
@@ -105,9 +108,16 @@ spec = [
     ['WideCharToMultiByte', [('UINT', 'CodePage'), ('DWORD', 'dwFlags'), ('LPCCH', 'lpDefaultChar'), ('LPBOOL', 'lpUsedDefaultChar')], adjustdef(0, 1, 2, 3)],
 ]
 
+struct_spec = [
+
+    ['STARTUPINFOW', struct_u2a],
+
+]
+
 import sys
 from dispatcher import APIDispatcher
 
 dispatcher = APIDispatcher(sys.argv[1].lower() != 'false')
 dispatcher.register(spec)
-dispatcher.run(sys.argv[2], 'W$|WideChar')
+dispatcher.register_struct(struct_spec)
+dispatcher.run(sys.argv[2], 'W$|WideChar', 'W$')

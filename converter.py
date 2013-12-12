@@ -369,7 +369,21 @@ def _w2u_imp(ctx, typespec):
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
     ctx.desc_self.parameter_types[target_index] = (orig_type[:-1] + 'U', orig_name)
     ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    return ctx
+    if orig_type[3:] in ctx.types:
+        fields = ctx.types[orig_type[3:]]
+    if orig_type[2:] in ctx.types:
+        fields = ctx.types[orig_type[2:]]
+    if orig_type in ctx.types:
+        fields = ctx.types[orig_type]
+    fields = [(t,v) for t,v in fields.fields if t == 'LPWSTR' or t == 'LPCWSTR']
+    return ctx._replace(code_before = ctx.code_before + Template("""\
+	my_remove_pointer<$orig_type>::type ${orig_name}__;
+	$orig_type ${orig_name}_ = & ${orig_name}__;
+	CopyMemory(${orig_name}_, $orig_name, sizeof(${orig_name}__));
+$mapper""").substitute(orig_name = orig_name, orig_type = orig_type, mapper = ''.join([Template("""\
+	WSTR ${orig_name}_$field($orig_name -> $field);
+	${orig_name}_ -> $field = ${orig_name}_$field;
+""").substitute(orig_name = orig_name, field = v) for t,v in fields])))
 
 def w2u(idx):
     return lambda ctx, typespecs: reduce( \
@@ -380,14 +394,15 @@ def w2u(idx):
 
 # Converters for struct
 
-def struct_u2a(struct_name):
+def struct_u2a(ctx):
     """Create aliases for struct SomethingU to SomethingA"""
-    uname = struct_name[:-1] + 'U'
-    aname = struct_name[:-1] + 'A'
-    return Template('''\
+    ctx.types[ctx.desc.name] = ctx.desc
+    uname = ctx.desc.name[:-1] + 'U'
+    aname = ctx.desc.name[:-1] + 'A'
+    return ctx._replace(header = ctx.header + Template('''\
 #ifndef $uname
 #define $uname $aname
 #define LP$uname LP$aname
 #define LPC$uname LPC$aname
 #endif
-''').substitute(uname = uname, aname = aname)
+''').substitute(uname = uname, aname = aname))

@@ -124,11 +124,13 @@ extern "C" {
 
 from collections import namedtuple
 
-convctx = namedtuple('ConvCtx', 'desc_self desc_call code_before code_after')
+convctx = namedtuple('ConvCtx', 'types desc_self desc_call code_before code_after')
+struct_convctx = namedtuple('StructConvCtx', 'types desc header')
 
 class _Spec:
 # conversion spec
     REGEXP, TYPES, FUNC = range(3)
+    STRUCT_FUNC = 1
 # in REGEXP for CRT
     SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
 # macro spec
@@ -143,12 +145,17 @@ from descriptor import FunctionDescriptor, StructDescriptor
 
 class Dispatcher(object):
     _table = []
+    _struct_table = []
+    _types = {}
 
     def __init__(self, split = False, header_dir = 'include', source_dir = 'gensrc'):
         self._output = _Output(split, header_dir, source_dir)
 
     def register(self, spec):
         self._table.extend(spec)
+
+    def register_struct(self, spec):
+        self._struct_table.extend(spec)
 
     def _make_def(self, decl, name, trace, body):
         return Template('''
@@ -159,7 +166,7 @@ $body
 }
 ''').substitute(decl = decl, name = name, trace = trace, body = body)
 
-    def run(self, input, target, option = []):
+    def run(self, input, target, target_struct, option = []):
         index = clang.cindex.Index.create()
         tu = index.parse(input, option)
         print 'Translation unit:', tu.spelling
@@ -167,11 +174,11 @@ $body
         for c in tu.cursor.get_children():
             if(FunctionDescriptor.is_target(c) and re.search(target, c.spelling)):
                 self._dispatch(FunctionDescriptor(c))
-            if(StructDescriptor.is_target(c)):
+            if(StructDescriptor.is_target(c) and re.search(target_struct, c.spelling)):
                 self._dispatch_struct(StructDescriptor(c))
 
     def _process(self, desc, onespec, outname):
-        ctx = convctx(desc.clone(), desc.clone(), '', '')
+        ctx = convctx(self._types, desc.clone(), desc.clone(), '', '')
         ctx = self._adjust(ctx, onespec)
         funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
         ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
@@ -253,7 +260,21 @@ $body#endif
             )
 
     def _dispatch_struct(self, desc):
-        pass
+        processed = False
+        outname = self._outname(desc)
+        for onespec in self._struct_table:
+            if(not re.search(onespec[_Spec.REGEXP], desc.name)):
+                continue
+
+            ctx = struct_convctx(self._types, desc, '')
+            funcs = onespec[_Spec.STRUCT_FUNC] if isinstance(onespec[_Spec.STRUCT_FUNC], list) else [onespec[_Spec.STRUCT_FUNC]]
+            ctx = reduce(lambda acc, func: func(acc), funcs, ctx)
+            self._output.h(outname, ctx.header)
+            processed = True
+            break
+
+        if not processed:
+            self._output.txt(outname, "struct %s;\n" % desc.name)
 
     def __del__(self):
         self._output.cleanup()

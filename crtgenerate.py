@@ -85,4 +85,4 @@ from dispatcher import CRTDispatcher
 
 dispatcher = CRTDispatcher(sys.argv[1].lower() != 'false')
 dispatcher.register(spec)
-dispatcher.run(sys.argv[3], '^_w(?!rite|to|csto)|^_u(exec|spawn)v', ['-I', sys.argv[2]])
+dispatcher.run(sys.argv[3], '^_w(?!rite|to|csto)|^_u(exec|spawn)v', 'DO_NOT_MATCH_ANYTHING', ['-I', sys.argv[2]])
