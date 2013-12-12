@@ -8,17 +8,17 @@ generate:
 sgenerate:
 	$(MAKE) -f Makefile.generate .sgenerate
 
-.generated:
+./.generated:
 	$(MAKE) -f Makefile.generate .generate
 
 clean:
 	-rm -rf {gensrc,helper,odstream}/*.o *.a *.exe gensrc/*.{txt,cpp} include/*u.h *.pyc .generate .sgenerate .generated
 
-test: .generated
-testrun: .generated
-testrunner: .generated
+test: ./.generated
+testrun: ./.generated
+testrunner: ./.generated
 
-%.a: .generated
+%.a: ./.generated
 	$(MAKE) -f Makefile.work $@
 
 %:
@@ -26,7 +26,7 @@ testrunner: .generated
 
 force: ;
 
-repatch: .extract
+repatch: ./.extract
 	rm -rf perl-5.18.1
 	cp -pR perl-5.18.1-orig perl-5.18.1
 	chmod +w `grep +++ perl-5.18.1.patch | sed 's,+++ ,,;s,201.*,,'`
@@ -38,7 +38,7 @@ mkpatch:
 initpatch: perl-5.18.1-orig/README
 	@: nothing
 
-.extract: perl-5.18.1.tar.gz
+./.extract: perl-5.18.1.tar.gz
 	rm -rf temp perl-5.18.1-orig
 	mkdir temp
 	tar xzf perl-5.18.1.tar.gz -C temp
