@@ -6,9 +6,10 @@ from converter import *
 
 spec = [
 
-# LPVOID lpEnvironment
-# FIXME: Move struct definition
-    ['CreateProcessW$', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx([0,1,2]), w2u(3)]],
+# TODO: LPVOID lpEnvironment
+    ['', [('LPCWSTR', 'lpUsername'), ('LPCWSTR', 'lpDomain'), ('LPCWSTR', 'lpPassword'), ('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx(range(6)), w2u(6)]],
+    ['', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx([0,1,2]), w2u(3)]],
+
     ['BinaryType', [('LPCWSTR', 'lpApplicationName')], ro_nolen],
     ['lstrcmp', [('LPCWSTR', 'lpString1'), ('LPCWSTR', 'lpString2')], ro_nolen],
     ['GetLogicalDriveStrings', [('DWORD', 'nBufferLength'), ('LPWSTR', 'lpBuffer')], forwardA],

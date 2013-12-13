@@ -301,7 +301,8 @@ class APIDispatcher(Dispatcher):
         return ctx
 
     def _fallback(self, ctx, onespec):
-        if ctx.desc_call.name == 'FindFirstStreamW':
+# TODO: Blacklist info SHOULD be defined elsewhere
+        if ctx.desc_call.name in ['FindFirstStreamW', 'CreateProcessWithLogonW', 'CreateProcessWithTokenW']:
             return None, None
         fallback, fallback_call = ctx.desc_self.clone(), ctx.desc_self.clone()
         if ctx.desc_call.name[-1] == 'W':
