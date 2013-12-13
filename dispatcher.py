@@ -318,7 +318,7 @@ class APIDispatcher(Dispatcher):
         with open('include/windowsu.h', 'a') as f:
             f.write("#ifndef WINDOWSU_H\n#define WINDOWSU_H\n\n")
             for actualname in self._output._h:
-                f.write("#include <%s>\n" % actualname.partition('/')[2])
+                f.write('#include "%s"\n' % actualname.partition('/')[2])
             f.write("\n#endif\n")
         Dispatcher.__del__(self)
 
