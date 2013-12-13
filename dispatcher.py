@@ -55,6 +55,7 @@ class _Output(object):
 ''' if outname == 'msvcrt.h' else '''\
 #define UTF8_WIN32_DONT_REPLACE_ANSI
 ''') + Template('''\
+#include "win32u_apistructu.h"
 #include "$header"
 
 #include "helper/win32u_helper.hpp"
@@ -261,7 +262,7 @@ $body#endif
 
     def _dispatch_struct(self, desc):
         processed = False
-        outname = self._outname(desc)
+        outname = self._outname_struct(desc)
         for onespec in self._struct_table:
             if(not re.search(onespec[_Spec.REGEXP], desc.name)):
                 continue
@@ -288,6 +289,9 @@ class APIDispatcher(Dispatcher):
 
     def _outname(self, desc):
         return os.path.basename("%s" % desc.file)
+
+    def _outname_struct(self, desc):
+        return 'win32u_apistruct.h'
 
     def _adjust(self, ctx, onespec):
         if ctx.desc_self.name[-1] == 'W':
@@ -316,9 +320,13 @@ class APIDispatcher(Dispatcher):
 
     def __del__(self):
         with open('include/windowsu.h', 'a') as f:
-            f.write("#ifndef WINDOWSU_H\n#define WINDOWSU_H\n\n")
-            for actualname in self._output._h:
-                f.write('#include "%s"\n' % actualname.partition('/')[2])
+            f.write('''\
+#ifndef WINDOWSU_H
+#define WINDOWSU_H
+
+#include "win32u_apistructu.h"
+''')
+            f.write(''.join(['#include "%s"\n' % x.partition('/')[2] for x in self._output._h if not re.search('/win32u_apistructu.h', x)]))
             f.write("\n#endif\n")
         Dispatcher.__del__(self)
 
@@ -331,6 +339,9 @@ class CRTDispatcher(Dispatcher):
         return desc.name == onespec[_Spec.REGEXP][_Spec.CALL]
 
     def _outname(self, desc):
+        return 'msvcrt.h'
+
+    def _outname_struct(self, desc):
         return 'msvcrt.h'
 
     def _adjust(self, ctx, onespec):
