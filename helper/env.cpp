@@ -1,9 +1,19 @@
 #include <windows.h>
 #include "win32u_helper.hpp"
 
+#include <iostream>
 #include <vector>
 
-extern int _umain(...);
+int _umain_stub()
+{
+    return 0;
+}
+
+extern "C" int _umain(...) __attribute__((weak, alias("_Z11_umain_stubv")));
+extern int _umain() __attribute__((weak, alias("_Z11_umain_stubv")));
+extern int _umain(int argc) __attribute__((weak, alias("_Z11_umain_stubv")));
+extern int _umain(int argc, char ** argv) __attribute__((weak, alias("_Z11_umain_stubv")));
+extern int _umain(int argc, char ** argv, char **envp) __attribute__((weak, alias("_Z11_umain_stubv")));
 
 // LPSTR CreateEnvBlock(char cDelim);
 // void FreeEnvBlock(LPCSTR);
@@ -31,5 +41,27 @@ int main(void)
 	}
 	uargv.push_back(0);
 	// TODO: env
-	return _umain(argc, &uargv[0]);
+
+	if(static_cast<int(*)(...)>(_umain) != reinterpret_cast<int(*)(...)>(_umain_stub)) {
+		std::cout << "\"C\" _umain()" << std::endl;
+		return static_cast<int(*)(...)>(_umain)();
+	}
+	if(static_cast<int(*)()>(_umain) != reinterpret_cast<int(*)()>(_umain_stub)) {
+		std::cout << "_umain()" << std::endl;
+		return static_cast<int(*)()>(_umain)();
+	}
+	if(static_cast<int(*)(int)>(_umain) != reinterpret_cast<int(*)(int)>(_umain_stub)) {
+		std::cout << "_umain(int)" << std::endl;
+		return static_cast<int(*)(int)>(_umain)(argc);
+	}
+	if(static_cast<int(*)(int,char**)>(_umain) != reinterpret_cast<int(*)(int,char**)>(_umain_stub)) {
+		std::cout << "_umain(int, char**)" << std::endl;
+		return static_cast<int(*)(int,char**)>(_umain)(argc, &uargv[0]);
+	}
+	if(static_cast<int(*)(int,char**,char**)>(_umain) != reinterpret_cast<int(*)(int,char**,char**)>(_umain_stub)) {
+		std::cout << "_umain(int, char**,char**)" << std::endl;
+		return static_cast<int(*)(int,char**,char**)>(_umain)(argc, &uargv[0], 0);
+	}
+	std::cout << "_umain not defined" << std::endl;
+	return -1; // Not reached
 }
