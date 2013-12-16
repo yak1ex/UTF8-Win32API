@@ -28,8 +28,8 @@ testrun: testrunner
 testrunner: $(patsubst test%.cpp,test%.o,$(wildcard test/test*.cpp)) libwin32u.a
 	$(CXX) -static -o $@ $^
 
-libwin32u.a: helper/win32u_helper.o $(OBJS)
-	$(AR) ru $@ helper/win32u_helper.o $(OBJS)
+libwin32u.a: helper/win32u_helper.o helper/env.o $(OBJS)
+	$(AR) ru $@ $^
 
 %.h: %.txt
 	perl header.pl $< $@
