@@ -15,8 +15,20 @@ extern int _umain(int argc) __attribute__((weak, alias("_Z11_umain_stubv")));
 extern int _umain(int argc, char ** argv) __attribute__((weak, alias("_Z11_umain_stubv")));
 extern int _umain(int argc, char ** argv, char **envp) __attribute__((weak, alias("_Z11_umain_stubv")));
 
+static int(*ptr_umain)(...)                   = static_cast<int(*)(...)>(_umain);
+static int(*ptr_umain0)()                     = static_cast<int(*)()>(_umain);
+static int(*ptr_umain1)(int)                  = static_cast<int(*)(int)>(_umain);
+static int(*ptr_umain2)(int, char**)          = static_cast<int(*)(int, char**)>(_umain);
+static int(*ptr_umain3)(int, char**, char**)  = static_cast<int(*)(int, char**, char**)>(_umain);
+
 // LPSTR CreateEnvBlock(char cDelim);
 // void FreeEnvBlock(LPCSTR);
+
+template<typename T>
+static inline bool is_target(T t)
+{
+	return t != reinterpret_cast<T>(_umain_stub);
+}
 
 int main(void)
 {
@@ -42,25 +54,25 @@ int main(void)
 	uargv.push_back(0);
 	// TODO: env
 
-	if(static_cast<int(*)(...)>(_umain) != reinterpret_cast<int(*)(...)>(_umain_stub)) {
+	if(is_target(ptr_umain)) {
 		std::cout << "\"C\" _umain()" << std::endl;
-		return static_cast<int(*)(...)>(_umain)();
+		return ptr_umain();
 	}
-	if(static_cast<int(*)()>(_umain) != reinterpret_cast<int(*)()>(_umain_stub)) {
+	if(is_target(ptr_umain0)) {
 		std::cout << "_umain()" << std::endl;
-		return static_cast<int(*)()>(_umain)();
+		return ptr_umain0();
 	}
-	if(static_cast<int(*)(int)>(_umain) != reinterpret_cast<int(*)(int)>(_umain_stub)) {
+	if(is_target(ptr_umain1)) {
 		std::cout << "_umain(int)" << std::endl;
-		return static_cast<int(*)(int)>(_umain)(argc);
+		return ptr_umain1(argc);
 	}
-	if(static_cast<int(*)(int,char**)>(_umain) != reinterpret_cast<int(*)(int,char**)>(_umain_stub)) {
+	if(is_target(ptr_umain2)) {
 		std::cout << "_umain(int, char**)" << std::endl;
-		return static_cast<int(*)(int,char**)>(_umain)(argc, &uargv[0]);
+		return ptr_umain2(argc, &uargv[0]);
 	}
-	if(static_cast<int(*)(int,char**,char**)>(_umain) != reinterpret_cast<int(*)(int,char**,char**)>(_umain_stub)) {
-		std::cout << "_umain(int, char**,char**)" << std::endl;
-		return static_cast<int(*)(int,char**,char**)>(_umain)(argc, &uargv[0], 0);
+	if(is_target(ptr_umain3)) {
+		std::cout << "_umain(int, char**, char**)" << std::endl;
+		return ptr_umain3(argc, &uargv[0], 0);
 	}
 	std::cout << "_umain not defined" << std::endl;
 	return -1; // Not reached
