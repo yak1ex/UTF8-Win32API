@@ -66,9 +66,6 @@ static inline bool is_target(T t)
 int main(void)
 {
 // No arguments
-	if(is_target(ptr_umain)) {
-		return ptr_umain();
-	}
 	if(is_target(ptr_umain0)) {
 		return ptr_umain0();
 	}
@@ -107,6 +104,9 @@ int main(void)
 	LPSTR *env = CreateEnviron();
 	if(is_target(ptr_umain3)) {
 		return ptr_umain3(argc, &uargv[0], env);
+	}
+	if(is_target(ptr_umain)) {
+		return ptr_umain(argc, &uargv[0], env);
 	}
 
 	return -1; // Not reached
