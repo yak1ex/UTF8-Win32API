@@ -65,8 +65,22 @@ static inline bool is_target(T t)
 
 int main(void)
 {
+// No arguments
+	if(is_target(ptr_umain)) {
+		return ptr_umain();
+	}
+	if(is_target(ptr_umain0)) {
+		return ptr_umain0();
+	}
+
+// 1 argument
 	int argc;
 	LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	if(is_target(ptr_umain1)) {
+		return ptr_umain1(argc);
+	}
+
+// 2 arguments
 	std::vector<std::size_t> uargv_idx;
 	std::vector<char> uargv_body;
 	int nLen = 0;
@@ -85,22 +99,15 @@ int main(void)
 		uargv.push_back(&uargv_body[0] + uargv_idx[i]);
 	}
 	uargv.push_back(0);
-	LPSTR *env = CreateEnviron();
-
-	if(is_target(ptr_umain)) {
-		return ptr_umain();
-	}
-	if(is_target(ptr_umain0)) {
-		return ptr_umain0();
-	}
-	if(is_target(ptr_umain1)) {
-		return ptr_umain1(argc);
-	}
 	if(is_target(ptr_umain2)) {
 		return ptr_umain2(argc, &uargv[0]);
 	}
+
+// 3 arguments
+	LPSTR *env = CreateEnviron();
 	if(is_target(ptr_umain3)) {
 		return ptr_umain3(argc, &uargv[0], env);
 	}
+
 	return -1; // Not reached
 }
