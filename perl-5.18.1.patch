@@ -106,6 +106,16 @@ diff -ur perl-5.18.1-orig/win32/perlglob.c perl-5.18.1/win32/perlglob.c
  
  int
  main(int argc, char *argv[])
+diff -ur perl-5.18.1-orig/win32/runperl.c perl-5.18.1/win32/runperl.c
+--- perl-5.18.1-orig/win32/runperl.c	2013-02-27 06:28:28.000000000 +0900
++++ perl-5.18.1/win32/runperl.c	2013-12-18 15:48:08.705220900 +0900
+@@ -1,5 +1,6 @@
+ #include "EXTERN.h"
+ #include "perl.h"
++#include "umain.h"
+ 
+ #ifdef __GNUC__
+ 
 diff -ur perl-5.18.1-orig/win32/vdir.h perl-5.18.1/win32/vdir.h
 --- perl-5.18.1-orig/win32/vdir.h	2013-02-27 06:28:28.000000000 +0900
 +++ perl-5.18.1/win32/vdir.h	2013-11-21 13:04:11.906351400 +0900
