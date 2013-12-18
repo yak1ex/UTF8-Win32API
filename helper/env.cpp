@@ -20,8 +20,42 @@ static int(*ptr_umain1)(int)                  = static_cast<int(*)(int)>(_umain)
 static int(*ptr_umain2)(int, char**)          = static_cast<int(*)(int, char**)>(_umain);
 static int(*ptr_umain3)(int, char**, char**)  = static_cast<int(*)(int, char**, char**)>(_umain);
 
-// LPSTR CreateEnvBlock(char cDelim);
-// void FreeEnvBlock(LPCSTR);
+LPSTR* CreateEnviron()
+{
+	std::vector<std::size_t> env_idx;
+	WCHAR* env = GetEnvironmentStringsW();
+	WCHAR* env_orig = env;
+	std::size_t len = 0;
+	while(*env != 0) {
+		env_idx.push_back(len);
+		len += UTF8Length(env);
+		while(*++env != 0) ;
+		++env;
+	}
+	env_idx.push_back(len);
+	char* top = new char[sizeof(LPSTR) * env_idx.size() + len];
+	char** result = static_cast<char**>(static_cast<void*>(top));
+	char** result_temp = result;
+	top += sizeof(LPSTR) * env_idx.size();
+	env = env_orig;
+	std::size_t i = 0;
+	while(*env != 0) {
+		*result_temp++ = top + env_idx[i];
+		ToUTF8(top + env_idx[i], env_idx[i+1] - env_idx[i], env);
+		while(*++env != 0) ;
+		++env; ++i;
+	}
+	*result_temp = 0;
+	FreeEnvironmentStringsW(env_orig);
+	return result;
+}
+
+void FreeEnviron(LPSTR *p)
+{
+	delete[] p;
+}
+
+//void ConvertEnvBlock(my_scoped_array<WCHAR> &result, LPVOID lpEnv);
 
 template<typename T>
 static inline bool is_target(T t)
@@ -51,7 +85,7 @@ int main(void)
 		uargv.push_back(&uargv_body[0] + uargv_idx[i]);
 	}
 	uargv.push_back(0);
-	// TODO: env
+	LPSTR *env = CreateEnviron();
 
 	if(is_target(ptr_umain)) {
 		return ptr_umain();
@@ -66,7 +100,7 @@ int main(void)
 		return ptr_umain2(argc, &uargv[0]);
 	}
 	if(is_target(ptr_umain3)) {
-		return ptr_umain3(argc, &uargv[0], 0);
+		return ptr_umain3(argc, &uargv[0], env);
 	}
 	return -1; // Not reached
 }
