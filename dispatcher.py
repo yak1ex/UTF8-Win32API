@@ -189,17 +189,23 @@ $body
 
         if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
             call = ctx.desc_call.make_func_call() + ';'
-            ret = 'return;'
+            ret = '''\
+ODS(<< "%s : return" << std::endl);
+	return;''' % ctx.desc_self.name
             if desc_fallback_call is not None:
                 fallback_call = desc_fallback_call.make_func_call() + ';'
         elif ctx.desc_self.result_type == ctx.desc_call.result_type:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
-            ret = 'return ret;'
+            ret = '''\
+ODS(<< "%s : return " << dwrap(ret) << std::endl);
+	return ret;''' % ctx.desc_self.name
             if desc_fallback_call is not None:
                 fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
         else:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
-            ret = 'return ret_;' # ret_ MUST be defined in conversion
+            ret = '''\
+ODS(<< "%s : return " << dwrap(ret_) << std::endl);
+	return ret_;''' % ctx.desc_self.name # ret_ MUST be defined in conversion
             if desc_fallback_call is not None:
                 fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
 
