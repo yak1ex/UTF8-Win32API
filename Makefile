@@ -14,6 +14,9 @@ sgenerate:
 clean:
 	-rm -rf {gensrc,helper,odstream}/*.o *.a *.exe gensrc/*.{txt,cpp} include/*u.h *.pyc .generate .sgenerate .generated
 
+buildclean:
+	-rm -rf {gensrc,helper,odstream}/*.o *.a *.exe
+
 test: ./.generated
 testrun: ./.generated
 testrunner: ./.generated
