@@ -12,14 +12,13 @@ def _nolen_helper(ctx, typespec, coder):
     return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
 
 def _ro_nolen_imp(ctx, typespec):
-    """
-    """
     return _nolen_helper(ctx, typespec, \
         lambda orig_type, orig_name: (Template("""\
 	WSTR ${name}_($name);
 """).substitute(name = orig_name), ''))
 
 def ro_nolen_idx(idx):
+    """A converter for read only strings without the corresponding length variables. Indices are specified."""
     return lambda ctx, typespecs: reduce( \
         lambda acc, x: _ro_nolen_imp(acc, x), \
         map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
@@ -27,6 +26,7 @@ def ro_nolen_idx(idx):
     )
 
 def ro_nolen(ctx, typespecs):
+    """A converter for read only strings without the corresponding length variables. All specs are processed."""
     return reduce( \
         lambda acc, x: _ro_nolen_imp(acc, x), \
         typespecs, \
@@ -55,6 +55,7 @@ def _roarray_nolen_imp(ctx, typespec):
     return ctx._replace(code_before = ctx.code_before + before)
 
 def roarray_nolen_idx(idx):
+    """A converter for an array of read only strings without the corresponding length variables. Indices are specified."""
     return lambda ctx, typespecs: reduce( \
         lambda acc, x: _roarray_nolen_imp(acc, x), \
         map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
@@ -86,6 +87,7 @@ def _rova_nolen_imp(ctx, typespec):
     return ctx._replace(code_before = ctx.code_before + before)
 
 def rova_nolen_idx(idx):
+    """A converter for variadic read only strings without the corresponding length variables. The index prior to the variadic arguments is specified."""
     return lambda ctx, typespecs: reduce( \
         lambda acc, x: _rova_nolen_imp(acc, x), \
         map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
@@ -132,11 +134,13 @@ def _rova_nolen_withenv_imp(ctx, typespec):
     return ctx._replace(code_before = ctx.code_before + before)
 
 def rova_nolen_withenv_idx(idx):
+    """A converter for variadic read only strings for arguments and environment variables without the corresponding length variables.
+
+    The index prior to the variadic arguments is specified.
+    """
     return lambda ctx, typespecs: _rova_nolen_withenv_imp(ctx, typespecs[idx])
 
 def _wo_nolen_imp(ctx, typespec):
-    """
-    """
     return _nolen_helper(ctx, typespec, \
         lambda orig_type, orig_name: (\
             Template("""\
@@ -147,6 +151,7 @@ def _wo_nolen_imp(ctx, typespec):
 """).substitute(name = orig_name)))
 
 def wo_nolen_idx(idx):
+    """A converter for write only strings without the corresponding length variables. Indices are specified."""
     return lambda ctx, typespecs: reduce( \
         lambda acc, x: _wo_nolen_imp(acc, x), \
         map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
@@ -154,6 +159,7 @@ def wo_nolen_idx(idx):
     )
 
 def wo_nolen(ctx, typespecs):
+    """A converter for write only strings without the corresponding length variables. All specs are processed."""
     return reduce( \
         lambda acc, x: _wo_nolen_imp(acc, x), \
         typespecs, \
@@ -174,8 +180,7 @@ def _wo_nolen_ret_null_static_imp(size, ctx, typespec):
 """).substitute(name = orig_name)))
 
 def wo_nolen_ret_null_static(size, idx):
-    """
-    """
+    """A converter for write only strings returned as the result without the corresponding length variables, returning the static buffer if NULL pointer is specified."""
     return lambda ctx, typespecs: _wo_nolen_ret_null_static_imp(size if isinstance(size, str) else str(size), ctx, typespecs[idx])
 
 def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
@@ -194,8 +199,7 @@ def _wo_nolen_ret_imp(size, ctx, typespec):
 """).substitute(name = orig_name)))
 
 def wo_nolen_ret(size, idx):
-    """
-    """
+    """A converter for write only strings returned as the result without the corresponding length variables."""
     return lambda ctx, typespecs: _wo_nolen_ret_imp(size if isinstance(size, str) else str(size), ctx, typespecs[idx])
 
 def _wo_len_helper(str_idx, len_idx, ctx, typespecs, coder):
@@ -211,8 +215,7 @@ def _wo_len_helper(str_idx, len_idx, ctx, typespecs, coder):
 
 # TODO: Not sure len_name can be NULL or not
 def wo_rwlen_ret_bool(str_idx, len_idx, error):
-    """
-    """
+    """A converter for a write only string with a read/write length variable, returning a boolean flag."""
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
 	WSTR ${str_name}_(*${len_name});
@@ -229,8 +232,7 @@ def wo_rwlen_ret_bool(str_idx, len_idx, error):
 
 # TODO: currently, returns length more than required
 def wo_rolen_ret_len(str_idx, len_idx):
-    """
-    """
+    """A converter for a write only string with a read only length variable, returning the required length for error conditions."""
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
@@ -248,8 +250,7 @@ def wo_rolen_ret_len(str_idx, len_idx):
 """).substitute(str_name = orig_str_name, len_name = orig_len_name)))
 
 def wo_rolen_ret_zero(str_idx, len_idx):
-    """
-    """
+    """A converter for a write only string with a read only length variable, returning 0 for error conditions."""
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
@@ -295,11 +296,15 @@ def _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
 """).substitute(str_name = orig_str_name, len_name = orig_len_name)))
 
 def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
+    """A converter for a write only string returned as a result, with a read only length variable.
+
+    If a NULL pointer is specified, the buffer is newly allocated.
+    """
     return lambda ctx, typespecs: _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs)
 
+# FIXME: Free the old buffer.
 def ret_alloc(ctx, typespecs):
-    """
-    """
+    """A converter to a function returning a string in a newly allocated buffer."""
     ctx.desc_self.result_type = 'LPSTR';
     return ctx._replace(code_after = ctx.code_after + """\
 	DWORD alloc_size = UTF8Length(ret);
@@ -308,11 +313,16 @@ def ret_alloc(ctx, typespecs):
 """)
 
 def forwardA(ctx, typespecs):
+    """A converter to forward to SomeFuncA function.
+
+    Type adjustment from LPWSTR to LPSTR is processed.
+    """
     ctx.desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, ctx.desc_self.parameter_types)
     ctx.desc_call.name = ctx.desc_call.name[:-1] + 'A'
     return ctx
 
 def forward(ctx, typespecs):
+    """A converter just forwarding. All parameters are kept as they are."""
     return ctx
 
 def _optional_imp(ctx, typespec, args):
@@ -327,6 +337,10 @@ def _optional_imp(ctx, typespec, args):
 """).substitute(idx = x[0], type = x[1]), enumerate(args))) + "\n")
 
 def optional(idx, *args):
+    """A converter for functions having optional arguments.
+
+    The index to the last non-optional parameter is specified and a list of types for optional arguments follows.
+    """
     return lambda ctx, typespecs: _optional_imp(ctx, typespecs[idx], args)
 
 def _fakecp_imp(ctx, typespec_cp, typespec_flag):
@@ -341,6 +355,10 @@ def _fakecp_imp(ctx, typespec_cp, typespec_flag):
 """).substitute(cpname = orig_name_cp, flagname = orig_name_flag))
 
 def fakecp(idx_cp, idx_flag):
+    """A converter for MultiByteToWideChar.
+
+    CP_ACP for UINT CodePage is converted to CP_UTF8.
+    """
     return lambda ctx, typespecs: _fakecp_imp(ctx, typespecs[idx_cp], typespecs[idx_flag])
 
 def _adjustdef_imp(ctx, typespec_cp, typespec_flag, typespec_def, typespec_used):
@@ -361,6 +379,11 @@ def _adjustdef_imp(ctx, typespec_cp, typespec_flag, typespec_def, typespec_used)
 """).substitute(cpname = orig_name_cp, flagname = orig_name_flag, defname = orig_name_def, usedname = orig_name_used))
 
 def adjustdef(idx_cp, idx_flag, idx_def, idx_used):
+    """A converter for WideCharToMulitiByte.
+
+    CP_ACP for UINT CodePage is converted to CP_UTF8.
+    In this case, MB_ERR_INVALID_CHARS is dropped and lpDefaultChar and lpUsedDefaultChar are set as 0.
+    """
     return lambda ctx, typespecs: _adjustdef_imp(ctx, typespecs[idx_cp], typespecs[idx_flag], typespecs[idx_def], typespecs[idx_used])
 
 def _w2u_imp(ctx, typespec):
@@ -385,6 +408,10 @@ $mapper""").substitute(orig_name = orig_name, orig_type = orig_type, mapper = ''
 """).substitute(orig_name = orig_name, field = v) for t,v in fields])))
 
 def w2u(idx):
+    """A converter to replace (LPC?)?.*W types with .*U.
+
+    Fields having LPWSTR or LPCWSTR types are set by the pointers to converted WCHAR strings.
+    """
     return lambda ctx, typespecs: reduce( \
         lambda acc, x: _w2u_imp(acc, x), \
         map(lambda x: typespecs[x], idx if isinstance(idx, list) else [idx]), \
@@ -394,7 +421,7 @@ def w2u(idx):
 # Converters for struct
 
 def struct_u2a(ctx):
-    """Create aliases for struct SomethingU to SomethingA"""
+    """A struct converter to create an alias of struct SomethingA as SomethingU."""
     ctx.types[ctx.desc.name] = ctx.desc
     uname = ctx.desc.name[:-1] + 'U'
     aname = ctx.desc.name[:-1] + 'A'
