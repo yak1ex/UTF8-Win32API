@@ -88,3 +88,40 @@ DWORD WSTR::extend_to(DWORD new_size)
 	}
 	return m_size;
 }
+
+// NOTE: Sanity check is NOT done
+static std::size_t GetOffset(LPCWSTR lpBaseW, LPCWSTR lpFilePartW)
+{
+	std::size_t result = 0;
+	while(lpBaseW != lpFilePartW) {
+		if(*lpBaseW < 0xD800U || *lpBaseW > 0xDBFFU) ++result;
+		++lpBaseW;
+	}
+	return result;
+}
+
+// NOTE: Sanity check is NOT done
+static LPSTR Advance(LPSTR lpBase, std::size_t diff)
+{
+	while(diff-- != 0) {
+		if(*lpBase == 0) break;
+		switch(static_cast<unsigned char>(*lpBase) & 0xC0) {
+		case 0x00: // ASCII
+		case 0x40: // ASCII
+			++lpBase;
+			break;
+		case 0xC0:
+			++lpBase;
+			// fall through
+		case 0x80:
+			while((static_cast<unsigned char>(*lpBase) & 0xC0) == 0x80) ++lpBase;
+			break;
+		}
+	}
+	return lpBase;
+}
+
+LPSTR AdjustFilePart(LPCWSTR lpBaseW, LPCWSTR lpFilePartW, LPSTR lpBase)
+{
+	return Advance(lpBase, GetOffset(lpBaseW, lpFilePartW));
+}

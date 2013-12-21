@@ -63,5 +63,6 @@ inline DWORD UTF8Length(LPWSTR ws)
 	return WideCharToMultiByte(CP_UTF8, 0, ws, -1, NULL, 0, NULL, NULL);
 }
 
+extern LPSTR AdjustFilePart(LPCWSTR lpBaseW, LPCWSTR lpFilePartW, LPSTR lpBase);
 
 #endif
