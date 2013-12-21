@@ -54,7 +54,7 @@ Perl 5.18.1 is compilable by perl-5.18.1.patch.
 You can see most of the patches in perl-5.18.1.patch add #include only and adjust make configuration.
 Known regressions in Perl tests are some tests in cpan/Win32/t/Unicode.t due to explicit code conversions in Win32 module.
 
-There are remaining TODO tasks such as argc, argv, environment variables, temporary filename, execl in perlhost.h, FindFirstFileA and so on.
+There are remaining TODO tasks such as a global variable environ for environment variables, temporary filename, execl in perlhost.h, FindFirstFileA and so on.
 
 Usage for Perl compilation
 --------------------------
