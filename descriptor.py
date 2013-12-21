@@ -72,22 +72,22 @@ class FunctionDescriptor(object):
     def index_arg(self, spec):
         """search argument corresponding to the specified spec, returning its index"""
         for i,v in enumerate(self._parameter_types):
-            if v == spec:
+            if v[0] == spec[0] and v[1].rstrip('_') == spec[1].rstrip('_'):
                 return i
             elif v[0] == spec[0] and spec[1] == None:
                 return i
-            elif v[1] == spec[1] and spec[0] == None:
+            elif v[1].rstrip('_') == spec[1].rstrip('_') and spec[0] == None:
                 return i
         return -1
 
     def get_param(self, spec):
         """search argument corresponding to the specified spec, returning its type and value"""
         for v in self._parameter_types:
-            if v == spec:
+            if v[0] == spec[0] and v[1].rstrip('_') == spec[1].rstrip('_'):
                 return v
             elif v[0] == spec[0] and spec[1] == None:
                 return v
-            elif v[1] == spec[1] and spec[0] == None:
+            elif v[1].rstrip('_') == spec[1].rstrip('_') and spec[0] == None:
                 return v
         raise KeyError('The specified typespec is not found')
 

@@ -386,6 +386,25 @@ def adjustdef(idx_cp, idx_flag, idx_def, idx_used):
     """
     return lambda ctx, typespecs: _adjustdef_imp(ctx, typespecs[idx_cp], typespecs[idx_flag], typespecs[idx_def], typespecs[idx_used])
 
+def _adjustfilepart_imp(ctx, typespec_buf, typespec_fp):
+    orig_type_buf, orig_name_buf = ctx.desc_call.get_param(typespec_buf)
+    fp_index = ctx.desc_self.index_arg(typespec_fp)
+    orig_type_fp, orig_name_fp = ctx.desc_self.parameter_types[fp_index]
+    ctx.desc_self.parameter_types[fp_index] = ('LPSTR *', orig_name_fp)
+    ctx.desc_call.parameter_types[fp_index] = (orig_type_fp, orig_name_fp + '_')
+    return ctx._replace(code_before = ctx.code_before + Template("""\
+	LPWSTR ${name_fp}__;
+	LPWSTR* ${name_fp}_ = &${name_fp}__;
+""").substitute(name_fp = orig_name_fp), code_after = ctx.code_after + Template("""\
+	if($name_fp) {
+		*$name_fp = AdjustFilePart(${name_buf}_, *${name_fp}_, $name_buf);
+	}
+""").substitute(name_fp = orig_name_fp, name_buf = orig_name_buf.rstrip('_')))
+
+def adjustfilepart(idx_fn, idx_fp):
+    """A converter for GetFullPathName"""
+    return lambda ctx, typespecs: _adjustfilepart_imp(ctx, typespecs[idx_fn], typespecs[idx_fp])
+
 def _w2u_imp(ctx, typespec):
     target_index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]

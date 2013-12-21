@@ -32,12 +32,13 @@ spec = [
     ['', [('LPCWSTR', 'lpUNCServerName'), ('LPCWSTR', 'lpFileName')], ro_nolen],
     ['', [('LPCWSTR', 'lpFileName'), ('LPCWSTR', 'lpExistingFileName')], ro_nolen],
 
+    ['', [('LPCWSTR', 'lpPath'), ('LPCWSTR', 'lpFileName'), ('LPCWSTR', 'lpExtension'), ('DWORD', 'nBufferLength'), ('LPWSTR', 'lpBuffer'), ('LPWSTR *', 'lpFilePart')], [ro_nolen_idx([0,1,2]), wo_rolen_ret_len(4,3), adjustfilepart(4,5)]],
+    ['', [('LPCWSTR', 'lpFileName'), ('DWORD', 'nBufferLength'), ('LPWSTR', 'lpBuffer'), ('LPWSTR *', 'lpFilePart')], [ro_nolen_idx(0), wo_rolen_ret_len(2,1), adjustfilepart(2,3)]],
+
 # Conversion not yet implemented:
-# DWORD SearchPathW(LPCWSTR lpPath, LPCWSTR lpFileName, LPCWSTR lpExtension, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
-# DWORD GetFullPathNameU(LPCSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR * lpFilePart)
-    ['', [('LPWSTR *', 'lpFilePart')], None],
 # HANDLE FindFirstFileW(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData)
     ['', [('LPCWSTR', 'lpFileName'), ('LPWIN32_FIND_DATAW', 'lpFindFileData')], None],
+
     ['', [('LPCWSTR', 'lpFileName')], ro_nolen],
 # ShellMessageBoxW in shlwapi
 #   ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], ro_nolen],
