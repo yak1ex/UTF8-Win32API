@@ -63,6 +63,7 @@ spec = [
     ['', [('LPCWSTR', 'lpszVolumeMountPoint'), ('LPWSTR', 'lpszVolumeName'), ('DWORD', 'cchBufferLength')], [ro_nolen_idx(0), wo_rolen_ret_zero(1,2)]],
     ['', [('LPCWSTR', 'lpszVolumeMountPoint')], ro_nolen],
 
+# Conversion not yet implemented:
     ['', [('LPCWSTR', 'pszRootPath'), ('LPSHQUERYRBINFO', 'pSHQueryRBInfo')], None],
     ['', [('LPCWSTR', 'pszRootPath')], ro_nolen],
 
