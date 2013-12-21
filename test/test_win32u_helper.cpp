@@ -202,3 +202,17 @@ BOOST_AUTO_TEST_CASE(test_my_scoped_array)
 		BOOST_CHECK(cp[0] == 5);
 	}
 }
+
+BOOST_AUTO_TEST_CASE(test_adjust_filepart)
+{
+	LPCWSTR pw1 = L"c:\\\xd869\xddf1\xd869\xde1a\\test.txt";
+	LPSTR pa1 = "c:\\\xf0\xaa\x97\xb1\xf0\xaa\x98\x9a\\test.txt";
+	LPSTR par1 = AdjustFilePart(pw1, pw1 + 8, pa1);
+	BOOST_CHECK_EQUAL(*par1, 't');
+	BOOST_CHECK_EQUAL(par1 - pa1, 12);
+	LPCWSTR pw2 = L"c:\\\x9f5f\x9f6c\\test.txt";
+	LPSTR pa2 = "c:\\\xe9\xbd\x9f\xe9\xbd\xac\\test.txt";
+	LPSTR par2 = AdjustFilePart(pw2, pw2 + 6, pa2);
+	BOOST_CHECK_EQUAL(*par2, 't');
+	BOOST_CHECK_EQUAL(par2 - pa2, 10);
+}
