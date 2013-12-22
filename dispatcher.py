@@ -216,6 +216,9 @@ ODS(<< "%s : return " << dwrap(ret_) << std::endl);
                 ctx.desc_self.name,
                 ctx.desc_self.make_trace_arg(),
                 "%s\t%s\n%s\t%s" % (ctx.code_before, call, ctx.code_after, ret)))
+        if (any([re.search('LPWSTR|LPCWSTR|W$', t) for t,n in ctx.desc_self.parameter_types]) or
+            re.search('LPWSTR|LPCWSTR|W$', ctx.desc_self.result_type)):
+            self._output.txt(outname, '// Warning: %s\n' % ctx.desc_self.make_func_decl())
 
         if desc_fallback is not None:
             self._output.cpp2(outname,
