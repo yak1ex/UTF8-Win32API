@@ -187,6 +187,7 @@ $body
         desc_fallback, desc_fallback_call = self._fallback(ctx, onespec)
         macro = self._macro(ctx, onespec)
 
+# No return value
         if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
             call = ctx.desc_call.make_func_call() + ';'
             ret = '''\
@@ -194,6 +195,7 @@ ODS(<< "%s : return" << std::endl);
 	return;''' % ctx.desc_self.name
             if desc_fallback_call is not None:
                 fallback_call = desc_fallback_call.make_func_call() + ';'
+# A return type is converted
         elif ctx.desc_self.result_type == ctx.desc_call.result_type:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
             ret = '''\
@@ -201,6 +203,7 @@ ODS(<< "%s : return " << dwrap(ret) << std::endl);
 	return ret;''' % ctx.desc_self.name
             if desc_fallback_call is not None:
                 fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
+# Otherwise
         else:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
             ret = '''\
@@ -216,6 +219,7 @@ ODS(<< "%s : return " << dwrap(ret_) << std::endl);
                 ctx.desc_self.name,
                 ctx.desc_self.make_trace_arg(),
                 "%s\t%s\n%s\t%s" % (ctx.code_before, call, ctx.code_after, ret)))
+# Check unintentional conversions, which does not specify all required parameter conversions.
         if (any([re.search('LPWSTR|LPCWSTR|W$', t) for t,n in ctx.desc_self.parameter_types]) or
             re.search('LPWSTR|LPCWSTR|W$', ctx.desc_self.result_type)):
             self._output.txt(outname, '// Warning: %s\n' % ctx.desc_self.make_func_decl())
