@@ -130,7 +130,7 @@ struct_convctx = namedtuple('StructConvCtx', 'types desc header')
 
 class _Spec:
 # conversion spec
-    REGEXP, TYPES, FUNC = range(3)
+    REGEXP, TYPES, FUNC, ATTR = range(4)
     STRUCT_FUNC = 1
 # in REGEXP for CRT
     SELF, CALL, ALIAS_OPT, ALIAS_ALL = range(4)
@@ -152,8 +152,11 @@ class Dispatcher(object):
     def __init__(self, split = False, header_dir = 'include', source_dir = 'gensrc'):
         self._output = _Output(split, header_dir, source_dir)
 
-    def register(self, spec):
-        self._table.extend(spec)
+    def register(self, specs):
+        for spec in specs:
+            if len(spec) <= _Spec.ATTR:
+                spec.append({})
+        self._table.extend(specs)
 
     def register_struct(self, spec):
         self._struct_table.extend(spec)
@@ -184,7 +187,11 @@ $body
         funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
         ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
 
-        desc_fallback, desc_fallback_call = self._fallback(ctx, onespec)
+        # FIXME: Fallback for variadic
+        need_fallback = 'no_fallback' not in onespec[_Spec.ATTR] and not ctx.desc_self.is_variadic
+
+        if need_fallback:
+            desc_fallback, desc_fallback_call = self._fallback(ctx, onespec)
         macro = self._macro(ctx, onespec)
 
 # No return value
@@ -193,7 +200,7 @@ $body
             ret = '''\
 ODS(<< "%s : return" << std::endl);
 	return;''' % ctx.desc_self.name
-            if desc_fallback_call is not None:
+            if need_fallback:
                 fallback_call = desc_fallback_call.make_func_call() + ';'
 # A return type is converted
         elif ctx.desc_self.result_type == ctx.desc_call.result_type:
@@ -201,7 +208,7 @@ ODS(<< "%s : return" << std::endl);
             ret = '''\
 ODS(<< "%s : return " << dwrap(ret) << std::endl);
 	return ret;''' % ctx.desc_self.name
-            if desc_fallback_call is not None:
+            if need_fallback:
                 fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
 # Otherwise
         else:
@@ -209,7 +216,7 @@ ODS(<< "%s : return " << dwrap(ret) << std::endl);
             ret = '''\
 ODS(<< "%s : return " << dwrap(ret_) << std::endl);
 	return ret_;''' % ctx.desc_self.name # ret_ MUST be defined in conversion
-            if desc_fallback_call is not None:
+            if need_fallback:
                 fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
 
         self._output.cpp_renew(outname)
@@ -224,7 +231,7 @@ ODS(<< "%s : return " << dwrap(ret_) << std::endl);
             re.search('LPWSTR|LPCWSTR|W$', ctx.desc_self.result_type)):
             self._output.txt(outname, '// Warning: %s\n' % ctx.desc_self.make_func_decl())
 
-        if desc_fallback is not None:
+        if need_fallback:
             self._output.cpp2(outname,
                 self._make_def(
                     desc_fallback.make_func_decl(),
@@ -244,7 +251,7 @@ $body#endif
 #define $target $name
 '''                     ).substitute(target = x[_Spec.REPLACEMENT], name = ctx.desc_self.name)), macro)) +
             "extern %s;\n%s" % (ctx.desc_self.make_func_decl(),
-                "extern %s;\n" % desc_fallback.make_func_decl() if desc_fallback is not None else "")
+                "extern %s;\n" % desc_fallback.make_func_decl() if need_fallback else "")
         )
 
     def _dispatch(self, desc):
@@ -314,9 +321,6 @@ class APIDispatcher(Dispatcher):
         return ctx
 
     def _fallback(self, ctx, onespec):
-# TODO: Blacklist info SHOULD be defined elsewhere
-        if ctx.desc_call.name in ['FindFirstStreamW', 'CreateProcessWithLogonW', 'CreateProcessWithTokenW']:
-            return None, None
         fallback, fallback_call = ctx.desc_self.clone(), ctx.desc_self.clone()
         if ctx.desc_call.name[-1] == 'W':
             fallback.name = fallback.name[:-1] + 'A_'
@@ -349,6 +353,15 @@ class CRTDispatcher(Dispatcher):
         Dispatcher.__init__(self, split, header_dir, source_dir)
         self._prolog()
 
+    def register(self, specs):
+        for spec in specs:
+            if len(spec[_Spec.REGEXP][_Spec.ALIAS_OPT]) == 0:
+                if len(spec) <= _Spec.ATTR:
+                    spec.append({'no_fallback': 1})
+                else:
+                    spec[_Spec.ATTR]['no_fallback'] = 1
+        Dispatcher.register(self, specs)
+
     def _match(self, onespec, desc):
         return desc.name == onespec[_Spec.REGEXP][_Spec.CALL]
 
@@ -364,8 +377,6 @@ class CRTDispatcher(Dispatcher):
         return ctx
 
     def _fallback(self, ctx, onespec):
-        if ctx.desc_self.is_variadic or len(onespec[_Spec.REGEXP][_Spec.ALIAS_OPT]) == 0:
-            return None, None
         fallback, fallback_call = ctx.desc_self.clone(), ctx.desc_self.clone()
         fallback.name = onespec[_Spec.REGEXP][_Spec.ALIAS_OPT][0] + '_'
         fallback_call.name = onespec[_Spec.REGEXP][_Spec.ALIAS_OPT][0]

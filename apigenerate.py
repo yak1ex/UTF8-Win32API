@@ -7,7 +7,9 @@ from converter import *
 spec = [
 
 # TODO: LPVOID lpEnvironment
-    ['', [('LPCWSTR', 'lpUsername'), ('LPCWSTR', 'lpDomain'), ('LPCWSTR', 'lpPassword'), ('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx(range(6)), w2u(6)]],
+# CreateProcessWithLogon
+    ['', [('LPCWSTR', 'lpUsername'), ('LPCWSTR', 'lpDomain'), ('LPCWSTR', 'lpPassword'), ('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx(range(6)), w2u(6)], {'no_fallback': 1}],
+    ['CreateProcessWithToken', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx([0,1,2]), w2u(3)], {'no_fallback': 1}],
     ['', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx([0,1,2]), w2u(3)]],
 
     ['BinaryType', [('LPCWSTR', 'lpApplicationName')], ro_nolen],
@@ -39,6 +41,7 @@ spec = [
 # HANDLE FindFirstFileW(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData)
     ['', [('LPCWSTR', 'lpFileName'), ('LPWIN32_FIND_DATAW', 'lpFindFileData')], None],
 
+    ['FindFirstStream', [('LPCWSTR', 'lpFileName')], ro_nolen, {'no_fallback': 1}],
     ['', [('LPCWSTR', 'lpFileName')], ro_nolen],
 # ShellMessageBoxW in shlwapi
 #   ['', [('LPCWSTR', 'lpcText'), ('LPCWSTR', 'lpcTitle')], ro_nolen],
