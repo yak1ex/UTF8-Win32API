@@ -13,6 +13,10 @@ class _Output(object):
         self._source_dir = source_dir
         self._split = split
 
+    def configure(self, source_prologue = '', header_prologue = ''):
+        self._source_prologue = source_prologue
+        self._header_prologue = header_prologue
+
     def _cpp_name(self, outname):
         if self._split:
             return '%s/%s' % (self._source_dir, outname.replace('.h', 'u_%s.cpp' % self._cpp[outname]))
@@ -40,21 +44,7 @@ class _Output(object):
             return
         self._cpp[actualname] = 1
         with open(actualname, 'a') as f:
-            # FIXME: Inappropriate tight coupling
-            f.write(('''\
-#define UTF8_WIN32_DONT_REPLACE_MSVCRT
-#include <vector>
-#include <errno.h>
-#include <stdio.h>
-#include <direct.h>
-#include <io.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/utime.h>
-#include <process.h>
-''' if outname == 'msvcrt.h' else '''\
-#define UTF8_WIN32_DONT_REPLACE_ANSI
-''') + Template('''\
+            f.write(self._source_prologue + Template('''\
 #include "win32u_apistructu.h"
 #include "$header"
 
@@ -71,7 +61,6 @@ class _Output(object):
         self._h[actualname] = 1
         guard_name = actualname.partition('/')[2].upper().replace('.', '_')
         with open(actualname, 'a') as f:
-            # FIXME: Inappropriate tight coupling
             f.write(Template('''\
 #ifndef $guard
 #define $guard
@@ -82,11 +71,7 @@ $header
 extern "C" {
 #endif
 
-''').substitute(guard = guard_name, header = '''\
-#include <wchar.h>
-#include <sys/utime.h>
-
-''' if outname == 'msvcrt.h' else "\n"))
+''').substitute(guard = guard_name, header = self._header_prologue))
 
     def cpp_renew(self, outname):
         if not outname in self._cpp:
@@ -303,6 +288,9 @@ $body#endif
 class APIDispatcher(Dispatcher):
     def __init__(self, split = False, header_dir = 'include', source_dir = 'gensrc'):
         Dispatcher.__init__(self, split, header_dir, source_dir)
+        self._output.configure(source_prologue = '''\
+#define UTF8_WIN32_DONT_REPLACE_ANSI
+''')
 
     def _match(self, onespec, desc):
         return re.search(onespec[_Spec.REGEXP], desc.name)
@@ -351,6 +339,22 @@ class APIDispatcher(Dispatcher):
 class CRTDispatcher(Dispatcher):
     def __init__(self, split = False, header_dir = 'include', source_dir = 'gensrc'):
         Dispatcher.__init__(self, split, header_dir, source_dir)
+        self._output.configure(header_prologue = '''\
+#include <wchar.h>
+#include <sys/utime.h>
+
+''', source_prologue = '''\
+#define UTF8_WIN32_DONT_REPLACE_MSVCRT
+#include <vector>
+#include <errno.h>
+#include <stdio.h>
+#include <direct.h>
+#include <io.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/utime.h>
+#include <process.h>
+''')
         self._prolog()
 
     def register(self, specs):
