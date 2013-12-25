@@ -14,7 +14,7 @@ def _nolen_helper(ctx, typespec, coder):
 def _ro_nolen_imp(ctx, typespec):
     return _nolen_helper(ctx, typespec, \
         lambda orig_type, orig_name: (Template("""\
-	WSTR ${name}_($name);
+	win32u::WSTR ${name}_($name);
 """).substitute(name = orig_name), ''))
 
 def ro_nolen_idx(idx):
@@ -39,10 +39,10 @@ def _roarray_nolen_imp(ctx, typespec):
     ctx.desc_self.parameter_types[target_index] = ('LPCSTR const *', orig_name)
     ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
     before = Template("""\
-	std::vector<WSTR> ${name}_hold;
+	std::vector<win32u::WSTR> ${name}_hold;
 	int ${name}_idx = 0;
 	while(1) {
-		${name}_hold.push_back(WSTR(${name}[${name}_idx]));
+		${name}_hold.push_back(win32u::WSTR(${name}[${name}_idx]));
 		if(! ${name}_hold.back()) break;
 		++${name}_idx;
 	}
@@ -72,11 +72,11 @@ def _rova_nolen_imp(ctx, typespec):
     before = Template("""\
 	va_list ${name}_va;
 	va_start(${name}_va, $name);
-	std::vector<WSTR> ${name}_hold;
-	${name}_hold.push_back(WSTR($name));
+	std::vector<win32u::WSTR> ${name}_hold;
+	${name}_hold.push_back(win32u::WSTR($name));
 	do {
 		LPSTR p = va_arg(${name}_va, LPSTR);
-		${name}_hold.push_back(WSTR(p));
+		${name}_hold.push_back(win32u::WSTR(p));
 	} while(${name}_hold.back());
 	std::vector<LPCWSTR> ${name}_arg;
 	for(std::size_t ${name}_hold_idx = 0; ${name}_hold_idx != ${name}_hold.size(); ++${name}_hold_idx) {
@@ -105,11 +105,11 @@ def _rova_nolen_withenv_imp(ctx, typespec):
     before = Template("""\
 	va_list ${name}_va;
 	va_start(${name}_va, $name);
-	std::vector<WSTR> ${name}_hold;
-	${name}_hold.push_back(WSTR($name));
+	std::vector<win32u::WSTR> ${name}_hold;
+	${name}_hold.push_back(win32u::WSTR($name));
 	do {
 		LPSTR p = va_arg(${name}_va, LPSTR);
-		${name}_hold.push_back(WSTR(p));
+		${name}_hold.push_back(win32u::WSTR(p));
 	} while(${name}_hold.back());
 	std::vector<LPCWSTR> ${name}_arg;
 	for(std::size_t ${name}_hold_idx = 0; ${name}_hold_idx != ${name}_hold.size(); ++${name}_hold_idx) {
@@ -118,10 +118,10 @@ def _rova_nolen_withenv_imp(ctx, typespec):
 	LPCWSTR* ${name}_ = &${name}_arg[0];
 
 	LPCSTR* ${name}_env = va_arg(${name}_va, LPCSTR*);
-	std::vector<WSTR> ${name}_env_hold;
+	std::vector<win32u::WSTR> ${name}_env_hold;
 	int ${name}_env_idx = 0;
 	while(1) {
-		${name}_env_hold.push_back(WSTR(${name}_env[${name}_env_idx]));
+		${name}_env_hold.push_back(win32u::WSTR(${name}_env[${name}_env_idx]));
 		if(! ${name}_env_hold.back()) break;
 		++${name}_env_idx;
 	}
@@ -144,7 +144,7 @@ def _wo_nolen_imp(ctx, typespec):
     return _nolen_helper(ctx, typespec, \
         lambda orig_type, orig_name: (\
             Template("""\
-	WSTR ${name}_($name ? MAX_PATH : 0);
+	win32u::WSTR ${name}_($name ? MAX_PATH : 0);
 """).substitute(name = orig_name), \
             Template("""\
 	${name}_.get($name, MAX_PATH);
@@ -170,7 +170,7 @@ def _wo_nolen_ret_null_static_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
     return _nolen_helper(ctx, typespec, lambda orig_type, orig_name: (Template("""\
 	static char static_buf[$size * 3];
-	WSTR ${name}_($name);
+	win32u::WSTR ${name}_($name);
 """).substitute(size = size, name = orig_name), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
@@ -189,7 +189,7 @@ def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
 def _wo_nolen_ret_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
     return _nolen_helper(ctx, typespec, lambda orig_type, orig_name: (Template("""\
-	WSTR ${name}_($size);
+	win32u::WSTR ${name}_($size);
 """).substitute(size = size, name = orig_name), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
@@ -218,8 +218,8 @@ def wo_rwlen_ret_bool(str_idx, len_idx, error):
     """A converter for a write only string with a read/write length variable, returning a boolean flag."""
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
-	WSTR ${str_name}_(*${len_name});
-	my_remove_pointer<$len_type>::type ${len_name}__ = *$len_name;
+	win32u::WSTR ${str_name}_(*${len_name});
+	win32u::remove_pointer<$len_type>::type ${len_name}__ = *$len_name;
 	$len_type ${len_name}_ = &${len_name}__;
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(${str_name}_.get_utf8_length() <= *$len_name) {
@@ -236,7 +236,7 @@ def wo_rolen_ret_len(str_idx, len_idx):
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
-	WSTR ${str_name}_(${len_name}_);
+	win32u::WSTR ${str_name}_(${len_name}_);
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(ret) {
 		if(! $str_name) {
@@ -254,7 +254,7 @@ def wo_rolen_ret_zero(str_idx, len_idx):
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
-	WSTR ${str_name}_(${len_name}_);
+	win32u::WSTR ${str_name}_(${len_name}_);
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	if(ret) {
 		if(${str_name}_.get_utf8_length() <= $len_name) {
@@ -271,7 +271,7 @@ def _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
     return _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
-	WSTR ${str_name}_(${len_name}_);
+	win32u::WSTR ${str_name}_(${len_name}_);
 """).substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
@@ -307,9 +307,9 @@ def ret_alloc(ctx, typespecs):
     """A converter to a function returning a string in a newly allocated buffer."""
     ctx.desc_self.result_type = 'LPSTR';
     return ctx._replace(code_after = ctx.code_after + """\
-	DWORD alloc_size = UTF8Length(ret);
+	DWORD alloc_size = win32u::UTF8Length(ret);
 	LPSTR ret_ = (LPSTR)malloc(alloc_size);
-	ToUTF8(ret_, alloc_size, ret);
+	win32u::ToUTF8(ret_, alloc_size, ret);
 """)
 
 def forwardA(ctx, typespecs):
@@ -418,11 +418,11 @@ def _w2u_imp(ctx, typespec):
         fields = ctx.types[orig_type]
     fields = [(t,v) for t,v in fields.fields if t == 'LPWSTR' or t == 'LPCWSTR']
     return ctx._replace(code_before = ctx.code_before + Template("""\
-	my_remove_pointer<$orig_type>::type ${orig_name}__;
+	win32u::remove_pointer<$orig_type>::type ${orig_name}__;
 	$orig_type ${orig_name}_ = & ${orig_name}__;
 	CopyMemory(${orig_name}_, $orig_name, sizeof(${orig_name}__));
 $mapper""").substitute(orig_name = orig_name, orig_type = orig_type, mapper = ''.join([Template("""\
-	WSTR ${orig_name}_$field($orig_name -> $field);
+	win32u::WSTR ${orig_name}_$field($orig_name -> $field);
 	${orig_name}_ -> $field = ${orig_name}_$field;
 """).substitute(orig_name = orig_name, field = v) for t,v in fields])))
 

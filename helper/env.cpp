@@ -28,7 +28,7 @@ LPSTR* CreateEnviron()
 	std::size_t len = 0;
 	while(*env != 0) {
 		env_idx.push_back(len);
-		len += UTF8Length(env);
+		len += win32u::UTF8Length(env);
 		while(*++env != 0) ;
 		++env;
 	}
@@ -41,7 +41,7 @@ LPSTR* CreateEnviron()
 	std::size_t i = 0;
 	while(*env != 0) {
 		*result_temp++ = top + env_idx[i];
-		ToUTF8(top + env_idx[i], env_idx[i+1] - env_idx[i], env);
+		win32u::ToUTF8(top + env_idx[i], env_idx[i+1] - env_idx[i], env);
 		while(*++env != 0) ;
 		++env; ++i;
 	}
@@ -83,13 +83,13 @@ int main(void)
 	int nLen = 0;
 	for(int i = 0; i < argc; ++i) {
 		uargv_idx.push_back(nLen);
-		nLen += UTF8Length(argv[i]);
+		nLen += win32u::UTF8Length(argv[i]);
 	}
 	uargv_idx.push_back(nLen);
 	uargv_body.reserve(nLen);
 	for(int i = 0; i < argc; ++i) {
 		uargv_body.resize(uargv_idx[i+1]);
-		ToUTF8(&uargv_body[0] + uargv_idx[i], uargv_idx[i+1] - uargv_idx[i], argv[i]);
+		win32u::ToUTF8(&uargv_body[0] + uargv_idx[i], uargv_idx[i+1] - uargv_idx[i], argv[i]);
 	}
 	std::vector<char*> uargv;
 	for(int i = 0; i < argc; ++i) {

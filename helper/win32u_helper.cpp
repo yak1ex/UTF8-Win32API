@@ -2,6 +2,8 @@
 #include "winnls.h"
 #include <algorithm> // for std::swap()
 
+namespace win32u {
+
 WSTR::WSTR(LPCSTR str, int len) :
 	m_size(str ? MultiByteToWideChar(CP_UTF8, 0, str, len, NULL, 0)
 	               + ((len > 0 && str[len - 1] != 0) ? 1 : 0)
@@ -124,4 +126,6 @@ static LPSTR Advance(LPSTR lpBase, std::size_t diff)
 LPSTR AdjustFilePart(LPCWSTR lpBaseW, LPCWSTR lpFilePartW, LPSTR lpBase)
 {
 	return Advance(lpBase, GetOffset(lpBaseW, lpFilePartW));
+}
+
 }

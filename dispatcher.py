@@ -191,7 +191,7 @@ ODS(<< "%s : return" << std::endl);
         elif ctx.desc_self.result_type == ctx.desc_call.result_type:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
             ret = '''\
-ODS(<< "%s : return " << dwrap(ret) << std::endl);
+ODS(<< "%s : return " << win32u::dwrap(ret) << std::endl);
 	return ret;''' % ctx.desc_self.name
             if need_fallback:
                 fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
@@ -199,7 +199,7 @@ ODS(<< "%s : return " << dwrap(ret) << std::endl);
         else:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
             ret = '''\
-ODS(<< "%s : return " << dwrap(ret_) << std::endl);
+ODS(<< "%s : return " << win32u::dwrap(ret_) << std::endl);
 	return ret_;''' % ctx.desc_self.name # ret_ MUST be defined in conversion
             if need_fallback:
                 fallback_call = 'return %s;' % desc_fallback_call.make_func_call()

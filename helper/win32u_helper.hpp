@@ -4,38 +4,40 @@
 #include <algorithm>
 #include <windows.h>
 
+namespace win32u {
+
 template<typename T>
-struct my_remove_pointer
+struct remove_pointer
 {
 	typedef T type;
 };
 
 template<typename T>
-struct my_remove_pointer<T*>
+struct remove_pointer<T*>
 {
 	typedef T type;
 };
 
 template<typename T>
-class my_scoped_array
+class scoped_array
 {
 	T *m;
-	my_scoped_array(const my_scoped_array&);
-	my_scoped_array& operator=(const my_scoped_array&);
+	scoped_array(const scoped_array&);
+	scoped_array& operator=(const scoped_array&);
 public:
-	my_scoped_array(T *p = 0) : m(p) {}
-	~my_scoped_array() { delete[] m; }
+	scoped_array(T *p = 0) : m(p) {}
+	~scoped_array() { delete[] m; }
 	T* get() { return m; }
 	const T* get() const { return m; }
 	T& operator[](std::size_t idx) { return m[idx]; }
 	const T& operator[](std::size_t idx) const { return m[idx]; }
-	void swap(my_scoped_array& other) { std::swap(m, other.m); }
+	void swap(scoped_array& other) { std::swap(m, other.m); }
 };
 
 class WSTR
 {
 	DWORD m_size;
-	my_scoped_array<WCHAR> m_wstr;
+	scoped_array<WCHAR> m_wstr;
 public:
 	explicit WSTR(LPCSTR str, int len = -1);
 	WSTR(const WSTR& r);
@@ -64,5 +66,7 @@ inline DWORD UTF8Length(LPWSTR ws)
 }
 
 extern LPSTR AdjustFilePart(LPCWSTR lpBaseW, LPCWSTR lpFilePartW, LPSTR lpBase);
+
+}
 
 #endif

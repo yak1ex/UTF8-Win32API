@@ -67,7 +67,7 @@ class FunctionDescriptor(object):
     def make_trace_arg(self):
         """
         """
-        return ' << '.join(['" %s: " << dwrap(%s)' % (n, n) for t, n in self._parameter_types])
+        return ' << '.join(['" %s: " << win32u::dwrap(%s)' % (n, n) for t, n in self._parameter_types])
 
     def index_arg(self, spec):
         """search argument corresponding to the specified spec, returning its index"""
