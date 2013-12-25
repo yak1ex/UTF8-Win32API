@@ -55,7 +55,26 @@ void FreeEnviron(LPSTR *p)
 	delete[] p;
 }
 
-//void ConvertEnvBlock(my_scoped_array<WCHAR> &result, LPVOID lpEnv);
+void ConvertEnvBlock(win32u::scoped_array<WCHAR> &result, LPVOID lpEnv)
+{
+	char *p = static_cast<char*>(lpEnv), *p_ = p;
+	std::size_t len = 0;
+	while(*p) {
+		len += MultiByteToWideChar(CP_UTF8, 0, p, -1, NULL, 0);
+		while(*++p != 0) ;
+		++p;
+	}
+	win32u::scoped_array<WCHAR> dest(new WCHAR[len + 1]);
+	LPWSTR p_dest = dest.get();
+	p = p_;
+	while(*p) {
+		p_dest += MultiByteToWideChar(CP_UTF8, 0, p, -1, p_dest, len + 1 - (p_dest - dest.get()));
+		while(*++p != 0) ;
+		++p;
+	}
+	*p_dest = 0;
+	dest.swap(result);
+}
 
 template<typename T>
 static inline bool is_target(T t)
