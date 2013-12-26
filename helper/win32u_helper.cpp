@@ -53,7 +53,7 @@ DWORD WSTR::get_truncated(LPSTR buffer, DWORD length) const
 
 	unsigned char *source = temp.get(), *dest = static_cast<unsigned char*>(static_cast<void*>(buffer)), *terminator = NULL;
 	while(length > 0) {
-		if(*source & 0xC0 != 0x80) { // first byte
+		if((*source & 0xC0) != 0x80) { // first byte
 			terminator = dest;
 		}
 		*dest++ = *source++;
