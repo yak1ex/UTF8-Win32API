@@ -13,6 +13,8 @@ const char pszJp[] = "\xe9\x96\x8b\xe7\x99\xba\xe3\x82\xbd\xe3\x83\x95\xe3\x83\x
 const wchar_t pszDevJW[] = L"x958b\x767a";
 const wchar_t pszJpW[] = L"\x958b\x767a\x30bd\x30d5\x30c8\x2e\x74\x78\x74";
 
+using win32u::WSTR;
+
 void test_WSTR_null_(WSTR &ws)
 {
 	char buf[1024];
@@ -163,48 +165,51 @@ BOOST_AUTO_TEST_CASE(test_WSTR_extend)
 	BOOST_CHECK(ws2.extend(1) == 2048);
 }
 
-BOOST_AUTO_TEST_CASE(test_my_remove_pointer)
+BOOST_AUTO_TEST_CASE(test_remove_pointer)
 {
 	using boost::is_same;
+	using win32u::remove_pointer;
 
-	BOOST_CHECK((is_same<my_remove_pointer<int>::type, int>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<const int>::type, const int>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<volatile int>::type, volatile int>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<const volatile int>::type, const volatile int>::value));
+	BOOST_CHECK((is_same<remove_pointer<int>::type, int>::value));
+	BOOST_CHECK((is_same<remove_pointer<const int>::type, const int>::value));
+	BOOST_CHECK((is_same<remove_pointer<volatile int>::type, volatile int>::value));
+	BOOST_CHECK((is_same<remove_pointer<const volatile int>::type, const volatile int>::value));
 
-	BOOST_CHECK((is_same<my_remove_pointer<int*>::type, int>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<const int*>::type, const int>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<volatile int*>::type, volatile int>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<const volatile int*>::type, const volatile int>::value));
+	BOOST_CHECK((is_same<remove_pointer<int*>::type, int>::value));
+	BOOST_CHECK((is_same<remove_pointer<const int*>::type, const int>::value));
+	BOOST_CHECK((is_same<remove_pointer<volatile int*>::type, volatile int>::value));
+	BOOST_CHECK((is_same<remove_pointer<const volatile int*>::type, const volatile int>::value));
 
-	BOOST_CHECK((is_same<my_remove_pointer<int&>::type, int&>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<const int&>::type, const int&>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<volatile int&>::type, volatile int&>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<const volatile int&>::type, const volatile int&>::value));
+	BOOST_CHECK((is_same<remove_pointer<int&>::type, int&>::value));
+	BOOST_CHECK((is_same<remove_pointer<const int&>::type, const int&>::value));
+	BOOST_CHECK((is_same<remove_pointer<volatile int&>::type, volatile int&>::value));
+	BOOST_CHECK((is_same<remove_pointer<const volatile int&>::type, const volatile int&>::value));
 
-	BOOST_CHECK((is_same<my_remove_pointer<int*&>::type, int*&>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<const int*&>::type, const int*&>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<volatile int*&>::type, volatile int*&>::value));
-	BOOST_CHECK((is_same<my_remove_pointer<const volatile int*&>::type, const volatile int*&>::value));
+	BOOST_CHECK((is_same<remove_pointer<int*&>::type, int*&>::value));
+	BOOST_CHECK((is_same<remove_pointer<const int*&>::type, const int*&>::value));
+	BOOST_CHECK((is_same<remove_pointer<volatile int*&>::type, volatile int*&>::value));
+	BOOST_CHECK((is_same<remove_pointer<const volatile int*&>::type, const volatile int*&>::value));
 }
 
-BOOST_AUTO_TEST_CASE(test_my_scoped_array)
+BOOST_AUTO_TEST_CASE(test_scoped_array)
 {
-	my_scoped_array<char> p;
+	using win32u::scoped_array;
+	scoped_array<char> p;
 	BOOST_CHECK(p.get() == 0);
-	//p.swap(my_scoped_array<char>(new char[10]()));
-	my_scoped_array<char>(new char[10]()).swap(p);
+	//p.swap(scoped_array<char>(new char[10]()));
+	scoped_array<char>(new char[10]()).swap(p);
 	BOOST_CHECK(p.get() != 0);
 	p[0] = 5;
 	BOOST_CHECK(p[0] == 5);
 	{
-		const my_scoped_array<char> & cp = p;
+		const scoped_array<char> & cp = p;
 		BOOST_CHECK(cp[0] == 5);
 	}
 }
 
 BOOST_AUTO_TEST_CASE(test_adjust_filepart)
 {
+	using win32u::AdjustFilePart;
 	LPCWSTR pw1 = L"c:\\\xd869\xddf1\xd869\xde1a\\test.txt";
 	LPSTR pa1 = "c:\\\xf0\xaa\x97\xb1\xf0\xaa\x98\x9a\\test.txt";
 	LPSTR par1 = AdjustFilePart(pw1, pw1 + 8, pa1);
