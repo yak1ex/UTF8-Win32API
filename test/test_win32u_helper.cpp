@@ -19,18 +19,18 @@ void test_WSTR_null_(WSTR &ws)
 {
 	char buf[1024];
 
-	BOOST_CHECK(static_cast<LPWSTR>(ws) == 0);
-	BOOST_CHECK(static_cast<LPCWSTR>(ws) == 0);
-	BOOST_CHECK(ws.size() == 0);
-	BOOST_CHECK(ws.get_utf8_length() == 0);
+	BOOST_CHECK(static_cast<LPWSTR>(ws) == 0); // null pointer comparison
+	BOOST_CHECK(static_cast<LPCWSTR>(ws) == 0); // null pointer comparison
+	BOOST_CHECK_EQUAL(ws.size(), 0);
+	BOOST_CHECK_EQUAL(ws.get_utf8_length(), 0);
 	buf[0] = '\xFF';
-	BOOST_CHECK(ws.get(NULL, 1024) == 0);
-	BOOST_CHECK(buf[0] == '\xFF');
-	BOOST_CHECK(ws.get(buf, sizeof(buf)) == 0);
-	BOOST_CHECK(buf[0] == '\xFF'); // unchanged
+	BOOST_CHECK_EQUAL(ws.get(NULL, 1024), 0);
+	BOOST_CHECK_EQUAL(buf[0], '\xFF');
+	BOOST_CHECK_EQUAL(ws.get(buf, sizeof(buf)), 0);
+	BOOST_CHECK_EQUAL(buf[0], '\xFF'); // unchanged
 	buf[0] = '\xFF';
-	BOOST_CHECK(ws.get_truncated(buf, sizeof(buf)) == 0);
-	BOOST_CHECK(buf[0] == '\xFF'); // unchanged
+	BOOST_CHECK_EQUAL(ws.get_truncated(buf, sizeof(buf)), 0);
+	BOOST_CHECK_EQUAL(buf[0], '\xFF'); // unchanged
 }
 
 BOOST_AUTO_TEST_CASE(test_WSTR_null)
@@ -63,17 +63,17 @@ BOOST_AUTO_TEST_CASE(test_WSTR_null_swap)
 
 	ws2.swap(ws);
 
-	BOOST_CHECK(lstrcmpW(ws, L"Test") == 0);
-	BOOST_CHECK(static_cast<LPWSTR>(ws2) == 0);
-	BOOST_CHECK(static_cast<LPCWSTR>(ws2) == 0);
-	BOOST_CHECK(ws2.size() == 0);
-	BOOST_CHECK(ws2.get_utf8_length() == 0);
+	BOOST_CHECK_EQUAL(lstrcmpW(ws, L"Test"), 0);
+	BOOST_CHECK(static_cast<LPWSTR>(ws2) == 0); // null pointer comparison
+	BOOST_CHECK(static_cast<LPCWSTR>(ws2) == 0); // null pointer comparison
+	BOOST_CHECK_EQUAL(ws2.size(), 0);
+	BOOST_CHECK_EQUAL(ws2.get_utf8_length(), 0);
 	buf[0] = '\xFF';
-	BOOST_CHECK(ws2.get(buf, sizeof(buf)) == 0);
-	BOOST_CHECK(buf[0] == '\xFF'); // unchanged
+	BOOST_CHECK_EQUAL(ws2.get(buf, sizeof(buf)), 0);
+	BOOST_CHECK_EQUAL(buf[0], '\xFF'); // unchanged
 	buf[0] = '\xFF';
-	BOOST_CHECK(ws2.get_truncated(buf, sizeof(buf)) == 0);
-	BOOST_CHECK(buf[0] == '\xFF'); // unchanged
+	BOOST_CHECK_EQUAL(ws2.get_truncated(buf, sizeof(buf)), 0);
+	BOOST_CHECK_EQUAL(buf[0], '\xFF'); // unchanged
 
 }
 
@@ -81,21 +81,21 @@ void test_WSTR_ascii_(WSTR& ws)
 {
 	char buf[1024];
 
-	BOOST_CHECK(lstrcmpW(ws, L"Test1") == 0);
-	BOOST_CHECK(ws.size() == 6);
-	BOOST_CHECK(ws.get_utf8_length() == 6);
-	BOOST_CHECK(ws.get(NULL, 1024) == 0);
-	BOOST_CHECK(ws.get(buf, 4) == 0); // ERROR_INSUFFICIENT_BUFFER
-	BOOST_CHECK(ws.get(buf, 6) == 6); // including terminator
-	BOOST_CHECK(lstrcmpA(buf, "Test1") == 0);
+	BOOST_CHECK_EQUAL(lstrcmpW(ws, L"Test1"), 0);
+	BOOST_CHECK_EQUAL(ws.size(), 6);
+	BOOST_CHECK_EQUAL(ws.get_utf8_length(), 6);
+	BOOST_CHECK_EQUAL(ws.get(NULL, 1024), 0);
+	BOOST_CHECK_EQUAL(ws.get(buf, 4), 0); // ERROR_INSUFFICIENT_BUFFER
+	BOOST_CHECK_EQUAL(ws.get(buf, 6), 6); // including terminator
+	BOOST_CHECK_EQUAL(lstrcmpA(buf, "Test1"), 0);
 	buf[0] = '\0';
-	BOOST_CHECK(ws.get(buf, 1024) == 6); // including terminator
-	BOOST_CHECK(lstrcmpA(buf, "Test1") == 0);
-	BOOST_CHECK(ws.get_truncated(buf, 3) == 3);
-	BOOST_CHECK(lstrcmpA(buf, "Te") == 0);
+	BOOST_CHECK_EQUAL(ws.get(buf, 1024), 6); // including terminator
+	BOOST_CHECK_EQUAL(lstrcmpA(buf, "Test1"), 0);
+	BOOST_CHECK_EQUAL(ws.get_truncated(buf, 3), 3);
+	BOOST_CHECK_EQUAL(lstrcmpA(buf, "Te"), 0);
 	int spec[] = { 0, 1, 2, 3, 4, 5, 6, 6, 6 };
 	for(std::size_t idx = 0; idx != sizeof(spec) / sizeof(spec[0]); ++idx) {
-		BOOST_CHECK(ws.get_truncated(buf, idx) == spec[idx]);
+		BOOST_CHECK_EQUAL(ws.get_truncated(buf, idx), spec[idx]);
 	}
 }
 
@@ -117,9 +117,9 @@ BOOST_AUTO_TEST_CASE(test_WSTR_ascii_copy)
 	WSTR ws2(ws);
 
 // Deep copy
-	BOOST_CHECK(ws != ws2);
-	BOOST_CHECK(ws.size() == ws2.size());
-	BOOST_CHECK(lstrcmpW(ws, ws2) == 0);
+	BOOST_CHECK_NE(ws, ws2);
+	BOOST_CHECK_EQUAL(ws.size(), ws2.size());
+	BOOST_CHECK_EQUAL(lstrcmpW(ws, ws2), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_WSTR_ascii_swap)
@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(test_WSTR_ascii_swap)
 
 	ws.swap(ws2);
 
-	BOOST_CHECK(lstrcmpW(ws, L"Test2") == 0);
-	BOOST_CHECK(lstrcmpW(ws2, L"Test1") == 0);
+	BOOST_CHECK_EQUAL(lstrcmpW(ws, L"Test2"), 0);
+	BOOST_CHECK_EQUAL(lstrcmpW(ws2, L"Test1"), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_WSTR_jp)
@@ -138,21 +138,21 @@ BOOST_AUTO_TEST_CASE(test_WSTR_jp)
 	char buf[1024];
 	WSTR ws(pszJp);
 
-	BOOST_CHECK(lstrcmpW(ws, pszJpW) == 0);
-	BOOST_CHECK(ws.size() == 10);
-	BOOST_CHECK(ws.get_utf8_length() == 20);
-	BOOST_CHECK(ws.get(NULL, 1024) == 0);
-	BOOST_CHECK(ws.get(buf, 19) == 0); // ERROR_INSUFFICIENT_BUFFER
-	BOOST_CHECK(ws.get(buf, 20) == 20); // including terminator
-	BOOST_CHECK(lstrcmpA(buf, pszJp) == 0);
+	BOOST_CHECK_EQUAL(lstrcmpW(ws, pszJpW), 0);
+	BOOST_CHECK_EQUAL(ws.size(), 10);
+	BOOST_CHECK_EQUAL(ws.get_utf8_length(), 20);
+	BOOST_CHECK_EQUAL(ws.get(NULL, 1024), 0);
+	BOOST_CHECK_EQUAL(ws.get(buf, 19), 0); // ERROR_INSUFFICIENT_BUFFER
+	BOOST_CHECK_EQUAL(ws.get(buf, 20), 20); // including terminator
+	BOOST_CHECK_EQUAL(lstrcmpA(buf, pszJp), 0);
 	buf[0] = '\0';
-	BOOST_CHECK(ws.get(buf, 1024) == 20); // including terminator
-	BOOST_CHECK(lstrcmpA(buf, pszJp) == 0);
-	BOOST_CHECK(ws.get_truncated(buf, 8) == 7);
-	BOOST_CHECK(lstrcmpA(buf, pszDevJ) == 0);
+	BOOST_CHECK_EQUAL(ws.get(buf, 1024), 20); // including terminator
+	BOOST_CHECK_EQUAL(lstrcmpA(buf, pszJp), 0);
+	BOOST_CHECK_EQUAL(ws.get_truncated(buf, 8), 7);
+	BOOST_CHECK_EQUAL(lstrcmpA(buf, pszDevJ), 0);
 	int spec[] = { 0, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 16, 17, 18, 19, 20, 20, 20 };
 	for(std::size_t idx = 0; idx != sizeof(spec) / sizeof(spec[0]); ++idx) {
-		BOOST_CHECK(ws.get_truncated(buf, idx) == spec[idx]);
+		BOOST_CHECK_EQUAL(ws.get_truncated(buf, idx), spec[idx]);
 	}
 }
 
@@ -161,16 +161,16 @@ BOOST_AUTO_TEST_CASE(test_WSTR_extend)
 	LPSTR psz = NULL;
 	WSTR ws(psz);
 
-	BOOST_CHECK(ws.extend(0) == 0);
-	BOOST_CHECK(ws.extend(1) > 0);
+	BOOST_CHECK_EQUAL(ws.extend(0), 0);
+	BOOST_CHECK_GT(ws.extend(1),0);
 	DWORD dw = ws.size();
-	BOOST_CHECK(ws.extend(1) == dw * 2);
-	BOOST_CHECK(ws.extend_to(dw) == dw * 2);
-	BOOST_CHECK(ws.extend_to(dw * 3) == dw * 3);
+	BOOST_CHECK_EQUAL(ws.extend(1), dw * 2);
+	BOOST_CHECK_EQUAL(ws.extend_to(dw), dw * 2);
+	BOOST_CHECK_EQUAL(ws.extend_to(dw * 3), dw * 3);
 
 	WSTR ws2(1024);
-	BOOST_CHECK(ws2.size() == 1024);
-	BOOST_CHECK(ws2.extend(1) == 2048);
+	BOOST_CHECK_EQUAL(ws2.size(), 1024);
+	BOOST_CHECK_EQUAL(ws2.extend(1), 2048);
 }
 
 BOOST_AUTO_TEST_CASE(test_remove_pointer)
@@ -203,15 +203,15 @@ BOOST_AUTO_TEST_CASE(test_scoped_array)
 {
 	using win32u::scoped_array;
 	scoped_array<char> p;
-	BOOST_CHECK(p.get() == 0);
+	BOOST_CHECK(p.get() == 0); // null pointer comparison
 	//p.swap(scoped_array<char>(new char[10]()));
 	scoped_array<char>(new char[10]()).swap(p);
-	BOOST_CHECK(p.get() != 0);
+	BOOST_CHECK(p.get() != 0); // null pointer comparison
 	p[0] = 5;
-	BOOST_CHECK(p[0] == 5);
+	BOOST_CHECK_EQUAL(p[0], 5);
 	{
 		const scoped_array<char> & cp = p;
-		BOOST_CHECK(cp[0] == 5);
+		BOOST_CHECK_EQUAL(cp[0], 5);
 	}
 }
 
