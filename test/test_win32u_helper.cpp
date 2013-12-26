@@ -93,6 +93,10 @@ void test_WSTR_ascii_(WSTR& ws)
 	BOOST_CHECK(lstrcmpA(buf, "Test1") == 0);
 	BOOST_CHECK(ws.get_truncated(buf, 3) == 3);
 	BOOST_CHECK(lstrcmpA(buf, "Te") == 0);
+	int spec[] = { 0, 1, 2, 3, 4, 5, 6, 6, 6 };
+	for(std::size_t idx = 0; idx != sizeof(spec) / sizeof(spec[0]); ++idx) {
+		BOOST_CHECK(ws.get_truncated(buf, idx) == spec[idx]);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(test_WSTR_ascii)
@@ -146,6 +150,10 @@ BOOST_AUTO_TEST_CASE(test_WSTR_jp)
 	BOOST_CHECK(lstrcmpA(buf, pszJp) == 0);
 	BOOST_CHECK(ws.get_truncated(buf, 8) == 7);
 	BOOST_CHECK(lstrcmpA(buf, pszDevJ) == 0);
+	int spec[] = { 0, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 16, 17, 18, 19, 20, 20, 20 };
+	for(std::size_t idx = 0; idx != sizeof(spec) / sizeof(spec[0]); ++idx) {
+		BOOST_CHECK(ws.get_truncated(buf, idx) == spec[idx]);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(test_WSTR_extend)
