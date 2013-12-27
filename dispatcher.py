@@ -224,6 +224,8 @@ ODS(<< "%s : return " << win32u::dwrap(ret_) << std::endl);
                     desc_fallback.make_trace_arg(),
                     "\t" + fallback_call))
 
+        if 'header_prologue' in onespec[_Spec.ATTR]:
+            self._output.h(outname, onespec[_Spec.ATTR]['header_prologue'])
         self._output.h(outname,
             "\n" + ''.join(map(
                 lambda x: reduce(lambda acc, guard: Template('''\
@@ -355,7 +357,6 @@ class CRTDispatcher(Dispatcher):
 #include <sys/utime.h>
 #include <process.h>
 ''')
-        self._prolog()
 
     def register(self, specs):
         for spec in specs:
@@ -393,124 +394,3 @@ class CRTDispatcher(Dispatcher):
         if 'no_oldconv' not in onespec[_Spec.ATTR]:
             macro.extend([(_Spec.CRT_OLD, x.replace('_', '')) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_OPT]])
         return macro
-
-# FIXME: specific action should be moved elsewhere
-    def _prolog(self):
-        self._output.h('msvcrt.h', """\
-
-#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT
-
-/* Need to include before the following macro, to avoid type conflicts */
-#include <sys/stat.h>
-
-#ifdef _USE_32BIT_TIME_T
-
-#ifdef _stat
-#undef _stat
-#endif
-#define _stat _ustat32
-
-#ifdef _stati64
-#undef _stati64
-#endif
-#define _stati64 _ustat32i64
-
-#else
-
-#ifdef _stat
-#undef _stat
-#endif
-#define _stat _ustat64i32
-
-#ifdef _stati64
-#undef _stati64
-#endif
-#define _stati64 _ustat64
-
-#endif
-
-#ifdef _stat32
-#undef _stat32
-#endif
-#define _stat32 _ustat32
-
-#ifdef _stat32i64
-#undef _stat32i64
-#endif
-#define _stat32i64 _ustat32i64
-
-#ifdef _stat64i32
-#undef _stat64i32
-#endif
-#define _stat64i32 _ustat64i32
-
-#ifdef _stat64
-#undef _stat64
-#endif
-#define _stat64 _ustat64
-
-/* from _mingw_stat64.h */
-
-#include <crtdefs.h>
-#pragma pack(push, CRT_PACKING)
-
-  struct _stat32 {
-    _dev_t st_dev;
-   _ino_t st_ino;
-    unsigned short st_mode;
-    short st_nlink;
-    short st_uid;
-    short st_gid;
-    _dev_t st_rdev;
-    _off_t st_size;
-    __time32_t st_atime;
-    __time32_t st_mtime;
-    __time32_t st_ctime;
-  };
-
-  struct _stat32i64 {
-    _dev_t st_dev;
-    _ino_t st_ino;
-    unsigned short st_mode;
-    short st_nlink;
-    short st_uid;
-    short st_gid;
-    _dev_t st_rdev;
-    __MINGW_EXTENSION __int64 st_size;
-    __time32_t st_atime;
-    __time32_t st_mtime;
-    __time32_t st_ctime;
-  };
-
-  struct _stat64i32 {
-    _dev_t st_dev;
-    _ino_t st_ino;
-    unsigned short st_mode;
-    short st_nlink;
-    short st_uid;
-    short st_gid;
-    _dev_t st_rdev;
-    _off_t st_size;
-    __time64_t st_atime;
-    __time64_t st_mtime;
-    __time64_t st_ctime;
-  };
-
-  struct _stat64 {
-    _dev_t st_dev;
-    _ino_t st_ino;
-    unsigned short st_mode;
-    short st_nlink;
-    short st_uid;
-    short st_gid;
-    _dev_t st_rdev;
-    __MINGW_EXTENSION __int64 st_size;
-    __time64_t st_atime;
-    __time64_t st_mtime;
-    __time64_t st_ctime;
-  };
-
-#pragma pack(pop)
-#endif
-
-""")
