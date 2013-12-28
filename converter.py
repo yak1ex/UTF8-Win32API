@@ -1,4 +1,32 @@
-"""Converter functions"""
+"""Converter functions
+
+This file defines converter functions.
+
+Actual converters' parameter:
+ctx: A conversion context (a named tuple consisting of types, desc_self,desc_call, code_before and code_after).
+  types: A hash consisting of { StructName: StructDescriptor, ... }.
+  desc_self: A FunctionDescriptor for the function.
+  desc_call: A FunctionDescriptor for the delegated function.
+  code_before: A code fragment before the call of the delegated function.
+  code_after: A code fragment after the call of the delegated function.
+typespec: A list consisting of REGEXP, TYPES, FUNC and ATTR.
+  REGEXP(0): A regexp or a tuple of consisting of SELF, CALL, ALIAS_OPT and ALIAS_ALL.
+    SELF(0): A target function name.
+    CALL(1): A delegated function name.
+    ALIAS_OPT(2): A list of optional alias names.
+    ALIAS_ALL(3): A list of alias names always effective.
+  TYPES(1): A list of tuples consisting of a type name and a parameter name.
+  FUNC(2): Converter functions. It can be scalar if only a converter function is used. Ohterwise, a list.
+  ATTR(3): A hash of conversion attributes. The current available attributes are as follows:
+    'no_fallback':  Do not produce an ANSI fallback function.
+    'oldname': Treat an alias for optional function name as for an old function name.
+    'no_oldconv': Do not produce an alias for old function name.
+    'header_prologue': Add header contents before the function declaration.
+
+Actual converters' return value:
+A conversion context (a named tuple consisting of types, desc_self,desc_call, code_before and code_after)
+
+"""
 
 from string import Template
 
