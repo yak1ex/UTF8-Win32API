@@ -433,6 +433,32 @@ def adjustfilepart(idx_fn, idx_fp):
     """A converter for GetFullPathName"""
     return lambda ctx, typespecs: _adjustfilepart_imp(ctx, typespecs[idx_fn], typespecs[idx_fp])
 
+def _convertenv_imp(ctx, typespec_flag, typespec_env):
+    orig_type_flag, orig_name_flag = ctx.desc_call.get_param(typespec_flag)
+    env_index = ctx.desc_self.index_arg(typespec_env)
+    orig_type_env, orig_name_env = ctx.desc_self.parameter_types[env_index]
+    ctx.desc_call.parameter_types[env_index] = (orig_type_env, orig_name_env + '_')
+    return ctx._replace(code_before = ctx.code_before + Template("""\
+	extern void ConvertEnvBlock(win32u::scoped_array<WCHAR> &result, LPVOID lpEnv);
+	LPVOID ${name_env}_;
+	win32u::scoped_array<WCHAR> ${name_env}__;
+	if($name_flag & CREATE_UNICODE_ENVIRONMENT) { // already unicode
+		${name_env}_ = $name_env;
+	} else {
+		if($name_env) {
+			ConvertEnvBlock(${name_env}__, $name_env);
+			${name_env}_ = ${name_env}__.get();
+		} else {
+			${name_env}_ = 0;
+		}
+		$name_flag |= CREATE_UNICODE_ENVIRONMENT;
+	}
+""").substitute(name_flag = orig_name_flag, name_env = orig_name_env))
+
+def convertenv(idx_flag, idx_env):
+    """A converter for CreateProcess env block"""
+    return lambda ctx, typespecs: _convertenv_imp(ctx, typespecs[idx_flag], typespecs[idx_env])
+
 def _w2u_imp(ctx, typespec):
     target_index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]

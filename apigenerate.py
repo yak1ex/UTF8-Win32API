@@ -6,11 +6,10 @@ from converter import *
 
 spec = [
 
-# TODO: LPVOID lpEnvironment
 # CreateProcessWithLogon
-    ['', [('LPCWSTR', 'lpUsername'), ('LPCWSTR', 'lpDomain'), ('LPCWSTR', 'lpPassword'), ('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx(range(6)), w2u(6)], {'no_fallback': 1}],
-    ['CreateProcessWithToken', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx([0,1,2]), w2u(3)], {'no_fallback': 1}],
-    ['', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo')], [ro_nolen_idx([0,1,2]), w2u(3)]],
+    ['', [('LPCWSTR', 'lpUsername'), ('LPCWSTR', 'lpDomain'), ('LPCWSTR', 'lpPassword'), ('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo'), ('DWORD', 'dwCreationFlags'), ('LPVOID', 'lpEnvironment')], [ro_nolen_idx(range(6)), w2u(6), convertenv(7,8)], {'no_fallback': 1}],
+    ['CreateProcessWithToken', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo'), ('DWORD', 'dwCreationFlags'), ('LPVOID', 'lpEnvironment')], [ro_nolen_idx([0,1,2]), w2u(3), convertenv(4,5)], {'no_fallback': 1}],
+    ['', [('LPCWSTR', 'lpApplicationName'), ('LPWSTR', 'lpCommandLine'), ('LPCWSTR', 'lpCurrentDirectory'), ('LPSTARTUPINFOW', 'lpStartupInfo'), ('DWORD', 'dwCreationFlags'), ('LPVOID', 'lpEnvironment')], [ro_nolen_idx([0,1,2]), w2u(3), convertenv(4,5)]],
 
     ['BinaryType', [('LPCWSTR', 'lpApplicationName')], ro_nolen],
     ['lstrcmp', [('LPCWSTR', 'lpString1'), ('LPCWSTR', 'lpString2')], ro_nolen],
