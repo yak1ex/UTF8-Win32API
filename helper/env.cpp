@@ -33,9 +33,17 @@ LPSTR* CreateEnviron()
 	return result;
 }
 
+LPSTR* _uenviron = CreateEnviron();
+
 void FreeEnviron(LPSTR *p)
 {
 	delete[] p;
+}
+
+void UpdateEnviron()
+{
+	FreeEnviron(_uenviron);
+	_uenviron = CreateEnviron();
 }
 
 void ConvertEnvBlock(win32u::scoped_array<WCHAR> &result, LPVOID lpEnv)

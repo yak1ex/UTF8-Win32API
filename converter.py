@@ -459,6 +459,12 @@ def convertenv(idx_flag, idx_env):
     """A converter for CreateProcess env block"""
     return lambda ctx, typespecs: _convertenv_imp(ctx, typespecs[idx_flag], typespecs[idx_env])
 
+def updateenv(ctx, typespecs):
+    return ctx._replace(code_after = ctx.code_after + '''\
+	extern void UpdateEnviron();
+	UpdateEnviron();
+''')
+
 def _w2u_imp(ctx, typespec):
     target_index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.parameter_types[target_index]

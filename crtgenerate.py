@@ -122,6 +122,21 @@ stat_header_prologue = '''\
 #endif
 '''
 
+environ_header_prologue = '''\
+
+extern char** _uenviron;
+#ifndef UTF8_WIN32_DONT_REPLACE_MSVCRT
+#ifdef environ
+#undef environ
+#endif
+#define environ _uenviron
+#ifdef _environ
+#undef _environ
+#endif
+#define _environ _uenviron
+#endif
+
+'''
 spec = [
 
 # stdio.h
@@ -153,7 +168,7 @@ spec = [
 # stdlib.h
 
     [('_usystem', '_wsystem', ['system'], ['_tsystem']), [('wchar_t const *', '_Command')], ro_nolen],
-    [('_uputenv', '_wputenv', ['_putenv'], ['_tputenv']), [('wchar_t const *', '_EnvString')], ro_nolen],
+    [('_uputenv', '_wputenv', ['_putenv'], ['_tputenv']), [('wchar_t const *', '_EnvString')], [ro_nolen, updateenv], {'header_prologue': environ_header_prologue}],
 
 # sys/stat.h
 

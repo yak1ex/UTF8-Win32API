@@ -20,8 +20,8 @@ static int(*ptr_umain1)(int)                  = static_cast<int(*)(int)>(_umain)
 static int(*ptr_umain2)(int, char**)          = static_cast<int(*)(int, char**)>(_umain);
 static int(*ptr_umain3)(int, char**, char**)  = static_cast<int(*)(int, char**, char**)>(_umain);
 
-extern LPSTR* CreateEnviron();
-extern void FreeEnviron(LPSTR *p);
+extern LPSTR* _uenviron;
+extern void UpdateEnviron();
 
 template<typename T>
 static inline bool is_target(T t)
@@ -31,6 +31,9 @@ static inline bool is_target(T t)
 
 int main(void)
 {
+// NOTE: A static initializer calls CreateEnviron(), thus the below line is not required.
+//	UpdateEnviron();
+
 // No arguments
 	if(is_target(ptr_umain0)) {
 		return ptr_umain0();
@@ -67,12 +70,11 @@ int main(void)
 	}
 
 // 3 arguments
-	LPSTR *env = CreateEnviron();
 	if(is_target(ptr_umain3)) {
-		return ptr_umain3(argc, &uargv[0], env);
+		return ptr_umain3(argc, &uargv[0], _uenviron);
 	}
 	if(is_target(ptr_umain)) {
-		return ptr_umain(argc, &uargv[0], env);
+		return ptr_umain(argc, &uargv[0], _uenviron);
 	}
 
 	return -1; // Not reached
