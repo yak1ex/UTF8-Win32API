@@ -69,6 +69,15 @@ diff -ur perl-5.18.1-orig/win32/makefile.mk perl-5.18.1/win32/makefile.mk
  
  #
  # Comment this out if you DON'T want your perl installation to be versioned.
+@@ -97,7 +97,7 @@
+ # Uncomment this if you're building a 32-bit perl and want 64-bit integers.
+ # (If you're building a 64-bit perl then you will have 64-bit integers whether
+ # or not this is uncommented.)
+-#USE_64_BIT_INT	*= define
++USE_64_BIT_INT	*= define
+ 
+ #
+ # uncomment exactly one of the following
 @@ -409,7 +409,7 @@
  # Options
  #
