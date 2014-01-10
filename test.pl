@@ -1,14 +1,32 @@
-use utf8;
-use Encode;
+use Test::More tests => 9;
 
-open my $fh, '>', 'ソフト開発.txt';
+BEGIN {
+use_ok('utf8');
+use_ok('Encode');
+}
+
+my @st;
+my $fh;
+
+ok(open($fh, '>', 'ソフト開発.txt'), 'open');
 print $fh Encode::encode('utf-8', "ソフト開発\n");
 close $fh;
 
-rename 'ソフト開発.txt' => 'ソフト開発_.txt';
+@st = stat 'ソフト開発.txt';
+ok(@st, 'stat');
 
-print join(' ', stat('ソフト開発_.txt')), "\n";
+ok(rename('ソフト開発.txt' => 'ソフト開発_.txt'), 'rename');
+
+@st = stat 'ソフト開発.txt';
+ok(!@st, 'stat for old');
+@st = stat 'ソフト開発_.txt';
+ok(@st, 'stat for new');
 
 opendir DIR, '.';
-print join(' ', map { Encode::encode('cp932', Encode::decode('utf-8', $_)) } grep { /\.txt/ } readdir DIR), "\n";
+my @gr = grep { /ソフト開発_\.txt/ } readdir DIR;
 closedir DIR;
+ok(@gr == 1, 'readdir');
+
+unlink 'ソフト開発_.txt';
+@st = stat 'ソフト開発_.txt';
+ok(!@st, 'unlink');
