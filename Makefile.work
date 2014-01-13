@@ -39,6 +39,11 @@ testrunner: $(patsubst test%.cpp,test%.o,$(wildcard test/test*.cpp)) libwin32u.a
 libwin32u.a: helper/win32u_helper.o helper/env.o helper/main.o $(OBJS)
 	$(AR) ru $@ $^
 
+perltest: ptest/probe.exe
+	./perl-5.18.1/perl.exe ptest/test.t
+
+ptest/probe.exe: ptest/probe.o
+
 win32u_helper.o: win32u_helper.cpp win32u_helper.hpp
 #winbaseu.o: winbaseu.cpp winbaseu.h win32u.hpp
 #winuseru.o: winuseru.cpp winuseru.h win32u.hpp

@@ -1,4 +1,4 @@
-use Test::More tests => 9;
+use Test::More tests => 10;
 
 BEGIN {
 use_ok('utf8');
@@ -30,3 +30,5 @@ ok(@gr == 1, 'readdir');
 unlink 'ソフト開発_.txt';
 @st = stat 'ソフト開発_.txt';
 ok(!@st, 'unlink');
+
+ok(system('.\\ptest\\probe.exe > NUL') == 0, 'system');
