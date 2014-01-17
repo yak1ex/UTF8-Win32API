@@ -1,4 +1,4 @@
-use Test::More tests => 10;
+use Test::More tests => 11;
 
 BEGIN {
 use_ok('utf8');
@@ -32,3 +32,10 @@ unlink 'ソフト開発_.txt';
 ok(!@st, 'unlink');
 
 ok(system('.\\ptest\\probe.exe > NUL') == 0, 'system');
+
+{
+    local %ENV = ('TEST' => 'テスト');
+    my $result = `.\\ptest\\probe.exe`;
+    # Assuming CP932 environment
+    like($result, qr/\[ENV\].*544553543D836583588367\s*\[ARGV\]/s, 'backquote');
+}
