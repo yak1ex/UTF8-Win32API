@@ -1,4 +1,4 @@
-use Test::More tests => 11;
+use Test::More tests => 12;
 
 BEGIN {
 use_ok('utf8');
@@ -37,5 +37,12 @@ ok(system('.\\ptest\\probe.exe > NUL') == 0, 'system');
     local %ENV = ('TEST' => 'テスト');
     my $result = `.\\ptest\\probe.exe`;
     # Assuming CP932 environment
-    like($result, qr/\[ENV\].*544553543D836583588367\s*\[ARGV\]/s, 'backquote');
+    like($result, qr/\[ENV\].*544553543D836583588367\s*\[ARGV\]/s, 'backquote with %ENV');
+}
+
+{
+    local %ENV = ();
+    my $result = `.\\ptest\\probe.exe テスト`;
+    # Assuming CP932 environment
+    like($result, qr/\[ENV\]\s+\[ARGV\].*\s+836583588367/s, 'backquote with args');
 }
