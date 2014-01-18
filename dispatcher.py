@@ -110,7 +110,7 @@ extern "C" {
 
 from collections import namedtuple
 
-convctx = namedtuple('ConvCtx', 'types desc_self desc_call code_before code_after')
+convctx = namedtuple('ConvCtx', 'types desc_self desc_call code_before code_after desc_fallback desc_fallback_call fcode_before')
 struct_convctx = namedtuple('StructConvCtx', 'types desc header')
 
 class _Spec:
@@ -167,17 +167,18 @@ $body
                 self._dispatch_struct(StructDescriptor(c))
 
     def _process(self, desc, onespec, outname):
-        ctx = convctx(self._types, desc.clone(), desc.clone(), '', '')
+        ctx = convctx(self._types, desc.clone(), desc.clone(), '', '', desc.clone(), desc.clone(), '')
         ctx = self._adjust(ctx, onespec)
         funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
         ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
+        macro = self._macro(ctx, onespec)
 
         # FIXME: Fallback for variadic
         need_fallback = 'no_fallback' not in onespec[_Spec.ATTR] and not ctx.desc_self.is_variadic
-
+        # FIXME: Conversion MUST occur in converters
+        ctx = ctx._replace(desc_fallback = ctx.desc_self.clone(), desc_fallback_call = ctx.desc_self.clone())
         if need_fallback:
-            desc_fallback, desc_fallback_call = self._fallback(ctx, onespec)
-        macro = self._macro(ctx, onespec)
+            ctx = self._fallback(ctx, onespec)
 
 # No return value
         if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
@@ -186,7 +187,7 @@ $body
 ODS(<< "%s : return" << std::endl);
 	return;''' % ctx.desc_self.name
             if need_fallback:
-                fallback_call = desc_fallback_call.make_func_call() + ';'
+                fallback_call = ctx.desc_fallback_call.make_func_call() + ';'
 # A return type is converted
         elif ctx.desc_self.result_type == ctx.desc_call.result_type:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
@@ -194,7 +195,7 @@ ODS(<< "%s : return" << std::endl);
 ODS(<< "%s : return " << win32u::dwrap(ret) << std::endl);
 	return ret;''' % ctx.desc_self.name
             if need_fallback:
-                fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
+                fallback_call = 'return %s;' % ctx.desc_fallback_call.make_func_call()
 # Otherwise
         else:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
@@ -202,7 +203,7 @@ ODS(<< "%s : return " << win32u::dwrap(ret) << std::endl);
 ODS(<< "%s : return " << win32u::dwrap(ret_) << std::endl);
 	return ret_;''' % ctx.desc_self.name # ret_ MUST be defined in conversion
             if need_fallback:
-                fallback_call = 'return %s;' % desc_fallback_call.make_func_call()
+                fallback_call = 'return %s;' % ctx.desc_fallback_call.make_func_call()
 
         self._output.cpp_renew(outname)
         self._output.cpp(outname,
@@ -219,9 +220,9 @@ ODS(<< "%s : return " << win32u::dwrap(ret_) << std::endl);
         if need_fallback:
             self._output.cpp2(outname,
                 self._make_def(
-                    desc_fallback.make_func_decl(),
-                    desc_fallback.name,
-                    desc_fallback.make_trace_arg(),
+                    ctx.desc_fallback.make_func_decl(),
+                    ctx.desc_fallback.name,
+                    ctx.desc_fallback.make_trace_arg(),
                     "\t" + fallback_call))
 
         if 'header_prologue' in onespec[_Spec.ATTR]:
@@ -238,7 +239,7 @@ $body#endif
 #define $target $name
 '''                     ).substitute(target = x[_Spec.REPLACEMENT], name = ctx.desc_self.name)), macro)) +
             "extern %s;\n%s" % (ctx.desc_self.make_func_decl(),
-                "extern %s;\n" % desc_fallback.make_func_decl() if need_fallback else "")
+                "extern %s;\n" % ctx.desc_fallback.make_func_decl() if need_fallback else "")
         )
 
     def _dispatch(self, desc):
@@ -311,14 +312,13 @@ class APIDispatcher(Dispatcher):
         return ctx
 
     def _fallback(self, ctx, onespec):
-        fallback, fallback_call = ctx.desc_self.clone(), ctx.desc_self.clone()
         if ctx.desc_call.name[-1] == 'W':
-            fallback.name = fallback.name[:-1] + 'A_'
-            fallback_call.name = fallback_call.name[:-1] + 'A'
+            ctx.desc_fallback.name = ctx.desc_fallback.name[:-1] + 'A_'
+            ctx.desc_fallback_call.name = ctx.desc_fallback_call.name[:-1] + 'A'
         else:
-            fallback.name = fallback.name[:-1] + '_'
-            fallback_call.name = fallback_call.name[:-1]
-        return fallback, fallback_call
+            ctx.desc_fallback.name = ctx.desc_fallback.name[:-1] + '_'
+            ctx.desc_fallback_call.name = ctx.desc_fallback_call.name[:-1]
+        return ctx
 
     def _macro(self, ctx, onespec):
         if ctx.desc_call.name[-1] == 'W':
@@ -382,10 +382,9 @@ class CRTDispatcher(Dispatcher):
         return ctx
 
     def _fallback(self, ctx, onespec):
-        fallback, fallback_call = ctx.desc_self.clone(), ctx.desc_self.clone()
-        fallback.name = onespec[_Spec.REGEXP][_Spec.ALIAS_OPT][0] + '_'
-        fallback_call.name = onespec[_Spec.REGEXP][_Spec.ALIAS_OPT][0]
-        return fallback, fallback_call
+        ctx.desc_fallback.name = onespec[_Spec.REGEXP][_Spec.ALIAS_OPT][0] + '_'
+        ctx.desc_fallback_call.name = onespec[_Spec.REGEXP][_Spec.ALIAS_OPT][0]
+        return ctx
 
     def _macro(self, ctx, onespec):
         macro = [(_Spec.NORMAL, x) for x in onespec[_Spec.REGEXP][_Spec.ALIAS_ALL]]
