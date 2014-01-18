@@ -166,19 +166,8 @@ $body
             if(StructDescriptor.is_target(c) and re.search(target_struct, c.spelling)):
                 self._dispatch_struct(StructDescriptor(c))
 
-    def _process(self, desc, onespec, outname):
-        ctx = convctx(self._types, desc.clone(), desc.clone(), '', '', desc.clone(), desc.clone(), '')
-        ctx = self._adjust(ctx, onespec)
-        funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
-        ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
+    def _process_normal(self, ctx, onespec, outname):
         macro = self._macro(ctx, onespec)
-
-        # FIXME: Fallback for variadic
-        need_fallback = 'no_fallback' not in onespec[_Spec.ATTR] and not ctx.desc_self.is_variadic
-        # FIXME: Conversion MUST occur in converters
-        ctx = ctx._replace(desc_fallback = ctx.desc_self.clone(), desc_fallback_call = ctx.desc_self.clone())
-        if need_fallback:
-            ctx = self._fallback(ctx, onespec)
 
 # No return value
         if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
@@ -186,24 +175,18 @@ $body
             ret = '''\
 ODS(<< "%s : return" << std::endl);
 	return;''' % ctx.desc_self.name
-            if need_fallback:
-                fallback_call = ctx.desc_fallback_call.make_func_call() + ';'
 # A return type is converted
         elif ctx.desc_self.result_type == ctx.desc_call.result_type:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
             ret = '''\
 ODS(<< "%s : return " << win32u::dwrap(ret) << std::endl);
 	return ret;''' % ctx.desc_self.name
-            if need_fallback:
-                fallback_call = 'return %s;' % ctx.desc_fallback_call.make_func_call()
 # Otherwise
         else:
             call = '%s ret = %s;' % (ctx.desc_call.result_type, ctx.desc_call.make_func_call())
             ret = '''\
 ODS(<< "%s : return " << win32u::dwrap(ret_) << std::endl);
 	return ret_;''' % ctx.desc_self.name # ret_ MUST be defined in conversion
-            if need_fallback:
-                fallback_call = 'return %s;' % ctx.desc_fallback_call.make_func_call()
 
         self._output.cpp_renew(outname)
         self._output.cpp(outname,
@@ -217,16 +200,9 @@ ODS(<< "%s : return " << win32u::dwrap(ret_) << std::endl);
             re.search('LPWSTR|LPCWSTR|W$', ctx.desc_self.result_type)):
             self._output.txt(outname, '// Warning: %s\n' % ctx.desc_self.make_func_decl())
 
-        if need_fallback:
-            self._output.cpp2(outname,
-                self._make_def(
-                    ctx.desc_fallback.make_func_decl(),
-                    ctx.desc_fallback.name,
-                    ctx.desc_fallback.make_trace_arg(),
-                    "\t" + fallback_call))
-
         if 'header_prologue' in onespec[_Spec.ATTR]:
             self._output.h(outname, onespec[_Spec.ATTR]['header_prologue'])
+
         self._output.h(outname,
             "\n" + ''.join(map(
                 lambda x: reduce(lambda acc, guard: Template('''\
@@ -238,9 +214,45 @@ $body#endif
 #endif
 #define $target $name
 '''                     ).substitute(target = x[_Spec.REPLACEMENT], name = ctx.desc_self.name)), macro)) +
-            "extern %s;\n%s" % (ctx.desc_self.make_func_decl(),
-                "extern %s;\n" % ctx.desc_fallback.make_func_decl() if need_fallback else "")
+            "extern %s;\n" % (ctx.desc_self.make_func_decl())
         )
+
+    def _process_fallback(self, ctx, onespec, outname):
+        # FIXME: Conversion MUST occur in converters
+        ctx = ctx._replace(desc_fallback = ctx.desc_self.clone(), desc_fallback_call = ctx.desc_self.clone())
+        ctx = self._fallback(ctx, onespec)
+
+# No return value
+        if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
+            fallback_call = ctx.desc_fallback_call.make_func_call() + ';'
+# A return type is converted
+        elif ctx.desc_self.result_type == ctx.desc_call.result_type:
+            fallback_call = 'return %s;' % ctx.desc_fallback_call.make_func_call()
+# Otherwise
+        else:
+            fallback_call = 'return %s;' % ctx.desc_fallback_call.make_func_call()
+
+        self._output.cpp2(outname,
+            self._make_def(
+                ctx.desc_fallback.make_func_decl(),
+                ctx.desc_fallback.name,
+                ctx.desc_fallback.make_trace_arg(),
+                "\t" + fallback_call))
+
+        self._output.h(outname, "extern %s;\n" % ctx.desc_fallback.make_func_decl())
+
+    def _process(self, desc, onespec, outname):
+        ctx = convctx(self._types, desc.clone(), desc.clone(), '', '', desc.clone(), desc.clone(), '')
+        ctx = self._adjust(ctx, onespec)
+        funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
+        ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
+
+        self._process_normal(ctx, onespec, outname)
+
+        # FIXME: Fallback for variadic
+        need_fallback = 'no_fallback' not in onespec[_Spec.ATTR] and not ctx.desc_self.is_variadic
+        if need_fallback:
+            self._process_fallback(ctx, onespec, outname)
 
     def _dispatch(self, desc):
         processed = False
