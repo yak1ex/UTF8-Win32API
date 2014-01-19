@@ -31,19 +31,18 @@ A conversion context (a named tuple consisting of types, desc_self,desc_call, co
 from string import Template
 
 def _nolen_helper(ctx, typespec, coder):
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    target_type = "LPSTR" if orig_type == "LPWSTR" or orig_type == "wchar_t *" else "LPCSTR"
-    ctx.desc_self.parameter_types[target_index] = (target_type, orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    before, after = coder(orig_type, orig_name)
+    index = ctx.desc_self.index_arg(typespec)
+    ctx.desc_self.transform_param(index, lambda t,n: (
+        "LPSTR" if t == "LPWSTR" or t == "wchar_t *" else "LPCSTR", n))
+    ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
+    before, after = coder(*ctx.desc_self.get_param(index))
     return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
 
 def _ro_nolen_imp(ctx, typespec):
     return _nolen_helper(ctx, typespec, \
-        lambda orig_type, orig_name: (Template("""\
+        lambda t, n: (Template("""\
 	win32u::WSTR ${name}_($name);
-""").substitute(name = orig_name), ''))
+""").substitute(name = n), ''))
 
 def ro_nolen_idx(idx):
     """A converter for read only strings without the corresponding length variables. Indices are specified."""
@@ -62,10 +61,9 @@ def ro_nolen(ctx, typespecs):
     )
 
 def _roarray_nolen_imp(ctx, typespec):
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = ('LPCSTR const *', orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    index = ctx.desc_self.index_arg(typespec)
+    ctx.desc_self.transform_param(index, lambda t,n: ('LPCSTR const *', n))
+    ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
     before = Template("""\
 	std::vector<win32u::WSTR> ${name}_hold;
 	int ${name}_idx = 0;
@@ -79,7 +77,7 @@ def _roarray_nolen_imp(ctx, typespec):
 		${name}_arg.push_back(${name}_hold[${name}_hold_idx]);
 	}
 	LPCWSTR* ${name}_ = &${name}_arg[0];
-""").substitute(name = orig_name)
+""").substitute(name = ctx.desc_self.get_pname(index))
     return ctx._replace(code_before = ctx.code_before + before)
 
 def roarray_nolen_idx(idx):
@@ -91,10 +89,9 @@ def roarray_nolen_idx(idx):
     )
 
 def _rova_nolen_imp(ctx, typespec):
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    index = ctx.desc_self.index_arg(typespec)
+    ctx.desc_self.transform_param(index, lambda t,n: ('LPCSTR', n))
+    ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
     ctx.desc_call.is_variadic = False
     ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
     before = Template("""\
@@ -111,7 +108,7 @@ def _rova_nolen_imp(ctx, typespec):
 		${name}_arg.push_back(${name}_hold[${name}_hold_idx]);
 	}
 	LPCWSTR* ${name}_ = &${name}_arg[0];
-""").substitute(name = orig_name)
+""").substitute(name = ctx.desc_self.get_pname(index))
     return ctx._replace(code_before = ctx.code_before + before)
 
 def rova_nolen_idx(idx):
@@ -123,11 +120,10 @@ def rova_nolen_idx(idx):
     )
 
 def _rova_nolen_withenv_imp(ctx, typespec):
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = ('LPCSTR', orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
-    ctx.desc_call.parameter_types.append(('LPCSTR*', orig_name + '_env_'))
+    index = ctx.desc_self.index_arg(typespec)
+    ctx.desc_self.transform_param(index, lambda t,n: ('LPCSTR', n))
+    ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
+    ctx.desc_call.parameter_types.append(('LPCSTR*', ctx.desc_self.get_pname(index) + '_env_'))
     ctx.desc_call.is_variadic = False
     ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
     before = Template("""\
@@ -158,7 +154,7 @@ def _rova_nolen_withenv_imp(ctx, typespec):
 		${name}_env_arg.push_back(${name}_env_hold[${name}_env_hold_idx]);
 	}
 	LPCWSTR* ${name}_env_ = &${name}_env_arg[0];
-""").substitute(name = orig_name)
+""").substitute(name = ctx.desc_self.get_pname(index))
     return ctx._replace(code_before = ctx.code_before + before)
 
 def rova_nolen_withenv_idx(idx):
@@ -170,13 +166,13 @@ def rova_nolen_withenv_idx(idx):
 
 def _wo_nolen_imp(ctx, typespec):
     return _nolen_helper(ctx, typespec, \
-        lambda orig_type, orig_name: (\
+        lambda type, name: (\
             Template("""\
 	win32u::WSTR ${name}_($name ? MAX_PATH : 0);
-""").substitute(name = orig_name), \
+""").substitute(name = name), \
             Template("""\
 	${name}_.get($name, MAX_PATH);
-""").substitute(name = orig_name)))
+""").substitute(name = name)))
 
 def wo_nolen_idx(idx):
     """A converter for write only strings without the corresponding length variables. Indices are specified."""
@@ -196,16 +192,16 @@ def wo_nolen(ctx, typespecs):
 
 def _wo_nolen_ret_null_static_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
-    return _nolen_helper(ctx, typespec, lambda orig_type, orig_name: (Template("""\
+    return _nolen_helper(ctx, typespec, lambda type, name: (Template("""\
 	static char static_buf[$size * 3];
 	win32u::WSTR ${name}_($name);
-""").substitute(size = size, name = orig_name), Template("""\
+""").substitute(size = size, name = name), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
 		ret_ = $name ? $name : static_buf;
 		${name}_.get(ret_, ${name}_.get_utf8_length()); // Assuming sufficient buffer
 	}
-""").substitute(name = orig_name)))
+""").substitute(name = name)))
 
 def wo_nolen_ret_null_static(size, idx):
     """A converter for write only strings returned as the result without the corresponding length variables, returning the static buffer if NULL pointer is specified."""
@@ -216,15 +212,15 @@ def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
 
 def _wo_nolen_ret_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
-    return _nolen_helper(ctx, typespec, lambda orig_type, orig_name: (Template("""\
+    return _nolen_helper(ctx, typespec, lambda type, name: (Template("""\
 	win32u::WSTR ${name}_($size);
-""").substitute(size = size, name = orig_name), Template("""\
+""").substitute(size = size, name = name), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
 		ret_ = ${name};
 		${name}_.get(ret_, ${name}_.get_utf8_length()); // Assuming sufficient buffer
 	}
-""").substitute(name = orig_name)))
+""").substitute(name = name)))
 
 def wo_nolen_ret(size, idx):
     """A converter for write only strings returned as the result without the corresponding length variables."""
@@ -233,39 +229,37 @@ def wo_nolen_ret(size, idx):
 def _wo_len_helper(str_idx, len_idx, ctx, typespecs, coder):
     str_index = ctx.desc_self.index_arg(typespecs[str_idx])
     len_index = ctx.desc_self.index_arg(typespecs[len_idx])
-    orig_str_type, orig_str_name = ctx.desc_self.parameter_types[str_index]
-    orig_len_type, orig_len_name = ctx.desc_self.parameter_types[len_index]
-    ctx.desc_self.parameter_types[str_index] = ('LPSTR', orig_str_name)
-    ctx.desc_call.parameter_types[str_index] = (orig_str_type, orig_str_name + '_')
-    ctx.desc_call.parameter_types[len_index] = (orig_len_type, orig_len_name + '_')
-    before, after = coder(orig_str_type, orig_str_name, orig_len_type, orig_len_name)
+    ctx.desc_self.transform_param(str_index, lambda t,n: ('LPSTR', n))
+    ctx.desc_call.transform_param(str_index, lambda t,n: (t, n + '_'))
+    ctx.desc_call.transform_param(len_index, lambda t,n: (t, n + '_'))
+    before, after = coder(ctx.desc_self.get_ptype(str_index), ctx.desc_self.get_pname(str_index), *ctx.desc_self.get_param(len_index))
     return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
 
 # TODO: Not sure len_name can be NULL or not
 def wo_rwlen_ret_bool(str_idx, len_idx, error):
     """A converter for a write only string with a read/write length variable, returning a boolean flag."""
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
-        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
+        lambda str_type, str_name, len_type, len_name: (Template("""\
 	win32u::WSTR ${str_name}_(*${len_name});
 	win32u::remove_pointer<$len_type>::type ${len_name}__ = *$len_name;
 	$len_type ${len_name}_ = &${len_name}__;
-""").substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
+""").substitute(str_name = str_name, len_name = len_name, len_type = len_type), Template("""\
 	if(${str_name}_.get_utf8_length() <= *$len_name) {
 		*$len_name = ${str_name}_.get($str_name, *$len_name);
 	} else {
 		SetLastError($error_code);
 		ret = FALSE;
 	}
-""").substitute(str_name = orig_str_name, len_name = orig_len_name, error_code = error)))
+""").substitute(str_name = str_name, len_name = len_name, error_code = error)))
 
 # TODO: currently, returns length more than required
 def wo_rolen_ret_len(str_idx, len_idx):
     """A converter for a write only string with a read only length variable, returning the required length for error conditions."""
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
-        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
+        lambda str_type, str_name, len_type, len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
 	win32u::WSTR ${str_name}_(${len_name}_);
-""").substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
+""").substitute(str_name = str_name, len_name = len_name, len_type = len_type), Template("""\
 	if(ret) {
 		if(! $str_name) {
 			ret = ret * 3;
@@ -275,15 +269,15 @@ def wo_rolen_ret_len(str_idx, len_idx):
 			ret = ${str_name}_.get_utf8_length();
 		}
 	}
-""").substitute(str_name = orig_str_name, len_name = orig_len_name)))
+""").substitute(str_name = str_name, len_name = len_name)))
 
 def wo_rolen_ret_zero(str_idx, len_idx):
     """A converter for a write only string with a read only length variable, returning 0 for error conditions."""
     return lambda ctx, typespecs: _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
-        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
+        lambda str_type, str_name, len_type, len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
 	win32u::WSTR ${str_name}_(${len_name}_);
-""").substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
+""").substitute(str_name = str_name, len_name = len_name, len_type = len_type), Template("""\
 	if(ret) {
 		if(${str_name}_.get_utf8_length() <= $len_name) {
 			${str_name}_.get($str_name, $len_name);
@@ -292,15 +286,15 @@ def wo_rolen_ret_zero(str_idx, len_idx):
 			ret = 0;
 		}
 	}
-""").substitute(str_name = orig_str_name, len_name = orig_len_name)))
+""").substitute(str_name = str_name, len_name = len_name)))
 
 def _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
     ctx.desc_self.result_type = 'LPSTR';
     return _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
-        lambda orig_str_type, orig_str_name, orig_len_type, orig_len_name: (Template("""\
+        lambda str_type, str_name, len_type, len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
 	win32u::WSTR ${str_name}_(${len_name}_);
-""").substitute(str_name = orig_str_name, len_name = orig_len_name, len_type = orig_len_type), Template("""\
+""").substitute(str_name = str_name, len_name = len_name, len_type = len_type), Template("""\
 	LPSTR ret_ = 0;
 	if(ret) {
 		if($str_name) {
@@ -321,7 +315,7 @@ def _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
 			ret_ = 0;
 		}
 	}
-""").substitute(str_name = orig_str_name, len_name = orig_len_name)))
+""").substitute(str_name = str_name, len_name = len_name)))
 
 def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
     """A converter for a write only string returned as a result, with a read only length variable.
@@ -354,13 +348,12 @@ def forward(ctx, typespecs):
     return ctx
 
 def _optional_imp(ctx, typespec, args):
-    orig_type, orig_name = ctx.desc_self.get_param(typespec)
     ctx.desc_call.parameter_types.extend(map(lambda x: (x[1], 'optional_' + str(x[0])), enumerate(args)))
     ctx.desc_call.is_variadic = False
     return ctx._replace(code_before = ctx.code_before + Template("""\
 	va_list optional_va;
 	va_start(optional_va, $name);
-""").substitute(name = orig_name) + "\n".join(map(lambda x: Template("""\
+""").substitute(name = ctx.desc_self.get_pname(typespec)) + "\n".join(map(lambda x: Template("""\
 	$type optional_$idx = va_arg(optional_va, $type);
 """).substitute(idx = x[0], type = x[1]), enumerate(args))) + "\n")
 
@@ -372,15 +365,13 @@ def optional(idx, *args):
     return lambda ctx, typespecs: _optional_imp(ctx, typespecs[idx], args)
 
 def _fakecp_imp(ctx, typespec_cp, typespec_flag):
-    orig_type_cp, orig_name_cp = ctx.desc_self.get_param(typespec_cp)
-    orig_type_flag, orig_name_flag = ctx.desc_self.get_param(typespec_flag)
     return ctx._replace(code_before = ctx.code_before + Template("""\
 	if($cpname == CP_ACP) {
 		$cpname = CP_UTF8;
 //		$flagname &= WC_ERR_INVALID_CHARS; // Applicable only for Windows Vista and later
 		$flagname = 0;
 	}
-""").substitute(cpname = orig_name_cp, flagname = orig_name_flag))
+""").substitute(cpname = ctx.desc_self.get_pname(typespec_cp), flagname = ctx.desc_self.get_pname(typespec_flag)))
 
 def fakecp(idx_cp, idx_flag):
     """A converter for MultiByteToWideChar.
@@ -390,10 +381,6 @@ def fakecp(idx_cp, idx_flag):
     return lambda ctx, typespecs: _fakecp_imp(ctx, typespecs[idx_cp], typespecs[idx_flag])
 
 def _adjustdef_imp(ctx, typespec_cp, typespec_flag, typespec_def, typespec_used):
-    orig_type_cp, orig_name_cp = ctx.desc_self.get_param(typespec_cp)
-    orig_type_flag, orig_name_flag = ctx.desc_self.get_param(typespec_flag)
-    orig_type_def, orig_name_def = ctx.desc_self.get_param(typespec_def)
-    orig_type_used, orig_name_used = ctx.desc_self.get_param(typespec_used)
     return ctx._replace(code_before = ctx.code_before + Template("""\
 	if($cpname == CP_ACP) {
 		$cpname = CP_UTF8;
@@ -404,7 +391,12 @@ def _adjustdef_imp(ctx, typespec_cp, typespec_flag, typespec_def, typespec_used)
 		}
 		$defname = 0;
 	}
-""").substitute(cpname = orig_name_cp, flagname = orig_name_flag, defname = orig_name_def, usedname = orig_name_used))
+""").substitute(
+        cpname = ctx.desc_self.get_pname(typespec_cp),
+        flagname = ctx.desc_self.get_pname(typespec_flag),
+        defname = ctx.desc_self.get_pname(typespec_def),
+        usedname = ctx.desc_self.get_pname(typespec_used)
+    ))
 
 def adjustdef(idx_cp, idx_flag, idx_def, idx_used):
     """A converter for WideCharToMulitiByte.
@@ -415,29 +407,26 @@ def adjustdef(idx_cp, idx_flag, idx_def, idx_used):
     return lambda ctx, typespecs: _adjustdef_imp(ctx, typespecs[idx_cp], typespecs[idx_flag], typespecs[idx_def], typespecs[idx_used])
 
 def _adjustfilepart_imp(ctx, typespec_buf, typespec_fp):
-    orig_type_buf, orig_name_buf = ctx.desc_call.get_param(typespec_buf)
-    fp_index = ctx.desc_self.index_arg(typespec_fp)
-    orig_type_fp, orig_name_fp = ctx.desc_self.parameter_types[fp_index]
-    ctx.desc_self.parameter_types[fp_index] = ('LPSTR *', orig_name_fp)
-    ctx.desc_call.parameter_types[fp_index] = (orig_type_fp, orig_name_fp + '_')
+    index_fp = ctx.desc_self.index_arg(typespec_fp)
+    ctx.desc_self.transform_param(index_fp, lambda t,n: ('LPSTR *', n))
+    ctx.desc_call.transform_param(index_fp, lambda t,n: (t, n + '_'))
     return ctx._replace(code_before = ctx.code_before + Template("""\
 	LPWSTR ${name_fp}__;
 	LPWSTR* ${name_fp}_ = &${name_fp}__;
-""").substitute(name_fp = orig_name_fp), code_after = ctx.code_after + Template("""\
+""").substitute(name_fp = ctx.desc_self.get_pname(index_fp)), code_after = ctx.code_after + Template("""\
 	if($name_fp) {
 		*$name_fp = AdjustFilePart(${name_buf}_, *${name_fp}_, $name_buf);
 	}
-""").substitute(name_fp = orig_name_fp, name_buf = orig_name_buf.rstrip('_')))
+""").substitute(name_fp = ctx.desc_self.get_pname(index_fp), name_buf = ctx.desc_call.get_pname(typespec_buf).rstrip('_')))
+# FIXME: desc_call.get_pname is required
 
 def adjustfilepart(idx_fn, idx_fp):
     """A converter for GetFullPathName"""
     return lambda ctx, typespecs: _adjustfilepart_imp(ctx, typespecs[idx_fn], typespecs[idx_fp])
 
 def _convertenv_imp(ctx, typespec_flag, typespec_env):
-    orig_type_flag, orig_name_flag = ctx.desc_call.get_param(typespec_flag)
-    env_index = ctx.desc_self.index_arg(typespec_env)
-    orig_type_env, orig_name_env = ctx.desc_self.parameter_types[env_index]
-    ctx.desc_call.parameter_types[env_index] = (orig_type_env, orig_name_env + '_')
+    index_env = ctx.desc_self.index_arg(typespec_env)
+    ctx.desc_call.transform_param(index_env, lambda t,n: (t, n + '_'))
     return ctx._replace(code_before = ctx.code_before + Template("""\
 	extern void ConvertEnvBlock(win32u::scoped_array<WCHAR> &result, LPVOID lpEnv);
 	LPVOID ${name_env}_;
@@ -453,7 +442,7 @@ def _convertenv_imp(ctx, typespec_flag, typespec_env):
 		}
 		$name_flag |= CREATE_UNICODE_ENVIRONMENT;
 	}
-""").substitute(name_flag = orig_name_flag, name_env = orig_name_env))
+""").substitute(name_flag = ctx.desc_self.get_pname(typespec_env), name_env = ctx.desc_self.get_pname(index_env)))
 
 def convertenv(idx_flag, idx_env):
     """A converter for CreateProcess env block"""
@@ -466,10 +455,10 @@ def updateenv(ctx, typespecs):
 ''')
 
 def _w2u_imp(ctx, typespec):
-    target_index = ctx.desc_self.index_arg(typespec)
-    orig_type, orig_name = ctx.desc_self.parameter_types[target_index]
-    ctx.desc_self.parameter_types[target_index] = (orig_type[:-1] + 'U', orig_name)
-    ctx.desc_call.parameter_types[target_index] = (orig_type, orig_name + '_')
+    index = ctx.desc_self.index_arg(typespec)
+    orig_type, orig_name = ctx.desc_self.get_param(index)
+    ctx.desc_self.transform_param(index, lambda t,n: (t[:-1] + 'U', n))
+    ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
     if orig_type[3:] in ctx.types:
         fields = ctx.types[orig_type[3:]]
     if orig_type[2:] in ctx.types:

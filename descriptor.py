@@ -81,7 +81,9 @@ class FunctionDescriptor(object):
         return -1
 
     def get_param(self, spec):
-        """search argument corresponding to the specified spec, returning its type and value"""
+        """search argument corresponding to the specified spec or index, returning its type and name"""
+        if isinstance(spec, int):
+            return self._parameter_types[spec]
         for v in self._parameter_types:
             if v[0] == spec[0] and v[1].rstrip('_') == spec[1].rstrip('_'):
                 return v
@@ -90,6 +92,24 @@ class FunctionDescriptor(object):
             elif v[1].rstrip('_') == spec[1].rstrip('_') and spec[0] == None:
                 return v
         raise KeyError('The specified typespec is not found')
+
+    def get_ptype(self, spec):
+        """search argument corresponding to the specified spec or index, returning its type"""
+        if isinstance(spec, int):
+            return self._parameter_types[spec][0]
+        return self.get_param(spec)[0]
+
+    def get_pname(self, spec):
+        """search argument corresponding to the specified spec or index, returning its name"""
+        if isinstance(spec, int):
+            return self._parameter_types[spec][1]
+        return self.get_param(spec)[1]
+
+    def transform_param(self, spec, func):
+        """Transform parameter type and name correspoinding to the specified spec or index, by the specified lambda"""
+        index = spec if isinstance(spec, int) else self.index_arg(spec)
+        self._parameter_types[index] = func(*self._parameter_types[index])
+        return self._parameter_types[index]
 
     def clone(self):
         cloned = FunctionDescriptor()
