@@ -34,6 +34,10 @@ def _nolen_helper(ctx, typespec, coder):
     index = ctx.desc_self.index_arg(typespec)
     ctx.desc_self.transform_param(index, lambda t,n: (
         "LPSTR" if t == "LPWSTR" or t == "wchar_t *" else "LPCSTR", n))
+    ctx.desc_fallback.transform_param(index, lambda t,n: (
+        "LPSTR" if t == "LPWSTR" or t == "wchar_t *" else "LPCSTR", n))
+    ctx.desc_fallback_call.transform_param(index, lambda t,n: (
+        "LPSTR" if t == "LPWSTR" or t == "wchar_t *" else "LPCSTR", n))
     ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
     before, after = coder(*ctx.desc_self.get_param(index))
     return ctx._replace(code_before = ctx.code_before + before, code_after = ctx.code_after + after)
@@ -63,6 +67,8 @@ def ro_nolen(ctx, typespecs):
 def _roarray_nolen_imp(ctx, typespec):
     index = ctx.desc_self.index_arg(typespec)
     ctx.desc_self.transform_param(index, lambda t,n: ('LPCSTR const *', n))
+    ctx.desc_fallback.transform_param(index, lambda t,n: ('LPCSTR const *', n))
+    ctx.desc_fallback_call.transform_param(index, lambda t,n: ('LPCSTR const *', n))
     ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
     before = Template("""\
 	std::vector<win32u::WSTR> ${name}_hold;
@@ -192,6 +198,7 @@ def wo_nolen(ctx, typespecs):
 
 def _wo_nolen_ret_null_static_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
+    ctx.desc_fallback.result_type = 'LPSTR';
     return _nolen_helper(ctx, typespec, lambda type, name: (Template("""\
 	static char static_buf[$size * 3];
 	win32u::WSTR ${name}_($name);
@@ -212,6 +219,7 @@ def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
 
 def _wo_nolen_ret_imp(size, ctx, typespec):
     ctx.desc_self.result_type = 'LPSTR';
+    ctx.desc_fallback.result_type = 'LPSTR';
     return _nolen_helper(ctx, typespec, lambda type, name: (Template("""\
 	win32u::WSTR ${name}_($size);
 """).substitute(size = size, name = name), Template("""\
@@ -230,6 +238,8 @@ def _wo_len_helper(str_idx, len_idx, ctx, typespecs, coder):
     str_index = ctx.desc_self.index_arg(typespecs[str_idx])
     len_index = ctx.desc_self.index_arg(typespecs[len_idx])
     ctx.desc_self.transform_param(str_index, lambda t,n: ('LPSTR', n))
+    ctx.desc_fallback.transform_param(str_index, lambda t,n: ('LPSTR', n))
+    ctx.desc_fallback_call.transform_param(str_index, lambda t,n: ('LPSTR', n))
     ctx.desc_call.transform_param(str_index, lambda t,n: (t, n + '_'))
     ctx.desc_call.transform_param(len_index, lambda t,n: (t, n + '_'))
     before, after = coder(ctx.desc_self.get_ptype(str_index), ctx.desc_self.get_pname(str_index), *ctx.desc_self.get_param(len_index))
@@ -290,6 +300,7 @@ def wo_rolen_ret_zero(str_idx, len_idx):
 
 def _wo_rolen_ret_buffer_alloc_imp(str_idx, len_idx, ctx, typespecs):
     ctx.desc_self.result_type = 'LPSTR';
+    ctx.desc_fallback.result_type = 'LPSTR';
     return _wo_len_helper(str_idx, len_idx, ctx, typespecs, \
         lambda str_type, str_name, len_type, len_name: (Template("""\
 	$len_type ${len_name}_ = $len_name;
@@ -328,6 +339,7 @@ def wo_rolen_ret_buffer_alloc(str_idx, len_idx):
 def ret_alloc(ctx, typespecs):
     """A converter to a function returning a string in a newly allocated buffer."""
     ctx.desc_self.result_type = 'LPSTR';
+    ctx.desc_fallback.result_type = 'LPSTR';
     return ctx._replace(code_after = ctx.code_after + """\
 	DWORD alloc_size = win32u::UTF8Length(ret);
 	LPSTR ret_ = (LPSTR)malloc(alloc_size);
@@ -409,6 +421,8 @@ def adjustdef(idx_cp, idx_flag, idx_def, idx_used):
 def _adjustfilepart_imp(ctx, typespec_buf, typespec_fp):
     index_fp = ctx.desc_self.index_arg(typespec_fp)
     ctx.desc_self.transform_param(index_fp, lambda t,n: ('LPSTR *', n))
+    ctx.desc_fallback.transform_param(index_fp, lambda t,n: ('LPSTR *', n))
+    ctx.desc_fallback_call.transform_param(index_fp, lambda t,n: ('LPSTR *', n))
     ctx.desc_call.transform_param(index_fp, lambda t,n: (t, n + '_'))
     return ctx._replace(code_before = ctx.code_before + Template("""\
 	LPWSTR ${name_fp}__;
@@ -458,6 +472,8 @@ def _w2u_imp(ctx, typespec):
     index = ctx.desc_self.index_arg(typespec)
     orig_type, orig_name = ctx.desc_self.get_param(index)
     ctx.desc_self.transform_param(index, lambda t,n: (t[:-1] + 'U', n))
+    ctx.desc_fallback.transform_param(index, lambda t,n: (t[:-1] + 'A', n))
+    ctx.desc_fallback_call.transform_param(index, lambda t,n: (t[:-1] + 'A', n))
     ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
     if orig_type[3:] in ctx.types:
         fields = ctx.types[orig_type[3:]]

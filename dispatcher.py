@@ -218,8 +218,7 @@ $body#endif
         )
 
     def _process_fallback(self, ctx, onespec, outname):
-        # FIXME: Conversion MUST occur in converters
-        ctx = ctx._replace(desc_fallback = ctx.desc_self.clone(), desc_fallback_call = ctx.desc_self.clone())
+# Name adjustment
         ctx = self._fallback(ctx, onespec)
 
 # No return value
