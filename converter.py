@@ -442,7 +442,7 @@ def _convertenv_imp(ctx, typespec_flag, typespec_env):
 		}
 		$name_flag |= CREATE_UNICODE_ENVIRONMENT;
 	}
-""").substitute(name_flag = ctx.desc_self.get_pname(typespec_env), name_env = ctx.desc_self.get_pname(index_env)))
+""").substitute(name_flag = ctx.desc_self.get_pname(typespec_flag), name_env = ctx.desc_self.get_pname(index_env)))
 
 def convertenv(idx_flag, idx_env):
     """A converter for CreateProcess env block"""
