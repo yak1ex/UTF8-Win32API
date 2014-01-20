@@ -328,8 +328,7 @@ class APIDispatcher(Dispatcher):
             ctx.desc_fallback.name = ctx.desc_fallback.name[:-1] + 'A_'
             ctx.desc_fallback_call.name = ctx.desc_fallback_call.name[:-1] + 'A'
         else:
-            ctx.desc_fallback.name = ctx.desc_fallback.name[:-1] + '_'
-            ctx.desc_fallback_call.name = ctx.desc_fallback_call.name[:-1]
+            ctx.desc_fallback.name = ctx.desc_fallback.name + '_'
         return ctx
 
     def _macro(self, ctx, onespec):
