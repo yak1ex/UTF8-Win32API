@@ -352,6 +352,7 @@ def forwardA(ctx, typespecs):
     Type adjustment from LPWSTR to LPSTR is processed.
     """
     ctx.desc_self.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, ctx.desc_self.parameter_types)
+    ctx.desc_fallback.parameter_types = map(lambda x: ('LPSTR', x[1]) if x[0] == 'LPWSTR' else x, ctx.desc_fallback.parameter_types)
     ctx.desc_call.name = ctx.desc_call.name[:-1] + 'A'
     return ctx
 
