@@ -97,9 +97,13 @@ def roarray_nolen_idx(idx):
 def _rova_nolen_imp(ctx, typespec):
     index = ctx.desc_self.index_arg(typespec)
     ctx.desc_self.transform_param(index, lambda t,n: ('LPCSTR', n))
+    ctx.desc_fallback.transform_param(index, lambda t,n: ('LPCSTR', n))
     ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
     ctx.desc_call.is_variadic = False
     ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
+    ctx.desc_fallback_call.transform_param(index, lambda t,n: ('LPCSTR*', n + '_'))
+    ctx.desc_fallback_call.is_variadic = False
+    ctx.desc_fallback_call.name = ctx.desc_fallback_call.name.replace('l', 'v')
     before = Template("""\
 	va_list ${name}_va;
 	va_start(${name}_va, $name);
@@ -115,7 +119,18 @@ def _rova_nolen_imp(ctx, typespec):
 	}
 	LPCWSTR* ${name}_ = &${name}_arg[0];
 """).substitute(name = ctx.desc_self.get_pname(index))
-    return ctx._replace(code_before = ctx.code_before + before)
+    fbefore = Template("""\
+	va_list ${name}_va;
+	va_start(${name}_va, $name);
+	std::vector<LPCSTR> ${name}_arg;
+	${name}_arg.push_back($name);
+	do {
+		LPSTR p = va_arg(${name}_va, LPSTR);
+		${name}_arg.push_back(p);
+	} while(${name}_arg.back());
+	LPCSTR* ${name}_ = &${name}_arg[0];
+""").substitute(name = ctx.desc_self.get_pname(index))
+    return ctx._replace(code_before = ctx.code_before + before, fcode_before = ctx.fcode_before + fbefore)
 
 def rova_nolen_idx(idx):
     """A converter for variadic read only strings without the corresponding length variables. The index prior to the variadic arguments is specified."""
@@ -128,10 +143,15 @@ def rova_nolen_idx(idx):
 def _rova_nolen_withenv_imp(ctx, typespec):
     index = ctx.desc_self.index_arg(typespec)
     ctx.desc_self.transform_param(index, lambda t,n: ('LPCSTR', n))
+    ctx.desc_fallback.transform_param(index, lambda t,n: ('LPCSTR', n))
     ctx.desc_call.transform_param(index, lambda t,n: (t, n + '_'))
-    ctx.desc_call.parameter_types.append(('LPCSTR*', ctx.desc_self.get_pname(index) + '_env_'))
+    ctx.desc_call.parameter_types.append(('LPCWSTR*', ctx.desc_self.get_pname(index) + '_env_'))
     ctx.desc_call.is_variadic = False
     ctx.desc_call.name = ctx.desc_call.name.replace('l', 'v')
+    ctx.desc_fallback_call.transform_param(index, lambda t,n: ('LPCSTR*', n + '_'))
+    ctx.desc_fallback_call.parameter_types.append(('LPCSTR*', ctx.desc_self.get_pname(index) + '_env'))
+    ctx.desc_fallback_call.is_variadic = False
+    ctx.desc_fallback_call.name = ctx.desc_fallback_call.name.replace('l', 'v')
     before = Template("""\
 	va_list ${name}_va;
 	va_start(${name}_va, $name);
@@ -161,7 +181,19 @@ def _rova_nolen_withenv_imp(ctx, typespec):
 	}
 	LPCWSTR* ${name}_env_ = &${name}_env_arg[0];
 """).substitute(name = ctx.desc_self.get_pname(index))
-    return ctx._replace(code_before = ctx.code_before + before)
+    fbefore = Template("""\
+	va_list ${name}_va;
+	va_start(${name}_va, $name);
+	std::vector<LPCSTR> ${name}_arg;
+	${name}_arg.push_back($name);
+	do {
+		LPSTR p = va_arg(${name}_va, LPSTR);
+		${name}_arg.push_back(p);
+	} while(${name}_arg.back());
+	LPCSTR* ${name}_ = &${name}_arg[0];
+	LPCSTR* ${name}_env = va_arg(${name}_va, LPCSTR*);
+""").substitute(name = ctx.desc_self.get_pname(index))
+    return ctx._replace(code_before = ctx.code_before + before, fcode_before = ctx.fcode_before + fbefore)
 
 def rova_nolen_withenv_idx(idx):
     """A converter for variadic read only strings for arguments and environment variables without the corresponding length variables.
@@ -363,12 +395,15 @@ def forward(ctx, typespecs):
 def _optional_imp(ctx, typespec, args):
     ctx.desc_call.parameter_types.extend(map(lambda x: (x[1], 'optional_' + str(x[0])), enumerate(args)))
     ctx.desc_call.is_variadic = False
-    return ctx._replace(code_before = ctx.code_before + Template("""\
+    ctx.desc_fallback_call.parameter_types.extend(map(lambda x: (x[1], 'optional_' + str(x[0])), enumerate(args)))
+    ctx.desc_fallback_call.is_variadic = False
+    code_before = Template("""\
 	va_list optional_va;
 	va_start(optional_va, $name);
 """).substitute(name = ctx.desc_self.get_pname(typespec)) + "\n".join(map(lambda x: Template("""\
 	$type optional_$idx = va_arg(optional_va, $type);
-""").substitute(idx = x[0], type = x[1]), enumerate(args))) + "\n")
+""").substitute(idx = x[0], type = x[1]), enumerate(args))) + "\n"
+    return ctx._replace(code_before = ctx.code_before + code_before, fcode_before = ctx.fcode_before + code_before)
 
 def optional(idx, *args):
     """A converter for functions having optional arguments.

@@ -218,9 +218,6 @@ $body#endif
         )
 
     def _process_fallback(self, ctx, onespec, outname):
-# Name adjustment
-        ctx = self._fallback(ctx, onespec)
-
 # No return value
         if ctx.desc_self.result_type == 'void' or ctx.desc_self.result_type == 'VOID':
             fallback_call = ctx.desc_fallback_call.make_func_call() + ';'
@@ -236,20 +233,22 @@ $body#endif
                 ctx.desc_fallback.make_func_decl(),
                 ctx.desc_fallback.name,
                 ctx.desc_fallback.make_trace_arg(),
-                "\t" + fallback_call))
+                "%s\t%s" % (ctx.fcode_before, fallback_call)))
 
         self._output.h(outname, "extern %s;\n" % ctx.desc_fallback.make_func_decl())
 
     def _process(self, desc, onespec, outname):
+        need_fallback = 'no_fallback' not in onespec[_Spec.ATTR]
+
         ctx = convctx(self._types, desc.clone(), desc.clone(), '', '', desc.clone(), desc.clone(), '')
         ctx = self._adjust(ctx, onespec)
+        if need_fallback:
+            ctx = self._fallback(ctx, onespec)
         funcs = onespec[_Spec.FUNC] if isinstance(onespec[_Spec.FUNC], list) else [onespec[_Spec.FUNC]]
         ctx = reduce(lambda acc, func: func(acc, onespec[_Spec.TYPES]), funcs, ctx)
 
         self._process_normal(ctx, onespec, outname)
 
-        # FIXME: Fallback for variadic
-        need_fallback = 'no_fallback' not in onespec[_Spec.ATTR] and not ctx.desc_self.is_variadic
         if need_fallback:
             self._process_fallback(ctx, onespec, outname)
 
