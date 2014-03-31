@@ -9,7 +9,7 @@ gensrc/*u.txt
 .generate
 .sgenerate
 .generated
-.extract
+.extract*
 *.BAK
 perl-*/
 perl-*-orig/

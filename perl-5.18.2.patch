@@ -1,0 +1,178 @@
+diff -ur perl-5.18.2-orig/dosish.h perl-5.18.2/dosish.h
+--- perl-5.18.2-orig/dosish.h	2014-01-07 07:46:45.000000000 +0900
++++ perl-5.18.2/dosish.h	2014-03-31 10:40:10.522768900 +0900
+@@ -140,7 +140,7 @@
+ #else
+ #   define Fflush(fp)      fflush(fp)
+ #endif
+-#define Mkdir(path,mode)   mkdir((path),(mode))
++#define Mkdir(path,mode)   mkdir((path))
+ 
+ #ifndef WIN32
+ #  define Stat(fname,bufptr) stat((fname),(bufptr))
+diff -ur perl-5.18.2-orig/iperlsys.h perl-5.18.2/iperlsys.h
+--- perl-5.18.2-orig/iperlsys.h	2014-01-07 07:46:45.000000000 +0900
++++ perl-5.18.2/iperlsys.h	2014-03-31 10:40:10.536770300 +0900
+@@ -1408,6 +1408,8 @@
+ #define PerlSock_closesocket(s)		closesocket(s)
+ #endif
+ 
++#include "msvcrtu.h"
++
+ #endif	/* PERL_IMPLICIT_SYS */
+ 
+ #endif	/* __Inc__IPerl___ */
+diff -ur perl-5.18.2-orig/perl.c perl-5.18.2/perl.c
+--- perl-5.18.2-orig/perl.c	2014-01-07 07:46:45.000000000 +0900
++++ perl-5.18.2/perl.c	2014-03-31 10:40:10.560772700 +0900
+@@ -58,6 +58,8 @@
+ 
+ #endif
+ 
++#include "msvcrtu.h"
++
+ #ifndef HZ
+ #  ifdef CLK_TCK
+ #    define HZ CLK_TCK
+diff -ur perl-5.18.2-orig/pp_sys.c perl-5.18.2/pp_sys.c
+--- perl-5.18.2-orig/pp_sys.c	2014-01-07 07:46:45.000000000 +0900
++++ perl-5.18.2/pp_sys.c	2014-03-31 10:40:10.576774300 +0900
+@@ -31,6 +31,7 @@
+ #include "perl.h"
+ #include "time64.h"
+ #include "time64.c"
++#include "msvcrtu.h"
+ 
+ #ifdef I_SHADOW
+ /* Shadow password support for solaris - pdo@cs.umd.edu
+diff -ur perl-5.18.2-orig/util.c perl-5.18.2/util.c
+--- perl-5.18.2-orig/util.c	2014-01-07 07:46:46.000000000 +0900
++++ perl-5.18.2/util.c	2014-03-31 10:40:10.596776300 +0900
+@@ -48,6 +48,8 @@
+ # endif
+ #endif
+ 
++#include "msvcrtu.h"
++
+ #define FLUSH
+ 
+ #if defined(HAS_FCNTL) && defined(F_SETFD) && !defined(FD_CLOEXEC)
+diff -ur perl-5.18.2-orig/win32/makefile.mk perl-5.18.2/win32/makefile.mk
+--- perl-5.18.2-orig/win32/makefile.mk	2014-01-07 07:46:46.000000000 +0900
++++ perl-5.18.2/win32/makefile.mk	2014-03-31 10:40:10.611777800 +0900
+@@ -27,7 +27,7 @@
+ #
+ # Uncomment if you want to build a 32-bit Perl using a 32-bit compiler
+ # on a 64-bit version of Windows.
+-#WIN64		*= undef
++WIN64		*= undef
+ 
+ #
+ # Comment this out if you DON'T want your perl installation to be versioned.
+@@ -97,7 +97,7 @@
+ # Uncomment this if you're building a 32-bit perl and want 64-bit integers.
+ # (If you're building a 64-bit perl then you will have 64-bit integers whether
+ # or not this is uncommented.)
+-#USE_64_BIT_INT	*= define
++USE_64_BIT_INT	*= define
+ 
+ #
+ # uncomment exactly one of the following
+@@ -409,7 +409,7 @@
+ # Options
+ #
+ 
+-INCLUDES	= -I.\include -I. -I.. -I$(COREDIR)
++INCLUDES	= -I.\include -I. -I.. -I$(COREDIR) -I$(PWD)/../../include
+ DEFINES		= -DWIN32
+ .IF "$(WIN64)" == "define"
+ DEFINES		+= -DWIN64 -DCONSERVATIVE
+@@ -425,6 +425,7 @@
+ 
+ # same libs as MSVC
+ LIBFILES	= $(LIBC) \
++		  -lwin32u \
+ 		  -lmoldname -lkernel32 -luser32 -lgdi32 \
+ 		  -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 \
+ 		  -loleaut32 -lnetapi32 -luuid -lws2_32 -lmpr \
+@@ -440,7 +441,7 @@
+ 
+ EXTRACFLAGS	=
+ CFLAGS		= $(EXTRACFLAGS) $(INCLUDES) $(DEFINES) $(LOCDEFS) $(OPTIMIZE)
+-LINK_FLAGS	= $(LINK_DBG) -L"$(INST_COREDIR)" -L"$(CCLIBDIR)"
++LINK_FLAGS	= $(LINK_DBG) -L"$(INST_COREDIR)" -L"$(CCLIBDIR)" -L"$(PWD)/../.."
+ OBJOUT_FLAG	= -o
+ EXEOUT_FLAG	= -o
+ LIBOUT_FLAG	=
+diff -ur perl-5.18.2-orig/win32/perlglob.c perl-5.18.2/win32/perlglob.c
+--- perl-5.18.2-orig/win32/perlglob.c	2013-11-05 00:15:39.000000000 +0900
++++ perl-5.18.2/win32/perlglob.c	2014-03-31 10:40:10.634780100 +0900
+@@ -22,6 +22,7 @@
+ #include <fcntl.h>
+ #include <string.h>
+ #include <windows.h>
++#include "windowsu.h"
+ 
+ int
+ main(int argc, char *argv[])
+diff -ur perl-5.18.2-orig/win32/runperl.c perl-5.18.2/win32/runperl.c
+--- perl-5.18.2-orig/win32/runperl.c	2013-11-05 00:15:39.000000000 +0900
++++ perl-5.18.2/win32/runperl.c	2014-03-31 10:40:10.651781800 +0900
+@@ -1,5 +1,6 @@
+ #include "EXTERN.h"
+ #include "perl.h"
++#include "umain.h"
+ 
+ #ifdef __GNUC__
+ 
+diff -ur perl-5.18.2-orig/win32/vdir.h perl-5.18.2/win32/vdir.h
+--- perl-5.18.2-orig/win32/vdir.h	2013-11-05 00:15:39.000000000 +0900
++++ perl-5.18.2/win32/vdir.h	2014-03-31 10:40:10.662782900 +0900
+@@ -10,6 +10,8 @@
+ #ifndef ___VDir_H___
+ #define ___VDir_H___
+ 
++#undef WORD
++#include "windowsu.h"
+ /*
+  * Allow one slot for each possible drive letter
+  * and one additional slot for a UNC name
+diff -ur perl-5.18.2-orig/win32/win32.c perl-5.18.2/win32/win32.c
+--- perl-5.18.2-orig/win32/win32.c	2014-01-07 07:46:46.000000000 +0900
++++ perl-5.18.2/win32/win32.c	2014-03-31 10:40:10.681784800 +0900
+@@ -8,9 +8,10 @@
+  *    License or the Artistic License, as specified in the README file.
+  */
+ #define PERLIO_NOT_STDIO 0
+-#define WIN32_LEAN_AND_MEAN
++/*#define WIN32_LEAN_AND_MEAN*/
+ #define WIN32IO_IS_STDIO
+ #include <tchar.h>
++#include "msvcrtu.h"
+ 
+ #ifdef __GNUC__
+ #  define Win32_Winsock
+@@ -21,6 +22,7 @@
+ #endif
+ 
+ #include <windows.h>
++#include "windowsu.h"
+ 
+ #ifndef HWND_MESSAGE
+ #  define HWND_MESSAGE ((HWND)-3)
+diff -ur perl-5.18.2-orig/win32/win32io.c perl-5.18.2/win32/win32io.c
+--- perl-5.18.2-orig/win32/win32io.c	2013-11-05 00:15:39.000000000 +0900
++++ perl-5.18.2/win32/win32io.c	2014-03-31 10:40:10.703787000 +0900
+@@ -2,10 +2,12 @@
+ #define WIN32_LEAN_AND_MEAN
+ #define WIN32IO_IS_STDIO
+ #include <tchar.h>
++#include "msvcrtu.h"
+ #ifdef __GNUC__
+ #define Win32_Winsock
+ #endif
+ #include <windows.h>
++#include "windowsu.h"
+ 
+ #include <sys/stat.h>
+ #include "EXTERN.h"
